@@ -5,87 +5,56 @@
 **Proposed** on 2026-01-11
 
 ## Context
->
-> [!NOTE]
-> This document serves as the **Design-Rationale Record (DRR)** (ref: E.9) for the initiative to "Bridge" the FPF Specification (Patterns) into the FPF Skill Stack (Capabilities).
 
-## 1. Context & Problem Statement
+The **FPF Specification** (Part A-G) defines the *Laws* and *Patterns* of the framework. The **FPF Skill Stack** provides the *Runtime* and *Capabilities* to execute these patterns.
 
-The **FPF Specification** (Part A-G) defines the *Laws* and *Patterns* of the framework.
-The **FPF Skill Stack** provides the *Runtime* and *Capabilities* to execute these patterns.
-Currently, there is a gap: we have the Outline (`FPF_Spec_8_Outline.md`) but no executable Skills implementing these patterns.
+Currently, there is a gap: we have the Outline (`FPF_Spec_8_Outline.md`) but no executable Skills implementing these patterns. We need a systematic way to transform normative FPF Patterns into executable `SKILL.md` definitions.
 
-**Goal**: Systematically transform normative FPF Patterns into executable `SKILL.md` definitions.
+## Decision
 
-## 2. Methodology: Spec-to-Skills Execution
+We will adopt the **Standard 3.0 Spec-to-Skills Methodology** with the following specific rules:
 
-We will follow the **Standard 3.0 Spec-to-Skills Methodology** (from `design/standards_and_methodology.md`):
+### 1. The "Verb Test" Selection Criteria
 
-1. **Source**: `FPF_Spec_8_Outline.md` (The Constitution).
-2. **Extraction**: Identify "Actionable" Patterns (e.g., *Method*, *Audit*, *Generate*, *Check*) vs. "Definitional" Patterns (e.g., *Ontology*, *Taxonomy*).
-3. **Inventory**: Registry in `SKILL_INVENTORY.md`.
-4. **Implementation**: Mint `SKILL.md` manifests.
+We will only mint Skills for Patterns that pass the "Verb Test":
 
-## 3. Structural Decisions
+* **Method / Process (Verb)**: Patterns describing an action (e.g., "How to Mint", "How to Log") **SHALL** become Skills.
+* **Ontology / Type (Noun)**: Patterns describing definitions (e.g., "Holon", "Role") **SHALL NOT** become Skills (they are Types).
+* **Metric (Measurement)**: Patterns describing scales or audits **SHALL** become Skills.
 
-### 3.1 The Inventory Baseline
+### 2. Centralized Inventory Location
 
-We need to initialize the central registry.
+We will initialize the central skill registry at:
+`contexts/Skills/design/SKILL_INVENTORY.md`
 
-* **File**: `SKILL_INVENTORY.md`
-* **Location**: Root of `fpf-foundry` (or `contexts/Skills/design/` per strict spec, but we will start at root for visibility if needed). *Correction: We should adhere to the standard `contexts/Skills/design/SKILL_INVENTORY.md` and create the directory if missing.*
+This adheres strictly to the FPF Context structure, ensuring the `Skills` context manages its own design artifacts.
 
-### 3.2 Candidate Selection Strategy
+### 3. Policy Realization Strategy
 
-Not every Pattern becomes a Skill. The FPF Spec contains Definitions (Nouns) and Methods (Verbs). Since a **Skill** is formally a `U.MethodDescription` (Recipe), we only bridge "Verb-Patterns".
+Patterns that represent Laws (Constraints) will be handled via:
 
-### 3.3 Selection Rules (The "Verb Test")
+* **Passive Constraints**: Embedded in `SKILL.md` frontmatter (e.g., `policies` list) or Prerequisite Injection.
+* **Active Auditors**: Dedicated "Audit" Skills (e.g., `design/audit-lexicon`) that verify compliance.
 
-We apply the following filter to every Pattern in the outline:
+## Rationale
 
-| Pattern Category | Nature | Decision | Example |
-| :--- | :--- | :--- | :--- |
-| **Method / Process** | **Action (Verb)** | **✅ CREATE SKILL** | **F.18 Naming Protocol** ("How to Mint") → `design/mint-name`<br>**A.15.1 Work Record** ("How to Log") → `telemetry/log-work` |
-| **Ontology / Type** | **Structure (Noun)** | ❌ **NO SKILL** | **A.1 Holon** (Concept only).<br>**A.2 Role** (Definition only).<br>*(Skills will USE these types, but are not distinct skills themselves)* |
-| **Metric / Scale** | **Measurement** | **✅ CREATE SKILL** | **A.18 CSLC** ("How to Measure") → `metric/evaluate-cslc` |
-| **Constraint / Law** | **Rule** | 🔶 **CREATE POLICY** | **E.5.1 Lexical Firewall** → Implemented as a **Linter** or **Guard** inside other skills. |
+* **Executability**: A Skill is formally a `U.MethodDescription` (a recipe). It must produce a `U.Work` record. Nouns cannot produce work; only Verbs can. Therefore, the "Verb Test" is the only logical filter for the Bridge.
+* **Traceability**: Placing the inventory in `contexts/Skills/design` ensures that the "Skills" context is self-contained. If we placed it at the root, we would violate the `A.7 Strict Distinction` between the Foundry (Root) and the Contexts (Workspaces).
+* **Enforcement**: We cannot "execute" a law like "Do not depend on tools". We can only "audit" it or "constrain" it. Separating these strategies prevents us from trying to write impossible code.
 
-**The Golden Rule**: *Can an Agent "execute" this pattern to produce a `U.Work` record?*
+## Consequences
 
-* Yes → It's a Skill.
-* No → It's a Type, Standard, or Principle.
+### Positive
 
-### 3.4 Policy Realization Strategy
+* [x] **Clear Roadmap**: The "Verb Test" instantly filters the 100+ patterns down to a manageable list of executable skills.
+* [x] **Auditability**: Every generated Skill will trace back to a specific Spec Section (e.g., `Ref: F.18`).
+* [x] **Architectural Purity**: Keeping the inventory in `contexts/Skills` maintains the fractal structure of the Holarchy.
 
-Patterns that represent **Laws** (e.g., `E.5.1 Lexical Firewall`, `A.7 Strict Distinction`) cannot be "executed" directly, but they must be **enforced**. We handle them in two ways:
+### Negative
 
-#### A. Passive Constraints (RoC - Rule of Constraints)
+* [x] **Visibility Friction**: The inventory is buried 3 levels deep (`contexts/Skills/design`), making it less "in your face" than a root file.
+* [x] **Maintenance Overhead**: We must manually keep the Inventory in sync with the Spec until we build an automated `design/sync-spec` skill.
 
-* **Mechanism**: Embedded in the `SKILL.md` YAML Frontmatter (under `allowed_tools` or `policies`) or via **Prerequisite Injection**.
-* **Example**: `E.5.3 Unidirectional Dependency` is enforced by NOT giving a "Core" skill access to "Tooling" directories.
-* **Example (New)**: `F.18 Naming` context dependence is enforced by injecting `F.1-F.17` prerequisites directly into the `SKILL.md` description, ensuring the Agent accesses local meaning (F.0.1) before minting.
+## Compliance
 
-#### B. Active Auditors (Validation Skills)
-
-* **Mechanism**: A dedicated Skill that *checks* compliance.
-* **Example**: `E.5.1 Lexical Firewall` → `design/audit-lexicon` (a skill that scans text and flags banned jargon).
-* **Pattern**: These become **"Verify"** or **"Audit"** skills in the inventory.
-
-## 4. Execution Plan
-
-### Step 1: Initialize Infrastructure
-
-* Create local directory `contexts/Skills/design`.
-
-* Create `contexts/Skills/design/SKILL_INVENTORY.md` with Table header.
-
-### Step 2: Extraction Run
-
-* Parse `FPF_Spec_8_Outline.md`.
-
-* Select top 5-10 high-impact patterns.
-* Add to Inventory as "Planned".
-
-### Step 3: Scaffold High-Priority Skills
-
-* Create `contexts/Skills/src/<domain>/<name>/SKILL.md` for the top picks.
+* [x] **E.9 DRR**: Follows the standard Context-Decision-Rationale-Consequences format.
