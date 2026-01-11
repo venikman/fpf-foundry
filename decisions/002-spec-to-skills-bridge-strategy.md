@@ -1,6 +1,11 @@
+# 002. FPF Spec-to-Skills Bridge Strategy
 
-# RDD: FPF Spec-to-Skills Bridge Strategy
+## Status
 
+**Proposed** on 2026-01-11
+
+## Context
+>
 > [!NOTE]
 > This document serves as the **Design-Rationale Record (DRR)** (ref: E.9) for the initiative to "Bridge" the FPF Specification (Patterns) into the FPF Skill Stack (Capabilities).
 
