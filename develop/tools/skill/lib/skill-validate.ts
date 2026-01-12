@@ -101,7 +101,6 @@ export function runCrossChecks(skills: SkillDoc[]): CrossCheckError[] {
   }
 
   for (const skill of skills) {
-    const data = skill.data;
     checkStepIdUniqueness(skill, errors);
     checkEvalTestsNonEmpty(skill, errors);
     checkUpdatedAfterCreated(skill, errors);

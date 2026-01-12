@@ -47,7 +47,7 @@ eval:
         text: "Hi there"
       expected:
         upper_text: "HI THERE"
-version: 0.1.0
+version: "0.1.0"
 metadata:
   tags:
     - example

@@ -47,12 +47,12 @@ eval:
         recipient: Kai
       expected:
         greeting: "Hello, Kai."
-version: 0.1.0
+version: "0.1.0"
 metadata:
   tags:
     - example
     - greeting
   authors:
     - FPF Foundry
-  created: 2026-02-01
-  updated: 2026-02-01
+  created: "2026-02-01"
+  updated: "2026-02-01"

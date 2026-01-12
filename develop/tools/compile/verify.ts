@@ -41,9 +41,17 @@ for (const sourcePath of sources) {
     continue;
   }
 
-  const expectedObj = JSON.parse(readFileSync(expectedPath, "utf8"));
+  let expectedObj: unknown;
+  try {
+    expectedObj = JSON.parse(readFileSync(expectedPath, "utf8"));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to parse expected JSON: ${expectedPath} (${message})`);
+    failures += 1;
+    continue;
+  }
   const expectedCanonical = stableStringify(sortKeys(expectedObj));
-  const expectedId = expectedObj.id;
+  const expectedId = (expectedObj as Record<string, unknown>).id;
   if (typeof expectedId !== "string" || expectedId.trim().length === 0) {
     console.error(`Expected output missing id: ${expectedPath}`);
     failures += 1;
@@ -53,13 +61,20 @@ for (const sourcePath of sources) {
   const actualJsonPath = resolve(options.outDir, expectedId, "skill.json");
   const actualSkillPath = resolve(options.outDir, expectedId, "skill.yaml");
   let actualObj: unknown;
-  if (existsSync(actualJsonPath)) {
-    actualObj = JSON.parse(readFileSync(actualJsonPath, "utf8"));
-  } else if (existsSync(actualSkillPath)) {
-    const actualYaml = readFileSync(actualSkillPath, "utf8");
-    actualObj = parseYaml(actualYaml, actualSkillPath);
-  } else {
-    console.error(`Missing compile output: ${actualJsonPath} (or ${actualSkillPath})`);
+  try {
+    if (existsSync(actualJsonPath)) {
+      actualObj = JSON.parse(readFileSync(actualJsonPath, "utf8"));
+    } else if (existsSync(actualSkillPath)) {
+      const actualYaml = readFileSync(actualSkillPath, "utf8");
+      actualObj = parseYaml(actualYaml, actualSkillPath);
+    } else {
+      console.error(`Missing compile output: ${actualJsonPath} (or ${actualSkillPath})`);
+      failures += 1;
+      continue;
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Failed to parse compile output for ${baseName}: ${message}`);
     failures += 1;
     continue;
   }

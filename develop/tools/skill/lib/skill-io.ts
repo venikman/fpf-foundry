@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "fs";
+import { readFileSync, readdirSync } from "fs";
 import { join, relative } from "path";
 
 type LineInfo = {
@@ -229,7 +229,6 @@ function parseInlineMapping(
   inline: { key: string; remainder: string }
 ): { value: Record<string, unknown>; nextIndex: number } {
   const obj: Record<string, unknown> = {};
-  const line = lines[lineIndex];
   const valuePart = inline.remainder.trim();
   if (valuePart.length === 0) {
     const nextIndex = nextNonEmptyIndex(lines, lineIndex + 1);
@@ -339,10 +338,11 @@ function parseBlockScalar(
   let index = firstContentIndex;
   while (index < lines.length) {
     const line = lines[index];
-    if (line.indent < blockIndent) {
+    const isEmptyLine = line.raw.trim().length === 0;
+    if (!isEmptyLine && line.indent < blockIndent) {
       break;
     }
-    collected.push(line.raw.slice(blockIndent));
+    collected.push(isEmptyLine ? "" : line.raw.slice(blockIndent));
     index += 1;
   }
   const value = style === ">" ? foldBlockScalar(collected) : collected.join("\n");
@@ -438,7 +438,7 @@ function parseScalar(value: string): unknown {
 
 function parseDoubleQuoted(value: string): string {
   if (!value.endsWith('"')) {
-    return value.slice(1);
+    throw new Error(`Unterminated double-quoted string: ${value}`);
   }
   const inner = value.slice(1, -1);
   let result = "";
@@ -474,7 +474,7 @@ function parseDoubleQuoted(value: string): string {
 
 function parseSingleQuoted(value: string): string {
   if (!value.endsWith("'")) {
-    return value.slice(1);
+    throw new Error(`Unterminated single-quoted string: ${value}`);
   }
   const inner = value.slice(1, -1);
   return inner.replace(/''/g, "'");

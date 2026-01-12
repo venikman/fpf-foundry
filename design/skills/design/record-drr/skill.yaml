@@ -5,7 +5,9 @@ summary: "Records a formal Design-Rationale Record (DRR) for architectural decis
 intent:
   goal: "Create a DRR markdown file that captures context, decision, and consequences."
   non_goals:
-    - "UNKNOWN"
+    - "Does not make the decision; only records it."
+    - "Does not modify or overwrite existing DRRs."
+    - "Does not enforce decision content beyond the DRR structure."
 inputs:
   - name: title
     type: string
@@ -44,11 +46,12 @@ procedure:
     instruction: "If telemetry/log-work is available, log the DRR action with spec E.9."
 constraints:
   safety:
-    - "UNKNOWN"
+    - "Do not overwrite existing DRR files."
+    - "Use the next available numeric prefix based on existing files."
   privacy:
-    - "UNKNOWN"
+    - "Do not include secrets or personal data unless explicitly required."
   licensing:
-    - "UNKNOWN"
+    - "Do not copy proprietary text; author original rationale."
 dependencies:
   tools:
     - list_dir
@@ -64,30 +67,33 @@ eval:
   tests:
     - name: basic-drr
       input_fixture:
-        title: "UNKNOWN"
-        context: "UNKNOWN"
-        decision: "UNKNOWN"
-        work_context: "UNKNOWN"
+        title: "Adopt SkillSpec v0.1.0"
+        context: "We need a structured, machine-validated format for defining skills."
+        decision: "Adopt SkillSpec v0.1.0 for all skill definitions and validate in CI."
+        work_context: "Skills"
       expected:
-        drr_path: "UNKNOWN"
+        drr_path: "design/decisions/001-adopt-skillspec-v0-1-0.md"
+      notes: "Assumes an empty design/decisions directory so the next id is 001."
     - name: basic-drr-2
       input_fixture:
-        title: "UNKNOWN"
-        context: "UNKNOWN"
-        decision: "UNKNOWN"
-        work_context: "UNKNOWN"
+        title: "Separate design and runtime artifacts"
+        context: "We need a clear separation between design-time docs and runtime outputs."
+        decision: "Keep docs/specs under design/ and generated outputs under runtime/."
+        work_context: "Tooling"
       expected:
-        drr_path: "UNKNOWN"
+        drr_path: "design/decisions/002-separate-design-and-runtime-artifacts.md"
+      notes: "Assumes a single existing DRR so the next id is 002."
 version: "0.1.0"
 metadata:
   tags:
     - design
   authors:
-    - "UNKNOWN"
+    - "FPF Foundry"
   created: "2026-01-12"
   updated: "2026-01-12"
 failure_modes:
-  - "UNKNOWN: intent.non_goals"
-  - "UNKNOWN: constraints.safety"
-  - "UNKNOWN: constraints.privacy"
-  - "UNKNOWN: constraints.licensing"
+  - "Missing required inputs (title, context, decision)."
+  - "Failed to create or access design/decisions/."
+  - "Failed to determine the next DRR id."
+  - "Failed to write DRR file."
+  - "Optional telemetry logging failed (telemetry/log-work unavailable or errored)."

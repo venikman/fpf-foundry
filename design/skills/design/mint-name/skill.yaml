@@ -5,7 +5,9 @@ summary: "Mints a new F.18 Name Card with strict Twin-Label and Sense-Seed valid
 intent:
   goal: "Mint a new F.18 Name Card for a concept within a bounded context."
   non_goals:
-    - "UNKNOWN"
+    - "Does not edit or rename existing Name Cards."
+    - "Does not infer definitions beyond the provided MDS."
+    - "Does not write outside runtime/contexts/<context>/design/names."
 inputs:
   - name: context
     type: string
@@ -42,9 +44,9 @@ constraints:
   safety:
     - "Do not overwrite an existing Name Card file."
   privacy:
-    - "UNKNOWN"
+    - "Do not include secrets or personal data in the Name Card unless explicitly provided and safe."
   licensing:
-    - "UNKNOWN"
+    - "Do not copy proprietary text; author original statements."
 dependencies:
   tools:
     - list_dir
@@ -60,29 +62,30 @@ eval:
   tests:
     - name: basic-mint
       input_fixture:
-        context: "UNKNOWN"
-        id: "UNKNOWN"
-        label: "UNKNOWN"
-        mds: "UNKNOWN"
+        context: "Tooling"
+        id: "example-concept"
+        label: "Example Concept"
+        mds: "A concept used to demonstrate Name Card minting."
       expected:
-        name_card_path: "UNKNOWN"
+        name_card_path: "runtime/contexts/Tooling/design/names/example-concept.md"
     - name: basic-mint-2
       input_fixture:
-        context: "UNKNOWN"
-        id: "UNKNOWN"
-        label: "UNKNOWN"
-        mds: "UNKNOWN"
+        context: "Skills"
+        id: "bounded-context"
+        label: "Bounded Context"
+        mds: "A boundary within which a specific domain model is defined and consistent."
       expected:
-        name_card_path: "UNKNOWN"
+        name_card_path: "runtime/contexts/Skills/design/names/bounded-context.md"
 version: "0.1.0"
 metadata:
   tags:
     - design
   authors:
-    - "UNKNOWN"
+    - "FPF Foundry"
   created: "2026-01-12"
   updated: "2026-01-12"
 failure_modes:
-  - "UNKNOWN: intent.non_goals"
-  - "UNKNOWN: constraints.privacy"
-  - "UNKNOWN: constraints.licensing"
+  - "Missing or invalid required inputs (context, id, label, mds)."
+  - "Target directory runtime/contexts/<context>/design/names is not accessible."
+  - "Name Card already exists at runtime/contexts/<context>/design/names/<id>.md."
+  - "Failed to write Name Card file."

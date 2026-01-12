@@ -5,7 +5,9 @@ summary: "Records a formal Design-Rationale Record (DRR) for architectural decis
 intent:
   goal: "Create a DRR markdown file that captures context, decision, and consequences."
   non_goals:
-    - "UNKNOWN"
+    - "Does not make the decision; only records it."
+    - "Does not modify or overwrite existing DRRs."
+    - "Does not enforce decision content beyond the DRR structure."
 inputs:
   - name: title
     type: string
@@ -26,12 +28,12 @@ inputs:
 outputs:
   - name: drr_path
     type: string
-    description: "Path to the generated DRR markdown file in decisions/."
+    description: "Path to the generated DRR markdown file in design/decisions/."
 procedure:
   - step_id: step-validate-inputs
     instruction: "Validate required inputs: title, context, decision."
   - step_id: step-resolve-target
-    instruction: "Resolve the decisions/ directory and create it if missing."
+    instruction: "Resolve the design/decisions/ directory and create it if missing."
   - step_id: step-next-id
     instruction: "Determine the next numeric DRR id based on existing decisions files."
   - step_id: step-format-filename
@@ -39,16 +41,17 @@ procedure:
   - step_id: step-build-content
     instruction: "Construct the DRR content with Status, Context, Decision, and Consequences sections."
   - step_id: step-write-file
-    instruction: "Write the DRR markdown file to decisions/."
+    instruction: "Write the DRR markdown file to design/decisions/."
   - step_id: step-log-work
     instruction: "If telemetry/log-work is available, log the DRR action with spec E.9."
 constraints:
   safety:
-    - "UNKNOWN"
+    - "Do not overwrite existing DRR files."
+    - "Use the next available numeric prefix based on existing files."
   privacy:
-    - "UNKNOWN"
+    - "Do not include secrets or personal data unless explicitly required."
   licensing:
-    - "UNKNOWN"
+    - "Do not copy proprietary text; author original rationale."
 dependencies:
   tools:
     - list_dir
@@ -58,36 +61,39 @@ dependencies:
     - "telemetry/log-work@^0.1.0"
 eval:
   acceptance_criteria:
-    - "Creates a DRR markdown file in decisions/ with a numeric prefix."
+    - "Creates a DRR markdown file in design/decisions/ with a numeric prefix."
     - "The DRR includes Context, Decision, and Consequences sections."
     - "If telemetry/log-work is present, a U.Work record is attempted."
   tests:
     - name: basic-drr
       input_fixture:
-        title: "UNKNOWN"
-        context: "UNKNOWN"
-        decision: "UNKNOWN"
-        work_context: "UNKNOWN"
+        title: "Adopt SkillSpec v0.1.0"
+        context: "We need a structured, machine-validated format for defining skills."
+        decision: "Adopt SkillSpec v0.1.0 for all skill definitions and validate in CI."
+        work_context: "Skills"
       expected:
-        drr_path: "UNKNOWN"
+        drr_path: "design/decisions/001-adopt-skillspec-v0-1-0.md"
+      notes: "Assumes an empty design/decisions directory so the next id is 001."
     - name: basic-drr-2
       input_fixture:
-        title: "UNKNOWN"
-        context: "UNKNOWN"
-        decision: "UNKNOWN"
-        work_context: "UNKNOWN"
+        title: "Separate design and runtime artifacts"
+        context: "We need a clear separation between design-time docs and runtime outputs."
+        decision: "Keep docs/specs under design/ and generated outputs under runtime/."
+        work_context: "Tooling"
       expected:
-        drr_path: "UNKNOWN"
+        drr_path: "design/decisions/002-separate-design-and-runtime-artifacts.md"
+      notes: "Assumes a single existing DRR so the next id is 002."
 version: "0.1.0"
 metadata:
   tags:
     - design
   authors:
-    - "UNKNOWN"
+    - "FPF Foundry"
   created: "2026-01-12"
   updated: "2026-01-12"
 failure_modes:
-  - "UNKNOWN: intent.non_goals"
-  - "UNKNOWN: constraints.safety"
-  - "UNKNOWN: constraints.privacy"
-  - "UNKNOWN: constraints.licensing"
+  - "Missing required inputs (title, context, decision)."
+  - "Failed to create or access design/decisions/."
+  - "Failed to determine the next DRR id."
+  - "Failed to write DRR file."
+  - "Optional telemetry logging failed (telemetry/log-work unavailable or errored)."

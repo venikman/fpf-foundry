@@ -37,7 +37,17 @@ for (const filePath of files) {
     continue;
   }
   const skill = data as Record<string, unknown>;
-  index[skill.id as string] = {
+  const skillId = skill.id as string;
+  const existing = index[skillId];
+  if (existing) {
+    errors.push({
+      file: relativePath,
+      path: "$.id",
+      message: `duplicate id '${skillId}' also defined in ${existing.path}`,
+    });
+    continue;
+  }
+  index[skillId] = {
     path: relativePath,
     version: skill.version as string,
   };
