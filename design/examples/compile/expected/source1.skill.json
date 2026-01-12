@@ -1,0 +1,92 @@
+{
+  "constraints": {
+    "licensing": [
+      "No third-party content or data."
+    ],
+    "privacy": [
+      "Do not log or store recipient names."
+    ],
+    "safety": [
+      "Avoid offensive or abusive language."
+    ]
+  },
+  "dependencies": {
+    "skills": [],
+    "tools": []
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Greeting starts with \"Hello,\".",
+      "Greeting includes the recipient name.",
+      "Greeting ends with a period."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "greeting": "Hello, Ada."
+        },
+        "input_fixture": {
+          "recipient": "Ada"
+        },
+        "name": "basic-ada"
+      },
+      {
+        "expected": {
+          "greeting": "Hello, Kai."
+        },
+        "input_fixture": {
+          "recipient": "Kai"
+        },
+        "name": "basic-kai"
+      }
+    ]
+  },
+  "id": "source1",
+  "inputs": [
+    {
+      "description": "name of the person to greet.",
+      "name": "recipient",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Generate a greeting in the form \"Hello, {recipient}.\"",
+    "non_goals": [
+      "No multilingual greetings.",
+      "No time-based greetings."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-02-01",
+    "tags": [
+      "example",
+      "greeting"
+    ],
+    "updated": "2026-02-01"
+  },
+  "name": "Greeting Formatter",
+  "outputs": [
+    {
+      "description": "greeting text in the format \"Hello, {recipient}.\"",
+      "name": "greeting",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Read the recipient input.",
+      "step_id": "step-read"
+    },
+    {
+      "instruction": "Format the greeting as \"Hello, {recipient}.\"",
+      "step_id": "step-format"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Formats a greeting for a named recipient.",
+  "version": "0.1.0"
+}

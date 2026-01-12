@@ -1,4 +1,4 @@
-# FPF Foundry ([`fpf-foundry`](contexts/Tooling/design/names/fpf-foundry.md))
+# FPF Foundry ([`fpf-foundry`](runtime/contexts/Tooling/design/names/fpf-foundry.md))
 
 > **The creative workshop for minting names, forging skills, and refining the FPF constitution.**
 
@@ -6,19 +6,34 @@
 
 This workspace is the **FPF Foundry**. It serves as the "Holonic Prime" for:
 
-1. **The Law**: The First Principles Framework Specification (`FPF-Spec.md`).
-2. **The Capabilities**: The FPF Skill Stack (`contexts/Skills`).
+1. **The Law**: The First Principles Framework Specification (`design/specs/FPF-Spec.md`).
+2. **The Capabilities**: The FPF Skill Stack (`design/skills` + `develop/skills/src`).
 3. **The Tooling**: The forge tools (e.g., `mint-name`) used to build the system.
 
 ## Structure
 
-* `FPF-Spec.md` - The Authoritative Specification.
-* `contexts/`
-  * `Skills/` - Executable agents and skills.
-  * `Tooling/` - Meta-tools for the Foundry itself.
-* `docs/` - Strategy and DRRs.
+* `design/` - Design-time sources (specs, docs, decisions, prompts, examples, skill definitions).
+* `develop/` - Development-time tools, scripts, and skill implementations.
+* `runtime/` - Generated outputs (contexts, compile output, skill index).
+
+## SkillSpec (soft launch)
+
+New or modified skills should include a `skill.yaml` and pass validation:
+
+```sh
+bun develop/tools/skill/validate.ts path/to/skill.yaml
+```
+
+The schema and normative spec live in `design/specs/skill/`.
 
 ## Quick Start
 
-* **Mint a Name**: `bun contexts/Skills/src/design/mint-name/index.ts`
-* **View Inventory**: `contexts/Skills/design/SKILL_INVENTORY.md`
+* **Mint a Name**: `bun develop/skills/src/design/mint-name/index.ts`
+* **View Inventory**: `design/skills/SKILL_INVENTORY.md`
+* **View Backlog**: `design/skills/SKILL_BACKLOG.md`
+
+Inventory is generated from SkillSpec files:
+
+```sh
+bun develop/tools/skill/inventory.ts
+```

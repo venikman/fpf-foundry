@@ -1,0 +1,83 @@
+schema_version: "0.1.0"
+id: text-to-skill
+name: Text to Skill
+summary: "Converts a short natural language description into a SkillSpec draft."
+intent:
+  goal: "Produce a SkillSpec v0.1.0 draft from input text."
+  non_goals:
+    - "Executing the described skill."
+    - "Fetching external sources."
+inputs:
+  - name: source_text
+    type: string
+    description: "Natural language description of the skill."
+    required: true
+  - name: target_id
+    type: string
+    description: "Desired skill id to use in output."
+    required: true
+    examples:
+      - "data-cleanup"
+outputs:
+  - name: skill_yaml
+    type: string
+    description: "Draft SkillSpec YAML."
+procedure:
+  - step_id: step-parse
+    instruction: "Extract intent, inputs, outputs, and constraints from the source text."
+    checks:
+      - "Goal and non-goals are explicit."
+  - step_id: step-structure
+    instruction: "Draft SkillSpec fields using schema_version 0.1.0 and the requested id."
+    checks:
+      - "All required fields are present."
+  - step_id: step-validate
+    instruction: "Run the SkillSpec validator and fix any schema issues."
+constraints:
+  safety:
+    - "Do not invent constraints not implied by the text."
+  privacy:
+    - "Do not include PII in examples."
+  licensing:
+    - "Do not include licensed text verbatim."
+dependencies:
+  tools:
+    - "develop/tools/skill/validate.ts"
+  skills:
+    - "hello-skill@^0.1.0"
+eval:
+  acceptance_criteria:
+    - "Output is valid SkillSpec YAML."
+    - "Output id matches target_id."
+  tests:
+    - name: simple
+      input_fixture:
+        source_text: "Create a greeting skill."
+        target_id: "greeting-skill"
+      expected:
+        schema_version: "0.1.0"
+        id: "greeting-skill"
+        name: "Greeting Skill"
+version: "0.1.0"
+metadata:
+  tags:
+    - authoring
+    - conversion
+  authors:
+    - "FPF Foundry"
+  created: "2026-01-02"
+  updated: "2026-01-02"
+failure_modes:
+  - "Missing required fields in the draft."
+quality:
+  precision_priority: 0.8
+  latency_priority: 0.4
+  cost_priority: 0.3
+provenance:
+  source_type: doc
+  source_ref: "local:examples"
+  compiled_by: "human"
+  compiled_at: "2026-01-02T12:00:00Z"
+  field_evidence:
+    - json_path: "$.intent.goal"
+      quote: "Create a greeting skill."

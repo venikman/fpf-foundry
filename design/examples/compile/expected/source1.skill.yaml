@@ -1,0 +1,58 @@
+schema_version: "0.1.0"
+id: source1
+name: Greeting Formatter
+summary: Formats a greeting for a named recipient.
+intent:
+  goal: Generate a greeting in the form "Hello, {recipient}."
+  non_goals:
+    - No multilingual greetings.
+    - No time-based greetings.
+inputs:
+  - name: recipient
+    type: string
+    description: name of the person to greet.
+    required: true
+outputs:
+  - name: greeting
+    type: string
+    description: greeting text in the format "Hello, {recipient}."
+procedure:
+  - step_id: step-read
+    instruction: Read the recipient input.
+  - step_id: step-format
+    instruction: Format the greeting as "Hello, {recipient}."
+constraints:
+  safety:
+    - Avoid offensive or abusive language.
+  privacy:
+    - Do not log or store recipient names.
+  licensing:
+    - No third-party content or data.
+dependencies:
+  tools: []
+  skills: []
+eval:
+  acceptance_criteria:
+    - Greeting starts with "Hello,".
+    - Greeting includes the recipient name.
+    - Greeting ends with a period.
+  tests:
+    - name: basic-ada
+      input_fixture:
+        recipient: Ada
+      expected:
+        greeting: "Hello, Ada."
+    - name: basic-kai
+      input_fixture:
+        recipient: Kai
+      expected:
+        greeting: "Hello, Kai."
+version: 0.1.0
+metadata:
+  tags:
+    - example
+    - greeting
+  authors:
+    - FPF Foundry
+  created: 2026-02-01
+  updated: 2026-02-01

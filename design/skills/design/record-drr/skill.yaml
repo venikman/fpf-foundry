@@ -1,0 +1,93 @@
+schema_version: "0.1.0"
+id: design/record-drr
+name: Record DRR
+summary: "Records a formal Design-Rationale Record (DRR) for architectural decisions."
+intent:
+  goal: "Create a DRR markdown file that captures context, decision, and consequences."
+  non_goals:
+    - "UNKNOWN"
+inputs:
+  - name: title
+    type: string
+    description: "Short title of the decision."
+    required: true
+  - name: context
+    type: string
+    description: "Problem context for the decision."
+    required: true
+  - name: decision
+    type: string
+    description: "Decision statement describing the solution."
+    required: true
+  - name: work_context
+    type: string
+    description: "Optional work context used when logging U.Work."
+    required: false
+outputs:
+  - name: drr_path
+    type: string
+    description: "Path to the generated DRR markdown file in design/decisions/."
+procedure:
+  - step_id: step-validate-inputs
+    instruction: "Validate required inputs: title, context, decision."
+  - step_id: step-resolve-target
+    instruction: "Resolve the design/decisions/ directory and create it if missing."
+  - step_id: step-next-id
+    instruction: "Determine the next numeric DRR id based on existing decisions files."
+  - step_id: step-format-filename
+    instruction: "Format the filename as <NNN>-<kebab-title>.md."
+  - step_id: step-build-content
+    instruction: "Construct the DRR content with Status, Context, Decision, and Consequences sections."
+  - step_id: step-write-file
+    instruction: "Write the DRR markdown file to design/decisions/."
+  - step_id: step-log-work
+    instruction: "If telemetry/log-work is available, log the DRR action with spec E.9."
+constraints:
+  safety:
+    - "UNKNOWN"
+  privacy:
+    - "UNKNOWN"
+  licensing:
+    - "UNKNOWN"
+dependencies:
+  tools:
+    - list_dir
+    - view_file
+    - write_to_file
+  skills:
+    - "telemetry/log-work@^0.1.0"
+eval:
+  acceptance_criteria:
+    - "Creates a DRR markdown file in design/decisions/ with a numeric prefix."
+    - "The DRR includes Context, Decision, and Consequences sections."
+    - "If telemetry/log-work is present, a U.Work record is attempted."
+  tests:
+    - name: basic-drr
+      input_fixture:
+        title: "UNKNOWN"
+        context: "UNKNOWN"
+        decision: "UNKNOWN"
+        work_context: "UNKNOWN"
+      expected:
+        drr_path: "UNKNOWN"
+    - name: basic-drr-2
+      input_fixture:
+        title: "UNKNOWN"
+        context: "UNKNOWN"
+        decision: "UNKNOWN"
+        work_context: "UNKNOWN"
+      expected:
+        drr_path: "UNKNOWN"
+version: "0.1.0"
+metadata:
+  tags:
+    - design
+  authors:
+    - "UNKNOWN"
+  created: "2026-01-12"
+  updated: "2026-01-12"
+failure_modes:
+  - "UNKNOWN: intent.non_goals"
+  - "UNKNOWN: constraints.safety"
+  - "UNKNOWN: constraints.privacy"
+  - "UNKNOWN: constraints.licensing"

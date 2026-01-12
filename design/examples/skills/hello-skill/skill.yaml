@@ -1,0 +1,43 @@
+schema_version: "0.1.0"
+id: hello-skill
+name: Hello Skill
+summary: "Returns a friendly greeting."
+intent:
+  goal: "Generate a greeting message."
+  non_goals: []
+inputs:
+  - name: recipient
+    type: string
+    description: "Name of the person to greet."
+    required: true
+outputs:
+  - name: greeting
+    type: string
+    description: "Greeting message."
+procedure:
+  - step_id: step-greet
+    instruction: "Create a greeting using the recipient name."
+constraints:
+  safety: []
+  privacy: []
+  licensing: []
+dependencies:
+  tools: []
+  skills: []
+eval:
+  acceptance_criteria:
+    - "Includes the recipient name."
+  tests:
+    - name: basic
+      input_fixture:
+        recipient: "Ada"
+      expected:
+        greeting: "Hello, Ada."
+version: "0.1.0"
+metadata:
+  tags:
+    - example
+  authors:
+    - "FPF Foundry"
+  created: "2026-01-01"
+  updated: "2026-01-01"

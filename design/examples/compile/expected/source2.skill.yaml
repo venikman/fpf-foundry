@@ -1,0 +1,58 @@
+schema_version: "0.1.0"
+id: source2
+name: Uppercase Transformer
+summary: Converts input text to uppercase.
+intent:
+  goal: Return an uppercase version of the input text.
+  non_goals:
+    - No locale-specific casing rules.
+    - No extra formatting.
+inputs:
+  - name: text
+    type: string
+    description: input text to convert.
+    required: true
+outputs:
+  - name: upper_text
+    type: string
+    description: uppercase version of the input text.
+procedure:
+  - step_id: step-read
+    instruction: Read the input text.
+  - step_id: step-convert
+    instruction: Convert the text to uppercase.
+constraints:
+  safety:
+    - Do not introduce new content.
+  privacy:
+    - Do not store input text.
+  licensing:
+    - No third-party data.
+dependencies:
+  tools: []
+  skills: []
+eval:
+  acceptance_criteria:
+    - Output is uppercase.
+    - Output length matches input length.
+    - Output contains the same characters as input, only uppercased.
+  tests:
+    - name: basic-hello
+      input_fixture:
+        text: "Hello"
+      expected:
+        upper_text: "HELLO"
+    - name: basic-mixed
+      input_fixture:
+        text: "Hi there"
+      expected:
+        upper_text: "HI THERE"
+version: 0.1.0
+metadata:
+  tags:
+    - example
+    - text
+  authors:
+    - FPF Foundry
+  created: "2026-02-02"
+  updated: "2026-02-02"

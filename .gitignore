@@ -4,3 +4,6 @@ node_modules/
 dist/
 coverage/
 .bun/
+runtime/out/
+runtime/contexts/
+runtime/skills/index.json

@@ -1,0 +1,88 @@
+schema_version: "0.1.0"
+id: design/mint-name
+name: Mint Name
+summary: "Mints a new F.18 Name Card with strict Twin-Label and Sense-Seed validation."
+intent:
+  goal: "Mint a new F.18 Name Card for a concept within a bounded context."
+  non_goals:
+    - "UNKNOWN"
+inputs:
+  - name: context
+    type: string
+    description: "Bounded context name used to locate contexts/<context>/design/names."
+    required: true
+  - name: id
+    type: string
+    description: "Kebab-case technical id for the Name Card."
+    required: true
+  - name: label
+    type: string
+    description: "Plain-English label for the Name Card."
+    required: true
+  - name: mds
+    type: string
+    description: "Minimal definitional statement for the concept."
+    required: true
+outputs:
+  - name: name_card_path
+    type: string
+    description: "Path to the generated Name Card markdown file."
+procedure:
+  - step_id: step-validate-inputs
+    instruction: "Validate required inputs: context, id, label, mds."
+  - step_id: step-resolve-target
+    instruction: "Resolve contexts/<context>/design/names and ensure it exists."
+  - step_id: step-build-content
+    instruction: "Construct the Name Card markdown content using the provided inputs."
+  - step_id: step-write-file
+    instruction: "Write the Name Card file to contexts/<context>/design/names/<id>.md and fail if it already exists."
+  - step_id: step-log-work
+    instruction: "If telemetry/log-work is available, log the mint action with spec F.18."
+constraints:
+  safety:
+    - "Do not overwrite an existing Name Card file."
+  privacy:
+    - "UNKNOWN"
+  licensing:
+    - "UNKNOWN"
+dependencies:
+  tools:
+    - list_dir
+    - view_file
+    - write_to_file
+  skills:
+    - "telemetry/log-work@^0.1.0"
+eval:
+  acceptance_criteria:
+    - "Creates a Name Card markdown file at contexts/<context>/design/names/<id>.md."
+    - "The Name Card includes the provided id, label, context, and mds."
+    - "If the target file already exists, the skill exits with an error."
+  tests:
+    - name: basic-mint
+      input_fixture:
+        context: "UNKNOWN"
+        id: "UNKNOWN"
+        label: "UNKNOWN"
+        mds: "UNKNOWN"
+      expected:
+        name_card_path: "UNKNOWN"
+    - name: basic-mint-2
+      input_fixture:
+        context: "UNKNOWN"
+        id: "UNKNOWN"
+        label: "UNKNOWN"
+        mds: "UNKNOWN"
+      expected:
+        name_card_path: "UNKNOWN"
+version: "0.1.0"
+metadata:
+  tags:
+    - design
+  authors:
+    - "UNKNOWN"
+  created: "2026-01-12"
+  updated: "2026-01-12"
+failure_modes:
+  - "UNKNOWN: intent.non_goals"
+  - "UNKNOWN: constraints.privacy"
+  - "UNKNOWN: constraints.licensing"
