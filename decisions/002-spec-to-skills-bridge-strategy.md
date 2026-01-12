@@ -59,9 +59,11 @@ The Skill Inventory row(s) referencing a constraint pattern MUST include a point
 The bridge strategy is considered implemented when all are true:
 
 - Every inventory row with `Impl != none` has a corresponding `contexts/Skills/src/<skill-id>/SKILL.md` (or documented equivalent).
-- Every `status=experimental` Skill is invokable and emits a `U.Work` record.
+- Every `status=experimental` or `status=stable` Skill is invokable and emits a `U.Work` record.
 - Every referenced constraint pattern has a `PolicyRealization` entry and it resolves to either passive gating or an existing `audit/*` Skill.
 - Inventory and filesystem are consistent for implemented skills (no "orphan" skills and no "phantom" inventory rows).
+
+Automated validation coverage: `scripts/skill_inventory_checks.js` enforces items 1, 2, and 4 and validates `PolicyRealization` value format when present; constraint-pattern coverage remains manual until constraints are tagged in the inventory.
 
 ## Rationale
 
@@ -81,8 +83,7 @@ The bridge strategy is considered implemented when all are true:
 
 * [x] **Visibility Friction**: The inventory is buried 3 levels deep (`contexts/Skills/design`), making it less "in your face" than a root file.
 * [x] **Maintenance Overhead**: We must manually keep the Inventory in sync with the Spec until we build an automated `design/sync-spec` skill.
-
-Without an explicit realization pointer (passive vs audit), constraint patterns will drift and become non-auditable.
+* [x] **Drift Risk**: Without an explicit realization pointer (passive vs audit), constraint patterns will drift and become non-auditable.
 
 ## Compliance
 

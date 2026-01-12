@@ -17,7 +17,7 @@ const codeSkills = collectCodeSkills(codeRoot);
 
 lintInventory(inventory, errors, inventoryPath);
 crossCheckInventory(inventory, skillDefinitions, codeSkills, errors);
-checkExperimentalWork(inventory, codeRoot, errors);
+checkWorkEmission(inventory, codeRoot, errors);
 
 if (errors.length > 0) {
     console.error("Skill inventory checks failed:");
@@ -42,6 +42,28 @@ function parseInventory(filePath, errorsList) {
         return [];
     }
 
+    const headerCells = lines[headerIndex].split("|").map((cell) => cell.trim()).slice(1, -1);
+    const numColumns = headerCells.length;
+    const columnIndex = new Map(headerCells.map((name, index) => [name, index]));
+    const requiredColumns = [
+        "Skill ID",
+        "Family",
+        "PatternRefs",
+        "PolicyRealization",
+        "Status",
+        "Impl",
+        "Outputs",
+        "Description",
+    ];
+
+    const missingColumns = requiredColumns.filter((column) => !columnIndex.has(column));
+    if (missingColumns.length > 0) {
+        errorsList.push(
+            `Inventory table missing columns in ${toRepoRelative(filePath)}: ${missingColumns.join(", ")}`
+        );
+        return [];
+    }
+
     const rows = [];
     for (let i = headerIndex + 2; i < lines.length; i++) {
         const line = lines[i];
@@ -51,12 +73,21 @@ function parseInventory(filePath, errorsList) {
 
         const cells = line.split("|").map((cell) => cell.trim());
         const values = cells.slice(1, -1);
-        if (values.length !== 7) {
-            errorsList.push(`${toRepoRelative(filePath)}:${i + 1} expected 7 columns, got ${values.length}`);
+        if (values.length !== numColumns) {
+            errorsList.push(
+                `${toRepoRelative(filePath)}:${i + 1} expected ${numColumns} columns, got ${values.length}`
+            );
             continue;
         }
 
-        const [skillIdRaw, family, patternRefsRaw, status, impl, outputs, description] = values;
+        const skillIdRaw = values[columnIndex.get("Skill ID")];
+        const family = values[columnIndex.get("Family")];
+        const patternRefsRaw = values[columnIndex.get("PatternRefs")];
+        const policyRealization = values[columnIndex.get("PolicyRealization")];
+        const status = values[columnIndex.get("Status")];
+        const impl = values[columnIndex.get("Impl")];
+        const outputs = values[columnIndex.get("Outputs")];
+        const description = values[columnIndex.get("Description")];
         const skillId = stripBackticks(skillIdRaw);
 
         rows.push({
@@ -64,6 +95,7 @@ function parseInventory(filePath, errorsList) {
             skillId,
             family,
             patternRefsRaw,
+            policyRealization,
             status,
             impl,
             outputs,
@@ -78,7 +110,7 @@ function lintInventory(rows, errorsList, filePath) {
     const seen = new Set();
     const allowedStatus = new Set(["planned", "experimental", "stable", "deprecated"]);
     const allowedImpl = new Set(["none", "stub", "code"]);
-    const patternRefRegex = /^[A-Z][A-Za-z0-9]*\.[A-Za-z0-9]+(\.[A-Za-z0-9]+)*$/;
+    const patternRefRegex = /^[A-Z][A-Za-z0-9]*(?:\.[A-Za-z0-9]+){1,2}$/;
 
     for (const row of rows) {
         if (!row.skillId) {
@@ -91,6 +123,10 @@ function lintInventory(rows, errorsList, filePath) {
         }
         seen.add(row.skillId);
 
+        if (!row.family || row.family.trim().length === 0 || row.family.trim() === "-") {
+            errorsList.push(`${toRepoRelative(filePath)}:${row.lineNumber} missing Family for '${row.skillId}'`);
+        }
+
         if (!allowedStatus.has(row.status)) {
             errorsList.push(
                 `${toRepoRelative(filePath)}:${row.lineNumber} invalid Status '${row.status}' for '${row.skillId}'`
@@ -101,6 +137,20 @@ function lintInventory(rows, errorsList, filePath) {
             errorsList.push(
                 `${toRepoRelative(filePath)}:${row.lineNumber} invalid Impl '${row.impl}' for '${row.skillId}'`
             );
+        }
+
+        const policyRealization = row.policyRealization.trim();
+        if (policyRealization.length === 0) {
+            errorsList.push(
+                `${toRepoRelative(filePath)}:${row.lineNumber} missing PolicyRealization for '${row.skillId}'`
+            );
+        } else if (policyRealization !== "-") {
+            const isAuditRef = /^audit\/[a-z0-9][a-z0-9-]*(?:\/[a-z0-9][a-z0-9-]*)*$/.test(policyRealization);
+            if (policyRealization !== "passive" && !isAuditRef) {
+                errorsList.push(
+                    `${toRepoRelative(filePath)}:${row.lineNumber} invalid PolicyRealization '${policyRealization}' for '${row.skillId}'`
+                );
+            }
         }
 
         if (row.patternRefsRaw !== "-") {
@@ -134,6 +184,13 @@ function crossCheckInventory(rows, skillDefinitions, codeSkills, errorsList) {
         if (row.impl === "code" && !codeSkills.has(row.skillId)) {
             errorsList.push(`Missing code implementation for '${row.skillId}' (expected ${codePathHint(row.skillId)})`);
         }
+
+        const policyRealization = row.policyRealization.trim();
+        if (policyRealization.startsWith("audit/") && !inventoryById.has(policyRealization)) {
+            errorsList.push(
+                `PolicyRealization '${policyRealization}' for '${row.skillId}' does not match an inventory Skill ID`
+            );
+        }
     }
 
     for (const skillId of codeSkills) {
@@ -148,9 +205,10 @@ function crossCheckInventory(rows, skillDefinitions, codeSkills, errorsList) {
     }
 }
 
-function checkExperimentalWork(rows, codeRootPath, errorsList) {
+function checkWorkEmission(rows, codeRootPath, errorsList) {
+    const statusesRequiringWork = new Set(["experimental", "stable"]);
     for (const row of rows) {
-        if (row.status !== "experimental" || row.impl !== "code") {
+        if (!statusesRequiringWork.has(row.status) || row.impl !== "code") {
             continue;
         }
 
@@ -160,9 +218,10 @@ function checkExperimentalWork(rows, codeRootPath, errorsList) {
         }
 
         const content = fs.readFileSync(codePath, "utf8");
-        const emitsWork = /U\.Work/.test(content) || /log-work/.test(content);
+        const stripped = stripComments(content);
+        const emitsWork = /\bU\.Work\b/.test(stripped) || /\blog-work\b/.test(stripped);
         if (!emitsWork) {
-            errorsList.push(`Experimental skill '${row.skillId}' does not appear to emit U.Work`);
+            errorsList.push(`Skill '${row.skillId}' (status=${row.status}) does not appear to emit U.Work`);
         }
     }
 }
@@ -175,9 +234,6 @@ function collectSkillDefinitions(skillsRootPath, errorsList) {
 
     walk(skillsRootPath, (filePath) => {
         if (path.basename(filePath) !== "SKILL.md") {
-            return;
-        }
-        if (filePath.endsWith(path.join("design", "SKILL_INVENTORY.md"))) {
             return;
         }
 
@@ -219,6 +275,10 @@ function collectCodeSkills(codeRootPath) {
     });
 
     return codeSkills;
+}
+
+function stripComments(content) {
+    return content.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
 }
 
 function extractSkillName(filePath) {
