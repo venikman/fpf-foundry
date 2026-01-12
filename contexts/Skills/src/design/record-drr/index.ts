@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readdirSync } from "fs";
 import { join } from "path";
 
 // E.9 Design-Rationale Record (DRR) Generator
-// Usage: bun record-drr.ts --title <title> --context <context-string> --decision <decision>
+// Usage: bun record-drr.ts --title <title> --context <context-string> --decision <decision> [--work-context <ctx>]
 
 const { values } = parseArgs({
     args: Bun.argv,
@@ -12,15 +12,18 @@ const { values } = parseArgs({
         title: { type: 'string' },
         context: { type: 'string' }, // The problem context, not Bounded Context
         decision: { type: 'string' },
+        "work-context": { type: 'string' },
     },
     strict: true,
     allowPositionals: true,
 });
 
 if (!values.title || !values.context || !values.decision) {
-    console.error("Usage: record-drr --title <title> --context <problem> --decision <solution>");
+    console.error("Usage: record-drr --title <title> --context <problem> --decision <solution> [--work-context <ctx>]");
     process.exit(1);
 }
+
+const workContext = values["work-context"] ?? "Skills";
 
 // 1. Resolve Target Directory: decisions/
 // Root 'decisions' folder is standard for ADRs
@@ -78,3 +81,26 @@ ${values.decision}
 console.log(`Recording DRR: ${filename}...`);
 await Bun.write(filePath, content);
 console.log(`Success: Recorded ${filePath}`);
+
+// 6. Automatic Work Logging (Skill Composition)
+const logScript = join(repoRoot, "contexts", "Skills", "src", "telemetry", "log-work", "index.ts");
+
+if (existsSync(logScript)) {
+    console.log("Logging Work Record via A.15.1...");
+    const proc = Bun.spawn([
+        "bun", logScript,
+        "--spec", "E.9",
+        "--role", "Archivist",
+        "--context", workContext,
+        "--action", `Recorded DRR '${values.title}' (${filename})`
+    ]);
+
+    await proc.exited;
+    if (proc.exitCode === 0) {
+        console.log("Work Logged Successfully.");
+    } else {
+        console.error("WARN: Failed to log work.");
+    }
+} else {
+    console.warn("WARN: Log-Work skill not found; skipping audit trace.");
+}
