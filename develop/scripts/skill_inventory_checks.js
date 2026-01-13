@@ -183,7 +183,7 @@ function crossCheckInventory(rows, skillDefinitions, codeSkills, errorsList) {
 
         const specPath = resolveSpecPath(row.skillId);
         if (!fs.existsSync(specPath)) {
-            errorsList.push(`Missing skill.yaml for '${row.skillId}' (expected ${toRepoRelative(specPath)})`);
+            errorsList.push(`Missing skill.json for '${row.skillId}' (expected ${toRepoRelative(specPath)})`);
         }
 
         if (row.impl === "code" && !codeSkills.has(row.skillId)) {
@@ -319,7 +319,7 @@ function resolveCodePath(codeRootPath, skillId) {
 }
 
 function resolveSpecPath(skillId) {
-    return path.join(skillsRoot, ...skillId.split("/"), "skill.yaml");
+    return path.join(skillsRoot, ...skillId.split("/"), "skill.json");
 }
 
 function codePathHint(skillId) {

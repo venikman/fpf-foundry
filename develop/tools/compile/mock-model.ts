@@ -13,13 +13,13 @@ if (!skillId) {
   process.exit(1);
 }
 
-const expectedYamlPath = resolve(repoRoot, "design", "examples", "compile", "expected", `${skillId}.skill.yaml`);
-let expectedYaml: string;
+const expectedJsonPath = resolve(repoRoot, "design", "examples", "compile", "expected", `${skillId}.skill.json`);
+let expectedJson: string;
 try {
-  expectedYaml = readFileSync(expectedYamlPath, "utf8").trimEnd();
+  expectedJson = readFileSync(expectedJsonPath, "utf8").trimEnd();
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`Mock model: missing expected fixture for skill id '${skillId}': ${expectedYamlPath} (${message})`);
+  console.error(`Mock model: missing expected fixture for skill id '${skillId}': ${expectedJsonPath} (${message})`);
   process.exit(1);
 }
 
@@ -32,11 +32,11 @@ const report = {
 };
 
 if (mode === "fast") {
-  process.stdout.write(renderYamlOnly(expectedYaml));
+  process.stdout.write(renderJsonOnly(expectedJson));
   process.exit(0);
 }
 
-process.stdout.write(renderYamlWithReport(expectedYaml, report));
+process.stdout.write(renderJsonWithReport(expectedJson, report));
 
 function extractSection(text: string, startMarker: string, endMarker: string): string {
   const startIndex = text.indexOf(startMarker);
@@ -59,12 +59,11 @@ function parseMode(text: string): string {
   return (match?.[1] ?? "strict").toLowerCase();
 }
 
-function renderYamlOnly(yaml: string): string {
-  return `\`\`\`yaml\n${yaml}\n\`\`\`\n`;
+function renderJsonOnly(json: string): string {
+  return `\`\`\`json\n${json}\n\`\`\`\n`;
 }
 
-function renderYamlWithReport(yaml: string, reportData: unknown): string {
+function renderJsonWithReport(json: string, reportData: unknown): string {
   const reportJson = JSON.stringify(reportData, null, 2);
-  return `\`\`\`yaml\n${yaml}\n\`\`\`\n\`\`\`json\n${reportJson}\n\`\`\`\n`;
+  return `\`\`\`json\n${json}\n\`\`\`\n\`\`\`json\n${reportJson}\n\`\`\`\n`;
 }
-

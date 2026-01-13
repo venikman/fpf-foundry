@@ -18,6 +18,19 @@ export function loadYamlFile(filePath: string): unknown {
 }
 
 /**
+ * Loads and parses a JSON file using `JSON.parse`.
+ */
+export function loadJsonFile(filePath: string): unknown {
+  const text = readFileSync(filePath, "utf8");
+  try {
+    return JSON.parse(text);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`${filePath}: invalid JSON (${message})`);
+  }
+}
+
+/**
  * Parses YAML text using a strict subset (no tabs, no inline collections, stable indentation).
  */
 export function parseYaml(text: string, sourceName: string): unknown {
@@ -69,7 +82,7 @@ export function stableStringify(value: unknown): string {
 }
 
 /**
- * Recursively finds `skill.yaml` files beneath the given directory.
+ * Recursively finds SkillSpec files beneath the given directory.
  */
 export function findSkillFiles(rootDir: string): string[] {
   const results: string[] = [];
@@ -101,7 +114,10 @@ function walk(currentDir: string, results: string[]): void {
     const fullPath = join(currentDir, entry.name);
     if (entry.isDirectory()) {
       walk(fullPath, results);
-    } else if (entry.isFile() && entry.name === "skill.yaml") {
+    } else if (
+      entry.isFile() &&
+      (entry.name === "skill.json" || entry.name === "skill.yaml" || entry.name === "skill.yml")
+    ) {
       results.push(fullPath);
     }
   }

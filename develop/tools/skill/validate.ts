@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { resolve } from "path";
 import { statSync } from "fs";
-import { findSkillFiles, loadYamlFile, toRepoRelative } from "./lib/skill-io";
+import { findSkillFiles, loadJsonFile, toRepoRelative } from "./lib/skill-io";
 import { CrossCheckError, SkillDoc, validateSchema, runCrossChecks } from "./lib/skill-validate";
 
 const args = process.argv.slice(2);
@@ -14,7 +14,7 @@ const rootDir = process.cwd();
 const targets = collectTargets(args, rootDir);
 
 if (targets.length === 0) {
-  console.error("No skill.yaml files found.");
+  console.error("No skill.json files found.");
   process.exit(1);
 }
 
@@ -23,9 +23,17 @@ const validSkills: SkillDoc[] = [];
 
 for (const filePath of targets) {
   const relativePath = toRepoRelative(filePath, rootDir);
+  if (!relativePath.endsWith("skill.json")) {
+    schemaErrors.push({
+      file: relativePath,
+      path: "$",
+      message: "SkillSpec must be JSON (skill.json).",
+    });
+    continue;
+  }
   let data: unknown;
   try {
-    data = loadYamlFile(filePath);
+    data = loadJsonFile(filePath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     schemaErrors.push({ file: relativePath, path: "$", message: `parse error: ${message}` });

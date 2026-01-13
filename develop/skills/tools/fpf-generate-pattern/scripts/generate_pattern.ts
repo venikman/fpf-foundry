@@ -67,7 +67,7 @@ async function generateSkill(title: string, content: string, fpfId: string, outp
 
     const description = `FPF Pattern ${fpfId}: ${title}`;
 
-    const skillSpec = buildSkillSpecYaml(slug, title, fpfId);
+    const skillSpec = buildSkillSpecJson(slug, title, fpfId);
 
     const yamlFrontmatter = `---
 name: ${slug}
@@ -82,67 +82,64 @@ allowed-tools: []
 `;
 
     await writeFile(join(skillDir, "SKILL.md"), yamlFrontmatter + content);
-    await writeFile(join(skillDir, "skill.yaml"), skillSpec);
+    await writeFile(join(skillDir, "skill.json"), skillSpec);
     console.log(`Generated ${slug} in ${skillDir}`);
 }
 
-function buildSkillSpecYaml(slug: string, title: string, fpfId: string): string {
+function buildSkillSpecJson(slug: string, title: string, fpfId: string): string {
     const dateStr = new Date().toISOString().split("T")[0];
     const summary = `FPF Pattern ${fpfId}: ${title}.`;
     const goal = `Apply pattern ${fpfId} (${title}).`;
-    const quotedTitle = JSON.stringify(title);
-    const quotedSummary = JSON.stringify(summary);
-    const quotedGoal = JSON.stringify(goal);
 
-    return `schema_version: "0.1.0"
-id: ${slug}
-name: ${quotedTitle}
-summary: ${quotedSummary}
-intent:
-  goal: ${quotedGoal}
-  non_goals:
-    - "UNKNOWN"
-inputs: []
-outputs: []
-procedure:
-  - step_id: step-define
-    instruction: "Define the procedure steps from the pattern text."
-constraints:
-  safety:
-    - "UNKNOWN"
-  privacy:
-    - "UNKNOWN"
-  licensing:
-    - "UNKNOWN"
-dependencies:
-  tools: []
-  skills: []
-eval:
-  acceptance_criteria:
-    - "UNKNOWN"
-    - "UNKNOWN"
-    - "UNKNOWN"
-  tests:
-    - name: basic
-      input_fixture: {}
-      expected: {}
-    - name: basic-2
-      input_fixture: {}
-      expected: {}
-version: "0.1.0"
-metadata:
-  tags:
-    - "pattern"
-  authors:
-    - "UNKNOWN"
-  created: "${dateStr}"
-  updated: "${dateStr}"
-failure_modes:
-  - "UNKNOWN: intent.non_goals"
-  - "UNKNOWN: constraints.safety"
-  - "UNKNOWN: constraints.privacy"
-  - "UNKNOWN: constraints.licensing"
-`;
+    const spec = {
+        schema_version: "0.1.0",
+        id: slug,
+        name: title,
+        summary,
+        intent: {
+            goal,
+            non_goals: ["UNKNOWN"],
+        },
+        inputs: [],
+        outputs: [],
+        procedure: [
+            {
+                step_id: "step-define",
+                instruction: "Define the procedure steps from the pattern text.",
+            },
+        ],
+        constraints: {
+            safety: ["UNKNOWN"],
+            privacy: ["UNKNOWN"],
+            licensing: ["UNKNOWN"],
+        },
+        dependencies: {
+            tools: [],
+            skills: [],
+        },
+        eval: {
+            acceptance_criteria: ["UNKNOWN", "UNKNOWN", "UNKNOWN"],
+            tests: [
+                { name: "basic", input_fixture: {}, expected: {} },
+                { name: "basic-2", input_fixture: {}, expected: {} },
+            ],
+        },
+        version: "0.1.0",
+        metadata: {
+            tags: ["pattern"],
+            authors: ["UNKNOWN"],
+            created: dateStr,
+            updated: dateStr,
+        },
+        failure_modes: [
+            "UNKNOWN: intent.non_goals",
+            "UNKNOWN: constraints.safety",
+            "UNKNOWN: constraints.privacy",
+            "UNKNOWN: constraints.licensing",
+        ],
+    };
+
+    return JSON.stringify(spec, null, 2) + "\n";
 }
 
 async function main() {

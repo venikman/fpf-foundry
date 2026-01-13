@@ -1,19 +1,11 @@
 # SkillSpec v0.1.0
 
 ## Purpose
-SkillSpec is the canonical, versioned format for describing an executable skill. It is human-authored in YAML and machine-validated as JSON. The schema is strict, deterministic, and designed for both LLM generation and human refinement without structural drift.
+SkillSpec is the canonical, versioned format for describing an executable skill. It is human-authored in JSON and machine-validated as JSON Schema. The schema is strict, deterministic, and designed for both LLM generation and human refinement without structural drift.
 
 ## Authoring and canonicalization (normative)
-- Author in YAML (YAML 1.2 subset defined below).
-- Parse YAML to JSON.
+- Author in JSON.
 - Canonical form for hashing/signing is JSON with lexicographically sorted object keys, 2-space indentation, LF newlines, and a trailing newline.
-
-## YAML subset (normative)
-- No anchors, aliases, merge keys, or custom tags.
-- No inline collections (`{}` or `[]`) except for empty `{}` and `[]`.
-- Indentation uses spaces only (tabs are invalid).
-- Quote strings that contain `:` or `#`, or leading/trailing whitespace.
-- Multi-line strings must use block scalars (`|` or `>`).
 
 ## Unknown policy (normative)
 If a required field cannot be derived, use the explicit placeholder value `"UNKNOWN"` and record missing facts in `failure_modes` or `provenance.field_evidence` with a `quote` of `"UNKNOWN"`. Do not invent facts.
@@ -113,54 +105,78 @@ Each test object:
 - `dependencies.skills` references resolve to known ids and valid version ranges.
 
 ## Canonicalization algorithm (normative)
-1. Parse YAML to JSON using the YAML subset.
+1. Parse JSON to an object.
 2. Recursively sort all object keys lexicographically.
 3. Serialize with 2-space indentation and LF newlines.
 4. Append a trailing newline.
 
 ## Minimal example (valid)
-```yaml
-schema_version: "0.1.0"
-id: hello-skill
-name: Hello Skill
-summary: "Returns a friendly greeting."
-intent:
-  goal: "Generate a greeting message."
-  non_goals: []
-inputs:
-  - name: recipient
-    type: string
-    description: "Name of the person to greet."
-    required: true
-outputs:
-  - name: greeting
-    type: string
-    description: "Greeting message."
-procedure:
-  - step_id: step-greet
-    instruction: "Create a greeting using the recipient name."
-constraints:
-  safety: []
-  privacy: []
-  licensing: []
-dependencies:
-  tools: []
-  skills: []
-eval:
-  acceptance_criteria:
-    - "Includes the recipient name."
-  tests:
-    - name: basic
-      input_fixture:
-        recipient: "Ada"
-      expected:
-        greeting: "Hello, Ada."
-version: "0.1.0"
-metadata:
-  tags:
-    - example
-  authors:
-    - "FPF Foundry"
-  created: "2026-01-01"
-  updated: "2026-01-01"
+```json
+{
+  "schema_version": "0.1.0",
+  "id": "hello-skill",
+  "name": "Hello Skill",
+  "summary": "Returns a friendly greeting.",
+  "intent": {
+    "goal": "Generate a greeting message.",
+    "non_goals": []
+  },
+  "inputs": [
+    {
+      "name": "recipient",
+      "type": "string",
+      "description": "Name of the person to greet.",
+      "required": true
+    }
+  ],
+  "outputs": [
+    {
+      "name": "greeting",
+      "type": "string",
+      "description": "Greeting message."
+    }
+  ],
+  "procedure": [
+    {
+      "step_id": "step-greet",
+      "instruction": "Create a greeting using the recipient name."
+    }
+  ],
+  "constraints": {
+    "safety": [],
+    "privacy": [],
+    "licensing": []
+  },
+  "dependencies": {
+    "tools": [],
+    "skills": []
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Includes the recipient name."
+    ],
+    "tests": [
+      {
+        "name": "basic",
+        "input_fixture": {
+          "recipient": "Ada"
+        },
+        "expected": {
+          "greeting": "Hello, Ada."
+        }
+      }
+    ]
+  },
+  "version": "0.1.0",
+  "metadata": {
+    "tags": [
+      "example"
+    ],
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-01",
+    "updated": "2026-01-01"
+  }
+}
 ```

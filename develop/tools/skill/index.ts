@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { mkdirSync, statSync, writeFileSync } from "fs";
 import { resolve } from "path";
-import { findSkillFiles, loadYamlFile, sortKeys, stableStringify, toRepoRelative } from "./lib/skill-io";
+import { findSkillFiles, loadJsonFile, sortKeys, stableStringify, toRepoRelative } from "./lib/skill-io";
 import { validateSchema } from "./lib/skill-validate";
 
 const rootDir = process.cwd();
@@ -13,7 +13,7 @@ if (args.includes("-h") || args.includes("--help")) {
 
 const files = collectTargets(args, rootDir);
 if (files.length === 0) {
-  console.error("No skill.yaml files found.");
+  console.error("No skill.json files found.");
   process.exit(1);
 }
 const errors: Array<{ file: string; path: string; message: string }> = [];
@@ -21,9 +21,13 @@ const entriesById = new Map<string, Array<{ path: string; version: string }>>();
 
 for (const filePath of files) {
   const relativePath = toRepoRelative(filePath, rootDir);
+  if (!relativePath.endsWith("skill.json")) {
+    errors.push({ file: relativePath, path: "$", message: "SkillSpec must be JSON (skill.json)." });
+    continue;
+  }
   let data: unknown;
   try {
-    data = loadYamlFile(filePath);
+    data = loadJsonFile(filePath);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     errors.push({ file: relativePath, path: "$", message: `parse error: ${message}` });

@@ -19,10 +19,10 @@ This workspace is the **FPF Foundry**. It serves as the "Holonic Prime" for:
 
 ## SkillSpec (soft launch)
 
-SkillSpec is authored under `design/skills/**/skill.yaml` (and `design/examples/skills/**/skill.yaml` for fixtures) and must pass validation:
+SkillSpec is authored under `design/skills/**/skill.json` (and `design/examples/skills/**/skill.json` for fixtures) and must pass validation:
 
 ```sh
-bun develop/tools/skill/validate.ts path/to/skill.yaml
+bun develop/tools/skill/validate.ts path/to/skill.json
 ```
 
 The schema and normative spec live in `design/specs/skill/`.

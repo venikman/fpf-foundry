@@ -2,8 +2,8 @@
 import { mkdirSync, readFileSync, writeFileSync } from "fs";
 import { resolve } from "path";
 import { compileOnce, Mode } from "./lib/compile-core";
-import { parseYaml, sortKeys, stableStringify, toRepoRelative } from "../skill/lib/skill-io";
-import { CrossCheckError, SchemaError, SkillDoc, runCrossChecks, validateSchema } from "../skill/lib/skill-validate";
+import { sortKeys, stableStringify, toRepoRelative } from "../skill/lib/skill-io";
+import { CrossCheckError, SchemaError, runCrossChecks, validateSchema } from "../skill/lib/skill-validate";
 
 type CliOptions = {
   sourcePath: string;
@@ -56,17 +56,17 @@ try {
   process.exit(1);
 }
 
-const skillYaml = ensureTrailingNewline(compileResult.skillYaml);
+const skillSpecJson = compileResult.skillSpecJson.trim();
 let skillData: Record<string, unknown>;
 try {
-  const parsed = parseYaml(skillYaml, "skill.yaml");
+  const parsed = JSON.parse(skillSpecJson);
   if (!isPlainObject(parsed)) {
     throw new Error("SkillSpec root must be an object.");
   }
-  skillData = parsed;
+  skillData = parsed as Record<string, unknown>;
 } catch (error) {
   const message = error instanceof Error ? error.message : String(error);
-  console.error(`Failed to parse skill.yaml: ${message}`);
+  console.error(`Failed to parse skill.json: ${message}`);
   process.exit(1);
 }
 
@@ -78,11 +78,9 @@ if (!skillId) {
 
 const outputDir = resolve(options.outDir, skillId);
 mkdirSync(outputDir, { recursive: true });
-const skillPath = resolve(outputDir, "skill.yaml");
-writeFileSync(skillPath, skillYaml, "utf8");
+const skillPath = resolve(outputDir, "skill.json");
 const normalizedJson = stableStringify(sortKeys(skillData));
-const normalizedPath = resolve(outputDir, "skill.json");
-writeFileSync(normalizedPath, normalizedJson, "utf8");
+writeFileSync(skillPath, normalizedJson, "utf8");
 
 let reportData: unknown | undefined;
 if (compileResult.compileReportJson) {
@@ -106,7 +104,6 @@ if (crossErrors.length > 0) {
 }
 
 console.log(`Compiled SkillSpec: ${toRepoRelative(skillPath, rootDir)}`);
-console.log(`Wrote normalized JSON: ${toRepoRelative(normalizedPath, rootDir)}`);
 if (reportData) {
   console.log(`Wrote compile report: ${toRepoRelative(resolve(outputDir, "compile-report.json"), rootDir)}`);
 }
@@ -191,10 +188,6 @@ function readText(filePath: string): string {
     console.error(`Failed to read ${filePath}: ${message}`);
     process.exit(1);
   }
-}
-
-function ensureTrailingNewline(value: string): string {
-  return value.endsWith("\n") ? value : `${value}\n`;
 }
 
 function printSchemaErrors(errors: SchemaError[], skillPath: string): void {

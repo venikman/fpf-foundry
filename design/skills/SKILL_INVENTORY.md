@@ -1,6 +1,6 @@
 # FPF Skill Inventory (Generated)
 
-This file is generated from skill.yaml files. Do not edit manually.
+This file is generated from skill.json files. Do not edit manually.
 
 ## Inventory schema (v1)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { existsSync, readFileSync, writeFileSync } from "fs";
 import { dirname, join, resolve } from "path";
-import { findSkillFiles, loadYamlFile, parseYaml, toRepoRelative } from "./lib/skill-io";
+import { findSkillFiles, loadJsonFile, parseYaml, toRepoRelative } from "./lib/skill-io";
 
 type InventoryEntry = {
   id: string;
@@ -31,7 +31,18 @@ if (args.includes("-h") || args.includes("--help")) {
 const options = parseArgs(args, rootDir);
 const skillFiles = findSkillFiles(options.skillsRoot);
 if (skillFiles.length === 0) {
-  console.error("No skill.yaml files found.");
+  console.error("No skill.json files found.");
+  process.exit(1);
+}
+
+const nonJsonSpecs = skillFiles
+  .map((filePath) => toRepoRelative(filePath, rootDir))
+  .filter((relativePath) => !relativePath.endsWith("skill.json"));
+if (nonJsonSpecs.length > 0) {
+  console.error("SkillSpec must be JSON (skill.json). Found non-JSON SkillSpec files:");
+  for (const relativePath of nonJsonSpecs) {
+    console.error(`- ${relativePath}`);
+  }
   process.exit(1);
 }
 
@@ -66,9 +77,9 @@ function parseArgs(argv: string[], repoRoot: string): Options {
 }
 
 function buildEntry(filePath: string, repoRoot: string): InventoryEntry {
-  const skillData = loadYamlFile(filePath);
+  const skillData = loadJsonFile(filePath);
   if (!isPlainObject(skillData)) {
-    throw new Error(`Invalid skill.yaml (expected object): ${filePath}`);
+    throw new Error(`Invalid skill.json (expected object): ${filePath}`);
   }
 
   const id = String(skillData.id ?? "").trim();
@@ -187,7 +198,7 @@ function renderInventory(entries: InventoryEntry[]): string {
   const lines: string[] = [];
   lines.push("# FPF Skill Inventory (Generated)");
   lines.push("");
-  lines.push("This file is generated from skill.yaml files. Do not edit manually.");
+  lines.push("This file is generated from skill.json files. Do not edit manually.");
   lines.push("");
   lines.push("## Inventory schema (v1)");
   lines.push("");

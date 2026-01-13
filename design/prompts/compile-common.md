@@ -8,14 +8,14 @@ Inputs:
 - MODE (strict | trace | fast)
 
 Outputs:
-- skill.yaml (SkillSpec YAML or JSON that validates against TARGET_SCHEMA)
+- skill.json (SkillSpec JSON that validates against TARGET_SCHEMA)
 - compile-report.json (strict/trace only)
 
 ## Output format
 - Strict/trace: output exactly two fenced blocks in this order:
-  1) ```yaml``` skill.yaml
+  1) ```json``` skill.json
   2) ```json``` compile-report.json
-- Fast: output only the ```yaml``` block.
+- Fast: output only the ```json``` block.
 - No prose outside fenced blocks.
 
 ## Core rules (apply to all modes)

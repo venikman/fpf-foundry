@@ -2,7 +2,7 @@
 import { existsSync, readFileSync, readdirSync } from "fs";
 import { resolve, basename, extname } from "path";
 import { spawnSync } from "child_process";
-import { parseYaml, sortKeys, stableStringify } from "../skill/lib/skill-io";
+import { sortKeys, stableStringify } from "../skill/lib/skill-io";
 
 const rootDir = process.cwd();
 const args = process.argv.slice(2);
@@ -59,16 +59,12 @@ for (const sourcePath of sources) {
   }
 
   const actualJsonPath = resolve(options.outDir, expectedId, "skill.json");
-  const actualSkillPath = resolve(options.outDir, expectedId, "skill.yaml");
   let actualObj: unknown;
   try {
     if (existsSync(actualJsonPath)) {
       actualObj = JSON.parse(readFileSync(actualJsonPath, "utf8"));
-    } else if (existsSync(actualSkillPath)) {
-      const actualYaml = readFileSync(actualSkillPath, "utf8");
-      actualObj = parseYaml(actualYaml, actualSkillPath);
     } else {
-      console.error(`Missing compile output: ${actualJsonPath} (or ${actualSkillPath})`);
+      console.error(`Missing compile output: ${actualJsonPath}`);
       failures += 1;
       continue;
     }

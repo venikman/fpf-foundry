@@ -21,7 +21,7 @@ export type CompileInputs = {
  * Parsed results from a single SkillSpec compile invocation.
  */
 export type CompileResult = {
-  skillYaml: string;
+  skillSpecJson: string;
   compileReportJson?: string;
   rawOutput: string;
 };
@@ -43,13 +43,13 @@ export function buildPrompt(template: string, inputs: CompileInputs): string {
 }
 
 /**
- * Runs the model command once and parses the fenced-block output into YAML (+ optional report JSON).
+ * Runs the model command once and parses the fenced-block output into SkillSpec JSON (+ optional report JSON).
  */
 export function compileOnce(inputs: CompileInputs): CompileResult {
   const prompt = buildPrompt(inputs.promptTemplate, inputs);
   const rawOutput = runModel(inputs.modelCmd, prompt);
-  const { skillYaml, compileReportJson } = parseOutput(rawOutput, inputs.mode);
-  return { skillYaml, compileReportJson, rawOutput };
+  const { skillSpecJson, compileReportJson } = parseOutput(rawOutput, inputs.mode);
+  return { skillSpecJson, compileReportJson, rawOutput };
 }
 
 function runModel(modelCmd: string, prompt: string): string {
@@ -73,7 +73,7 @@ function runModel(modelCmd: string, prompt: string): string {
   return stdout;
 }
 
-function parseOutput(output: string, mode: Mode): { skillYaml: string; compileReportJson?: string } {
+function parseOutput(output: string, mode: Mode): { skillSpecJson: string; compileReportJson?: string } {
   const { blocks, outside } = extractFencedBlocks(output);
   if (outside.trim().length > 0) {
     throw new Error("Model output contains text outside fenced blocks.");
@@ -84,20 +84,20 @@ function parseOutput(output: string, mode: Mode): { skillYaml: string; compileRe
       throw new Error("Fast mode requires exactly one fenced block.");
     }
     const first = blocks[0];
-    if (!isYamlInfo(first.info)) {
-      throw new Error("Fast mode requires the fenced block to be tagged as yaml.");
+    if (!isJsonInfo(first.info)) {
+      throw new Error("Fast mode requires the fenced block to be tagged as json.");
     }
-    return { skillYaml: first.content };
+    return { skillSpecJson: first.content };
   }
 
   if (blocks.length !== 2) {
     throw new Error("Strict/trace mode requires exactly two fenced blocks.");
   }
 
-  const yamlBlock = blocks[0];
+  const skillBlock = blocks[0];
   const jsonBlock = blocks[1];
-  if (!isYamlInfo(yamlBlock.info)) {
-    throw new Error("First fenced block must be tagged as yaml.");
+  if (!isJsonInfo(skillBlock.info)) {
+    throw new Error("First fenced block must be tagged as json.");
   }
   if (!isJsonInfo(jsonBlock.info)) {
     throw new Error("Second fenced block must be tagged as json.");
@@ -113,7 +113,7 @@ function parseOutput(output: string, mode: Mode): { skillYaml: string; compileRe
     throw new Error(`compile-report.json is not valid JSON: ${message}`);
   }
 
-  return { skillYaml: yamlBlock.content, compileReportJson: reportJson };
+  return { skillSpecJson: skillBlock.content, compileReportJson: reportJson };
 }
 
 function extractFencedBlocks(output: string): { blocks: FencedBlock[]; outside: string } {
@@ -151,11 +151,6 @@ function extractFencedBlocks(output: string): { blocks: FencedBlock[]; outside: 
   }
 
   return { blocks, outside: outside.join("\n") };
-}
-
-function isYamlInfo(info: string): boolean {
-  const tag = info.trim().toLowerCase();
-  return tag === "yaml" || tag === "yml";
 }
 
 function isJsonInfo(info: string): boolean {

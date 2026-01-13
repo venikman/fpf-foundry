@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { writeFileSync } from "fs";
 import { resolve } from "path";
-import { loadYamlFile, sortKeys, stableStringify } from "./lib/skill-io";
+import { loadJsonFile, sortKeys, stableStringify } from "./lib/skill-io";
 
 const args = process.argv.slice(2);
 if (args.length === 0 || args.includes("-h") || args.includes("--help")) {
@@ -17,7 +17,7 @@ if (outIndex >= 0 && outIndex + 1 >= args.length) {
 }
 const outPath = outIndex >= 0 ? resolve(args[outIndex + 1]) : null;
 
-const data = loadYamlFile(inputPath);
+const data = loadJsonFile(inputPath);
 const canonical = stableStringify(sortKeys(data));
 
 if (outPath) {
@@ -27,5 +27,5 @@ if (outPath) {
 }
 
 function printUsage(): void {
-  console.log("Usage: bun develop/tools/skill/normalize.ts <skill.yaml> [--out <file.json>]");
+  console.log("Usage: bun develop/tools/skill/normalize.ts <skill.json> [--out <file.json>]");
 }
