@@ -94,6 +94,7 @@ function buildEntry(filePath: string, repoRoot: string): InventoryEntry {
   const family = resolveFamily(frontmatter, id, skillData);
   const status = resolveStatus(frontmatter, impl);
   const patternRefs = resolvePatternRefs(frontmatter);
+  const outputs = resolveOutputs(frontmatter);
 
   return {
     id,
@@ -102,7 +103,7 @@ function buildEntry(filePath: string, repoRoot: string): InventoryEntry {
     policyRealization: "-",
     status,
     impl,
-    outputs: "-",
+    outputs,
     description: summary || "UNKNOWN",
   };
 }
@@ -190,6 +191,31 @@ function resolvePatternRefs(frontmatter: Frontmatter | null): string {
   }
 
   return Array.from(refs).sort().join("; ");
+}
+
+function resolveOutputs(frontmatter: Frontmatter | null): string {
+  if (!frontmatter) {
+    return "-";
+  }
+
+  const outputs = frontmatter.outputs;
+  const entries: string[] = [];
+  if (typeof outputs === "string") {
+    entries.push(outputs);
+  } else if (Array.isArray(outputs)) {
+    for (const entry of outputs) {
+      if (typeof entry === "string") {
+        entries.push(entry);
+      }
+    }
+  }
+
+  const cleaned = entries.map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+  if (cleaned.length === 0) {
+    return "-";
+  }
+
+  return cleaned.join("; ");
 }
 
 function renderInventory(entries: InventoryEntry[]): string {

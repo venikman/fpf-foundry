@@ -14,7 +14,6 @@
   "dependencies": {
     "skills": [],
     "tools": [
-      "list_dir",
       "write_to_file"
     ]
   },
@@ -105,11 +104,11 @@
     "authors": [
       "FPF Foundry"
     ],
-    "created": "2026-02-15",
+    "created": "2026-01-13",
     "tags": [
       "planning"
     ],
-    "updated": "2026-02-15"
+    "updated": "2026-01-13"
   },
   "name": "Create WorkPlan",
   "outputs": [

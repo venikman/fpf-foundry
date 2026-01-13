@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { parseArgs } from "util";
 import { existsSync, mkdirSync } from "fs";
-import { dirname, join, resolve } from "path";
+import { dirname, join } from "path";
 import { fileURLToPath } from "url";
 
 // A.15.2 WorkPlan Generator
@@ -60,6 +60,26 @@ function parseDeliverables(raw?: string): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+function findRepoRoot(startDir: string): string {
+  let current = startDir;
+  while (true) {
+    if (existsSync(join(current, "package.json"))) {
+      return current;
+    }
+    const parent = dirname(current);
+    if (parent === current) {
+      console.error("Could not locate repository root (package.json not found).");
+      process.exit(1);
+    }
+    current = parent;
+  }
+}
+
+function yamlEscape(value: string): string {
+  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
+  return `"${escaped}"`;
+}
+
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
 const id = requireMatch(values.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, "id", "kebab-case (lowercase letters, digits, '-')");
 const title = requireNonEmpty(values.title, "title");
@@ -67,7 +87,7 @@ const intent = requireNonEmpty(values.intent, "intent");
 const deliverables = parseDeliverables(values.deliverables);
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(scriptDir, "../../../../../");
+const repoRoot = findRepoRoot(scriptDir);
 const targetDir = join(repoRoot, "runtime", "contexts", context, "planning", "workplans");
 
 if (!existsSync(targetDir)) {
@@ -86,8 +106,8 @@ const deliverableLines = deliverables.length > 0 ? deliverables.map((entry) => `
 const content = `---
 type: WorkPlan
 id: ${id}
-title: ${title}
-context: ${context}
+title: ${yamlEscape(title)}
+context: ${yamlEscape(context)}
 status: draft
 created: ${dateStr}
 ---

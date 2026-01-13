@@ -36,6 +36,74 @@ function requireMatch(value: string | undefined, pattern: RegExp, name: string, 
   return trimmed;
 }
 
+type PosthogEvent = {
+  spec: string;
+  role: string;
+  context: string;
+  action: string;
+  timestamp: string;
+};
+
+/**
+ * Emits a PostHog event when configured via environment variables.
+ */
+async function emitPosthogEvent(event: PosthogEvent): Promise<void> {
+  const apiKey = process.env.POSTHOG_API_KEY?.trim();
+  const distinctId = process.env.POSTHOG_DISTINCT_ID?.trim();
+  if (!apiKey || !distinctId) {
+    return;
+  }
+
+  const host = (process.env.POSTHOG_HOST ?? "https://app.posthog.com").trim();
+  let url: URL;
+  try {
+    url = new URL("/capture", host);
+  } catch {
+    console.warn(`WARN: Invalid POSTHOG_HOST '${host}'.`);
+    return;
+  }
+
+  const includeAction = process.env.POSTHOG_INCLUDE_ACTION === "1";
+  const properties: Record<string, unknown> = {
+    spec: event.spec,
+    role: event.role,
+    context: event.context,
+    action_length: event.action.length,
+    action_included: includeAction,
+  };
+  if (includeAction) {
+    properties.action = event.action;
+  }
+
+  const payload = JSON.stringify({
+    api_key: apiKey,
+    event: "u_work_logged",
+    distinct_id: distinctId,
+    properties,
+    timestamp: event.timestamp,
+  });
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: payload,
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      console.warn(`WARN: PostHog capture failed (${response.status}).`);
+    }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`WARN: PostHog capture failed (${message}).`);
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
 
 // 1. Target: runtime/contexts/[Ctx]/telemetry/work/
@@ -48,7 +116,9 @@ if (!existsSync(targetDir)) {
 }
 
 // 2. Format: [Timestamp]-[Spec]-[Role].md (hashed or simplified)
-const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+const now = new Date();
+const isoTimestamp = now.toISOString();
+const timestamp = isoTimestamp.replace(/[:.]/g, "-");
 const filename = `work-${timestamp}.md`;
 const filePath = join(targetDir, filename);
 
@@ -63,7 +133,7 @@ type: U.Work
 spec: ${values.spec}
 performer: ${values.role}
 context: ${context}
-timestamp_start: ${new Date().toISOString()}
+timestamp_start: ${isoTimestamp}
 ---
 
 # U.Work: Execution of ${values.spec}
@@ -81,4 +151,11 @@ ${values.action}
 `;
 
 await Bun.write(filePath, content);
+await emitPosthogEvent({
+  spec: values.spec,
+  role: values.role,
+  context,
+  action: values.action,
+  timestamp: isoTimestamp,
+});
 console.log(`Work Logged: ${filePath}`);

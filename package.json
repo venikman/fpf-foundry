@@ -8,7 +8,7 @@
     "oxlint": "^1.39.0"
   },
   "scripts": {
-    "check": "bun develop/scripts/unicode_safety_check.ts --all && bun develop/tools/skill/validate.ts --all && bun develop/tools/skill/inventory.ts && git diff --exit-code -- design/skills/SKILL_INVENTORY.md && bun develop/scripts/skill_inventory_checks.ts && bun develop/tools/compile/verify.ts --model-cmd \"bun develop/tools/compile/mock-model.ts\"",
+    "check": "bun develop/scripts/check.ts",
     "format": "biome format --write develop",
     "format:check": "biome check develop",
     "lint": "oxlint develop --deny-warnings"

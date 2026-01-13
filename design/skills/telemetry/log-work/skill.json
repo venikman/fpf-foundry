@@ -5,7 +5,8 @@
     ],
     "privacy": [
       "Do not include secrets or personal data in the work record.",
-      "If inputs contain sensitive data, redact before writing."
+      "If inputs contain sensitive data, redact before writing.",
+      "If telemetry is emitted, do not send personal data unless explicitly opted in."
     ],
     "safety": [
       "Use timestamp-based filenames to avoid collisions.",
@@ -59,7 +60,8 @@
   "failure_modes": [
     "Missing required inputs (spec, role, context, action).",
     "Failed to create or access runtime/contexts/<context>/telemetry/work.",
-    "Failed to write work record file."
+    "Failed to write work record file.",
+    "Optional telemetry emission failed (non-fatal)."
   ],
   "id": "telemetry/log-work",
   "inputs": [
@@ -130,6 +132,10 @@
     {
       "instruction": "Write the U.Work markdown file using a timestamped filename.",
       "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If PostHog is configured, emit a u_work_logged event with safe metadata.",
+      "step_id": "step-emit-telemetry"
     }
   ],
   "schema_version": "0.1.0",

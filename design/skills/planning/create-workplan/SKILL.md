@@ -6,11 +6,12 @@ status: experimental
 family: planning
 role: Planning Coordinator
 allowed_tools:
-  - list_dir
   - write_to_file
 policies:
   - A.15.2 WorkPlan (Schedule of Intent)
   - A.15.1 U.Work Logging
+outputs:
+  - WorkPlan
 ---
 
 # Planning: Create WorkPlan (A.15.2)
