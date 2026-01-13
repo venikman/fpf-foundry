@@ -7,7 +7,24 @@
     "lineWidth": 180
   },
   "linter": {
-    "enabled": false
+    "enabled": true,
+    "includes": [
+      "develop/**/*.ts"
+    ],
+    "rules": {
+      "recommended": false,
+      "style": {
+        "noParameterAssign": "error",
+        "useConst": "error"
+      },
+      "suspicious": {
+        "noAssignInExpressions": "error",
+        "noCatchAssign": "error",
+        "noClassAssign": "error",
+        "noFunctionAssign": "error",
+        "noVar": "error"
+      }
+    }
   },
   "assist": {
     "enabled": false
