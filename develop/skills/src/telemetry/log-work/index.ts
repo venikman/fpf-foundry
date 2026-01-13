@@ -24,6 +24,9 @@ if (!values.spec || !values.role || !values.context || !values.action) {
   process.exit(1);
 }
 
+/**
+ * Validates an input value against a pattern or exits with a message.
+ */
 function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
   const trimmed = (value ?? "").trim();
   if (trimmed.length === 0 || !pattern.test(trimmed)) {

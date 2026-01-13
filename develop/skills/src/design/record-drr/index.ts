@@ -89,6 +89,9 @@ console.log(`Success: Recorded ${filePath}`);
 const logWorkSkillId = "telemetry/log-work";
 const skillsCodeRoot = join(repoRoot, "develop", "skills", "src");
 
+/**
+ * Resolves a skill id to a runnable script path when present.
+ */
 function resolveSkillPath(skillId: string): string | null {
   const parts = skillId.split("/");
   const tsPath = join(skillsCodeRoot, ...parts, "index.ts");

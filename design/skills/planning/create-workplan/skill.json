@@ -1,0 +1,147 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary planning templates; author original content."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in the WorkPlan unless explicitly required."
+    ],
+    "safety": [
+      "Do not overwrite existing WorkPlan files.",
+      "Reject context/id values containing path separators or dot-segments."
+    ]
+  },
+  "dependencies": {
+    "skills": [],
+    "tools": [
+      "list_dir",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a WorkPlan markdown file under runtime/contexts/<context>/planning/workplans/.",
+      "The WorkPlan includes title, intent, and deliverables sections.",
+      "If telemetry/log-work is available, a U.Work record is attempted."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "workplan_path": "runtime/contexts/Tooling/planning/workplans/q1-plan.md"
+        },
+        "input_fixture": {
+          "context": "Tooling",
+          "deliverables": "Inventory refresh; CI check",
+          "id": "q1-plan",
+          "intent": "Define Q1 delivery scope.",
+          "title": "Q1 Planning"
+        },
+        "name": "basic-workplan"
+      },
+      {
+        "expected": {
+          "workplan_path": "runtime/contexts/Skills/planning/workplans/bridge-done.md"
+        },
+        "input_fixture": {
+          "context": "Skills",
+          "deliverables": "Checklist; Review notes",
+          "id": "bridge-done",
+          "intent": "Specify the completion checklist for bridge work.",
+          "title": "Bridge Definition of Done"
+        },
+        "name": "basic-workplan-2"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, id, title, intent).",
+    "Target directory runtime/contexts/<context>/planning/workplans is not accessible.",
+    "WorkPlan already exists at runtime/contexts/<context>/planning/workplans/<id>.md.",
+    "Failed to write WorkPlan file.",
+    "Optional telemetry logging failed (telemetry/log-work unavailable or errored)."
+  ],
+  "id": "planning/create-workplan",
+  "inputs": [
+    {
+      "description": "Bounded context used to resolve runtime/contexts/<context>/planning/workplans (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Kebab-case id for the WorkPlan file.",
+      "name": "id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Short title for the WorkPlan.",
+      "name": "title",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Intent statement describing the plan objective.",
+      "name": "intent",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-separated list of deliverables.",
+      "name": "deliverables",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Create a WorkPlan (Schedule of Intent) and store it in runtime/contexts.",
+    "non_goals": [
+      "Does not execute the plan; only records it.",
+      "Does not infer deliverables beyond provided inputs.",
+      "Does not publish or sync the WorkPlan to external systems."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-02-15",
+    "tags": [
+      "planning"
+    ],
+    "updated": "2026-02-15"
+  },
+  "name": "Create WorkPlan",
+  "outputs": [
+    {
+      "description": "Path to the generated WorkPlan markdown file.",
+      "name": "workplan_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs: context, id, title, intent (ensure context is a safe path segment and id is kebab-case).",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Resolve runtime/contexts/<context>/planning/workplans and create it if missing.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the WorkPlan markdown content with title, intent, and deliverables.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the WorkPlan markdown file to runtime/contexts/<context>/planning/workplans/<id>.md.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the WorkPlan action with spec A.15.2.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Creates a WorkPlan (Schedule of Intent) and stores it under runtime/contexts.",
+  "version": "0.1.0"
+}

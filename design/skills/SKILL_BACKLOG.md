@@ -19,7 +19,6 @@ Columns
 | `metric/evaluate-cslc` | Metric | A.18 | - | planned | none | - | Evaluates a Characteristic (CSLC). |
 | `reasoning/abductive-loop` | Reasoning | B.5.2 | - | planned | none | - | Runs the Explore-Shape-Evidence-Operate loop. |
 | `audit/audit-lexicon` | Audit | E.5.1 | audit/audit-lexicon | planned | none | - | Enforces Lexical Firewall rules. |
-| `planning/create-workplan` | Planning | A.15.2 | - | planned | none | - | Creates a WorkPlan (Schedule of Intent). |
 | `governance/assign-role` | Governance | A.2.1 | - | planned | none | - | Formally assigns a Role to a Holder. |
 | `design/define-method` | Design | A.3.2 | - | planned | none | - | Defines a procedural Method (Recipe). |
 | `audit/verify-evidence` | Audit | A.10 | audit/verify-evidence | planned | none | - | Verifies audit trails and evidence links. |
