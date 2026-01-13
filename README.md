@@ -38,15 +38,17 @@ Constraints (enforced):
 
 --id must be kebab-case (lowercase, digits, -)
 
-2) Record a DRR (E.9)
+### 2) Record a DRR (E.9)
 
 Creates a numbered decision record (ADR-like) and logs the action as U.Work.
 
+```sh
 bun develop/skills/src/design/record-drr/index.ts \
   --title "Adopt SkillSpec JSON as the canonical format" \
   --context "We need a strict, toolable, cross-checkable skill definition format." \
   --decision "Use skill.json as the only SkillSpec source of truth; validate + inventory from it." \
   --work-context Tooling
+```
 
 
 Outputs:
@@ -59,15 +61,17 @@ Notes:
 
 --work-context defaults to Skills if omitted.
 
-3) Log Work (A.15.1)
+### 3) Log Work (A.15.1)
 
 Writes a standalone work record (used by other skills for audit trace).
 
+```sh
 bun develop/skills/src/telemetry/log-work/index.ts \
   --spec "A.15.1" \
   --role "Archivist" \
   --context Tooling \
   --action "Ran a manual work log example."
+```
 
 
 Output:
@@ -136,19 +140,22 @@ Use $telemetry/log-work:
 Return the created file path.
 ```
 
-Setup
+## Setup
 
-Prereq: Bun (https://bun.sh
-)
+Prereq: [Bun](https://bun.sh)
 
+```sh
 bun install
+```
 
 
 Optional: enable the pre-commit hook for local safety checks:
 
+```sh
 git config core.hooksPath .githooks
+```
 
-Skill inventory & SkillSpec
+## Skill inventory & SkillSpec
 
 Skills have three “layers”:
 
@@ -160,12 +167,16 @@ Implementation (runnable, optional): develop/skills/src/<skill-id>/index.ts
 
 Validate all SkillSpec:
 
+```sh
 bun develop/tools/skill/validate.ts --all
+```
 
 
 Regenerate inventory:
 
+```sh
 bun develop/tools/skill/inventory.ts
+```
 
 
 Inventory files:
@@ -174,25 +185,31 @@ design/skills/SKILL_INVENTORY.md (generated; do not hand-edit)
 
 design/skills/SKILL_BACKLOG.md (planned skills)
 
-Safety & consistency gates
+## Safety & consistency gates
 
 This repo is intentionally hostile to subtle corruption and drift:
 
 No JavaScript source (TypeScript only):
 
+```sh
 bun develop/scripts/no_js_files_check.ts --all
+```
 
 
 Unicode safety scan (hidden/bidi/control characters; Trojan Source class):
 
+```sh
 bun develop/scripts/unicode_safety_check.ts --all
+```
 
 
 Repo checks (format, lint, safety scan, SkillSpec validation, inventory cross-checks):
 
+```sh
 bun run check
+```
 
-Repo layout (mental model)
+## Repo layout (mental model)
 
 design/ — specs, decisions, examples, skill definitions (source-of-truth docs/specs)
 
@@ -202,7 +219,7 @@ runtime/ — generated outputs (contexts, emitted artifacts, indexes). Expect ch
 
 .codex/ — Codex CLI SKILL.md packages (separate from SkillSpec; reserved by tooling)
 
-Status
+## Status
 
 Everything is experimental. The point is fast iteration with strict invariants:
 
