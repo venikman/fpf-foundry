@@ -60,6 +60,9 @@ function parseDeliverables(raw?: string): string[] {
     .filter((entry) => entry.length > 0);
 }
 
+/**
+ * Finds the repository root by walking up to package.json.
+ */
 function findRepoRoot(startDir: string): string {
   let current = startDir;
   while (true) {
@@ -75,6 +78,9 @@ function findRepoRoot(startDir: string): string {
   }
 }
 
+/**
+ * Escapes a string for safe YAML double-quoted scalars.
+ */
 function yamlEscape(value: string): string {
   const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\r?\n/g, "\\n");
   return `"${escaped}"`;

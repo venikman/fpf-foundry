@@ -17,14 +17,19 @@ const steps: Step[] = [
 ];
 
 for (const step of steps) {
+  const cmd = [step.command, ...step.args].join(" ");
   const result = spawnSync(step.command, step.args, { stdio: "inherit" });
   if (result.error) {
     const message = result.error instanceof Error ? result.error.message : String(result.error);
-    console.error(`Check step '${step.name}' failed: ${message}`);
+    console.error(`Check step '${step.name}' failed: ${message}\nCommand: ${cmd}`);
+    process.exit(1);
+  }
+  if (result.signal) {
+    console.error(`Check step '${step.name}' terminated by signal ${result.signal}.\nCommand: ${cmd}`);
     process.exit(1);
   }
   if (result.status !== 0) {
-    console.error(`Check step '${step.name}' failed with exit code ${result.status}.`);
+    console.error(`Check step '${step.name}' failed with exit code ${result.status}.\nCommand: ${cmd}`);
     process.exit(result.status ?? 1);
   }
 }
