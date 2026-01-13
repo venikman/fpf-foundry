@@ -1,13 +1,11 @@
 #!/usr/bin/env bun
-"use strict";
-
-const childProcess = require("child_process");
+import { execFileSync } from "child_process";
+import { readFileSync } from "fs";
+import { gitMaxBufferBytes, listStagedFiles, listTrackedFiles } from "./lib/git-utils";
 
 const args = process.argv.slice(2);
 const scanStaged = args.includes("--staged");
 const scanAll = args.includes("--all") || !scanStaged;
-
-const gitMaxBufferBytes = 64 * 1024 * 1024;
 
 const forbiddenCodepoints = new Set([
   0x034f, // COMBINING GRAPHEME JOINER (invisible)
@@ -34,25 +32,9 @@ if (issues.length > 0) {
 
 console.log(`Unicode safety check passed (${fileList.length} file(s) scanned).`);
 
-function listTrackedFiles() {
-  return gitZ("ls-files").filter((entry) => entry.length > 0);
-}
-
-function listStagedFiles() {
-  return gitZ("diff", "--cached", "--name-only", "--diff-filter=ACMR").filter((entry) => entry.length > 0);
-}
-
-function gitZ(...gitArgs) {
-  const buffer = childProcess.execFileSync("git", [...gitArgs, "-z"], { encoding: null, maxBuffer: gitMaxBufferBytes });
-  return buffer
-    .toString("utf8")
-    .split("\0")
-    .filter((entry) => entry.length > 0);
-}
-
 function readIndexFile(repoRelativePath) {
   try {
-    const buffer = childProcess.execFileSync("git", ["show", `:${repoRelativePath}`], { encoding: null, maxBuffer: gitMaxBufferBytes });
+    const buffer = execFileSync("git", ["show", `:${repoRelativePath}`], { encoding: null, maxBuffer: gitMaxBufferBytes });
     return decodeUtf8OrNull(repoRelativePath, buffer);
   } catch (error) {
     issues.push(`${repoRelativePath}: failed to read staged content (${formatError(error)})`);
@@ -61,9 +43,8 @@ function readIndexFile(repoRelativePath) {
 }
 
 function readWorkingTreeFile(repoRelativePath) {
-  const fs = require("fs");
   try {
-    const buffer = fs.readFileSync(repoRelativePath);
+    const buffer = readFileSync(repoRelativePath);
     return decodeUtf8OrNull(repoRelativePath, buffer);
   } catch (error) {
     issues.push(`${repoRelativePath}: failed to read file (${formatError(error)})`);

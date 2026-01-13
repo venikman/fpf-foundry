@@ -48,7 +48,7 @@ bun develop/tools/skill/inventory.ts
 Unicode safety (Trojan Source class) scan:
 
 ```sh
-bun develop/scripts/unicode_safety_check.js --all
+bun develop/scripts/unicode_safety_check.ts --all
 ```
 
 Enable the pre-commit hook:

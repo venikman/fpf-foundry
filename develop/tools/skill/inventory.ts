@@ -35,9 +35,7 @@ if (skillFiles.length === 0) {
   process.exit(1);
 }
 
-const nonJsonSpecs = skillFiles
-  .map((filePath) => toRepoRelative(filePath, rootDir))
-  .filter((relativePath) => !relativePath.endsWith("skill.json"));
+const nonJsonSpecs = skillFiles.map((filePath) => toRepoRelative(filePath, rootDir)).filter((relativePath) => !relativePath.endsWith("skill.json"));
 if (nonJsonSpecs.length > 0) {
   console.error("SkillSpec must be JSON (skill.json). Found non-JSON SkillSpec files:");
   for (const relativePath of nonJsonSpecs) {
@@ -204,7 +202,7 @@ function renderInventory(entries: InventoryEntry[]): string {
   lines.push("");
   lines.push("Columns");
   lines.push("- Skill ID: canonical ID, also used as path segment under `develop/skills/src/`.");
-  lines.push("- Family: required taxonomy. It MUST mean \"capability area\" (not a duplicate of namespace).");
+  lines.push('- Family: required taxonomy. It MUST mean "capability area" (not a duplicate of namespace).');
   lines.push("- PatternRefs: `;`-separated list of spec pattern identifiers (example: `E.9; A.10`). Use `-` if none.");
   lines.push("- PolicyRealization: constraint realization strategy (`passive` or `audit/<skill-id>`). Use `-` if not applicable.");
   lines.push("- Status: one of `planned | experimental | stable | deprecated`.");
@@ -216,7 +214,7 @@ function renderInventory(entries: InventoryEntry[]): string {
   lines.push("| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |");
   for (const entry of entries) {
     lines.push(
-      `| \`${entry.id}\` | ${entry.family} | ${entry.patternRefs} | ${entry.policyRealization} | ${entry.status} | ${entry.impl} | ${entry.outputs} | ${entry.description} |`
+      `| \`${entry.id}\` | ${entry.family} | ${entry.patternRefs} | ${entry.policyRealization} | ${entry.status} | ${entry.impl} | ${entry.outputs} | ${entry.description} |`,
     );
   }
   lines.push("");

@@ -63,7 +63,7 @@ The bridge strategy is considered implemented when all are true:
 - Every referenced constraint pattern has a `PolicyRealization` entry and it resolves to either passive gating or an existing `audit/*` Skill.
 - Inventory and filesystem are consistent for implemented skills (no "orphan" skills and no "phantom" inventory rows).
 
-Automated validation coverage: `develop/scripts/skill_inventory_checks.js` enforces items 1, 2, and 4 and validates `PolicyRealization` value format when present; constraint-pattern coverage remains manual until constraints are tagged in the inventory.
+Automated validation coverage: `develop/scripts/skill_inventory_checks.ts` enforces items 1, 2, and 4 and validates `PolicyRealization` value format when present; constraint-pattern coverage remains manual until constraints are tagged in the inventory.
 
 ## Rationale
 
