@@ -1,0 +1,10 @@
+{
+  "dependencies": {},
+  "devDependencies": {
+    "oxlint": "^1.39.0"
+  },
+  "scripts": {
+    "check": "bun run lint && bun develop/scripts/unicode_safety_check.js --all && bun develop/tools/skill/validate.ts --all && bun develop/scripts/skill_inventory_checks.js",
+    "lint": "oxlint develop --deny-warnings"
+  }
+}

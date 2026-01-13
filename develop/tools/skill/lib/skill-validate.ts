@@ -346,7 +346,7 @@ function validateString(
   key: string,
   path: string,
   errors: SchemaError[],
-  optional = false
+  _optional = false
 ): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
@@ -407,7 +407,7 @@ function validateDate(
   key: string,
   path: string,
   errors: SchemaError[],
-  optional = false
+  _optional = false
 ): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
@@ -424,7 +424,7 @@ function validateDateTime(
   key: string,
   path: string,
   errors: SchemaError[],
-  optional = false
+  _optional = false
 ): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
@@ -440,7 +440,7 @@ function validateStringArray(
   value: unknown,
   path: string,
   errors: SchemaError[],
-  optional = false
+  _optional = false
 ): void {
   if (value === undefined) return;
   const arrayValue = ensureArray(value, path, errors);
