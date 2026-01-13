@@ -1,8 +1,6 @@
 #!/usr/bin/env bun
-"use strict";
-
-const fs = require("fs");
-const path = require("path");
+import * as fs from "fs";
+import * as path from "path";
 
 const repoRoot = process.cwd();
 const inventoryPath = path.join(repoRoot, "design", "skills", "SKILL_INVENTORY.md");
