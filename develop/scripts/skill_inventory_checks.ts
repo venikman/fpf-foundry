@@ -264,7 +264,7 @@ function collectCodeSkills(codeRootPath) {
 
     walk(codeRootPath, (filePath) => {
         const base = path.basename(filePath);
-        if (base !== "index.ts" && base !== "index.js") {
+        if (base !== "index.ts") {
             return;
         }
 
@@ -306,11 +306,6 @@ function resolveCodePath(codeRootPath, skillId) {
     const tsPath = path.join(codeRootPath, ...parts, "index.ts");
     if (fs.existsSync(tsPath)) {
         return tsPath;
-    }
-
-    const jsPath = path.join(codeRootPath, ...parts, "index.js");
-    if (fs.existsSync(jsPath)) {
-        return jsPath;
     }
 
     return null;
