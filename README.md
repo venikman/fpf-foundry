@@ -74,6 +74,68 @@ Output:
 
 runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md
 
+## Using skills with Claude and Codex
+
+These skills are file-output based, so AI agents work well here: ask them to run a skill and report back with the created file path(s) + `git diff`.
+
+### Claude (prompt examples)
+
+Mint a Name Card (F.18):
+
+```text
+In this repo root, run:
+bun develop/skills/src/design/mint-name/index.ts --context Tooling --id demo-name --label "Demo Name" --mds "A short, context-local definition."
+
+Then show me the created file path(s) and `git diff`.
+```
+
+Record a DRR (E.9):
+
+```text
+In this repo root, run:
+bun develop/skills/src/design/record-drr/index.ts --title "Adopt X" --context "We need Y because Z." --decision "We will do X." --work-context Tooling
+
+Then show me the created file path(s) and `git diff`.
+```
+
+### Codex (prompt examples)
+
+Mint a Name Card via Codex skill (`.codex/skills`):
+
+```text
+Use $design-mint-name to mint a Name Card:
+- context: Tooling
+- id: demo-name
+- label: "Demo Name"
+- mds: "A short, context-local definition."
+
+Return the created file path(s) and `git diff`.
+```
+
+Record a DRR via Codex skill:
+
+```text
+Use $design/record-drr to record a DRR:
+- title: "Adopt X"
+- context: "We need Y because Z."
+- decision: "We will do X."
+- work-context: Tooling
+
+Return the created file path(s) and `git diff`.
+```
+
+Log Work via Codex skill:
+
+```text
+Use $telemetry/log-work:
+- spec: "A.15.1"
+- role: "Archivist"
+- context: Tooling
+- action: "Ran a manual work log example."
+
+Return the created file path.
+```
+
 Setup
 
 Prereq: Bun (https://bun.sh
