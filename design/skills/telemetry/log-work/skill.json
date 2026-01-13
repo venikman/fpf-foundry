@@ -9,7 +9,8 @@
     ],
     "safety": [
       "Use timestamp-based filenames to avoid collisions.",
-      "Do not overwrite existing work log files."
+      "Do not overwrite existing work log files.",
+      "Reject context values containing path separators or dot-segments."
     ]
   },
   "dependencies": {
@@ -75,7 +76,7 @@
       "type": "string"
     },
     {
-      "description": "Bounded context used to resolve the runtime work log directory.",
+      "description": "Bounded context used to resolve the runtime work log directory (must be a safe path segment).",
       "name": "context",
       "required": true,
       "type": "string"
@@ -115,7 +116,7 @@
   ],
   "procedure": [
     {
-      "instruction": "Validate required inputs: spec, role, context, action.",
+      "instruction": "Validate required inputs: spec, role, context, action (ensure context is a safe path segment).",
       "step_id": "step-validate-inputs"
     },
     {

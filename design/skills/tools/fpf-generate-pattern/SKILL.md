@@ -41,6 +41,7 @@ This skill provides a Bun script `generate_pattern.ts` that parses a raw FPF Pat
 #### Usage
 
 ```bash
+cd "$(git rev-parse --show-toplevel)"
 bun run develop/skills/tools/fpf-generate-pattern/scripts/generate_pattern.ts --spec "design/specs/FPF-Spec.md" --pattern "E.8" --output "design/skills/knowledge"
 ```
 

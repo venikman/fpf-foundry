@@ -32,6 +32,9 @@ export function loadJsonFile(filePath: string): unknown {
 
 /**
  * Parses YAML text using a strict subset (no tabs, no inline collections, stable indentation).
+ *
+ * This is intentionally not a general-purpose YAML parser. It exists to keep SkillSpec tooling
+ * deterministic and dependency-free for the limited YAML we accept.
  */
 export function parseYaml(text: string, sourceName: string): unknown {
   const lines = buildLineInfos(text, sourceName);
@@ -149,6 +152,14 @@ function countIndent(line: string, sourceName: string, lineNumber: number): numb
   return indent;
 }
 
+function isEscaped(value: string, index: number): boolean {
+  let backslashCount = 0;
+  for (let i = index - 1; i >= 0 && value[i] === "\\"; i -= 1) {
+    backslashCount += 1;
+  }
+  return backslashCount % 2 === 1;
+}
+
 function stripComments(value: string): string {
   let inSingle = false;
   let inDouble = false;
@@ -163,7 +174,7 @@ function stripComments(value: string): string {
       continue;
     }
     if (char === '"' && !inSingle) {
-      if (value[i - 1] !== "\\") {
+      if (!isEscaped(value, i)) {
         inDouble = !inDouble;
       }
       continue;
@@ -432,7 +443,7 @@ function findUnquotedChar(value: string, target: string): number {
       continue;
     }
     if (char === '"' && !inSingle) {
-      if (value[i - 1] !== "\\") {
+      if (!isEscaped(value, i)) {
         inDouble = !inDouble;
       }
       continue;

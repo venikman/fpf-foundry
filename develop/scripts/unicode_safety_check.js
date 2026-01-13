@@ -117,7 +117,7 @@ function isForbiddenChar(ch) {
 
   const category = unicodeCategory(ch);
   if (category === "Cf") return true;
-  if (category === "Cc" && codepoint < 32) return true;
+  if (category === "Cc" && (codepoint < 32 || codepoint === 0x7f || (codepoint >= 0x80 && codepoint <= 0x9f))) return true;
   return false;
 }
 

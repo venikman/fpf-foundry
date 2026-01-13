@@ -1,8 +1,10 @@
 #!/usr/bin/env bun
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 
-const repoRoot = process.cwd();
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(scriptDir, "../../..");
 const prompt = await new Response(Bun.stdin).text();
 
 const mode = parseMode(prompt);

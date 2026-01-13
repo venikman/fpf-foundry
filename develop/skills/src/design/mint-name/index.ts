@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 import { parseArgs } from "util";
 import { existsSync, mkdirSync } from "fs";
-import { join } from "path";
+import { dirname, join, resolve } from "path";
+import { fileURLToPath } from "url";
 
 // F.18 Name Card Generator
 // Usage: bun mint-name.ts --context <ctx> --id <kebab-id> --label <Title Case> --mds <definition>
@@ -23,10 +24,25 @@ if (!values.context || !values.id || !values.label || !values.mds) {
     process.exit(1);
 }
 
+function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
+    const trimmed = (value ?? "").trim();
+    if (trimmed.length === 0 || !pattern.test(trimmed)) {
+        console.error(`Invalid ${name} '${value ?? ""}'. Expected ${description}.`);
+        process.exit(1);
+    }
+    return trimmed;
+}
+
+const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
+const id = requireMatch(values.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/, "id", "kebab-case (lowercase letters, digits, '-')");
+const label = values.label.trim();
+const mds = values.mds.trim();
+
 // 1. Resolve Target Directory: runtime/contexts/[Context]/design/names/
 // We assume we are running from repo root or standardized layout
-const repoRoot = process.cwd();
-const targetDir = join(repoRoot, "runtime", "contexts", values.context, "design", "names");
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(scriptDir, "../../../../../");
+const targetDir = join(repoRoot, "runtime", "contexts", context, "design", "names");
 
 // 2. Ensure Constraints
 if (!existsSync(targetDir)) {
@@ -34,7 +50,7 @@ if (!existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true });
 }
 
-const filename = `${values.id}.md`;
+const filename = `${id}.md`;
 const filePath = join(targetDir, filename);
 
 if (existsSync(filePath)) {
@@ -45,27 +61,27 @@ if (existsSync(filePath)) {
 // 3. Generate Content (Pattern F.18)
 const content = `---
 type: F.18 Name Card
-id: ${values.id}
-label: ${values.label}
-context: ${values.context}
+id: ${id}
+label: ${label}
+context: ${context}
 status: experimental
 ---
 
-# F.18 Name Card: ${values.label}
+# F.18 Name Card: ${label}
 
 ## 1. Twin-Labels
-- **Technical ID**: \`${values.id}\`
-- **Plain-English**: "${values.label}"
+- **Technical ID**: \`${id}\`
+- **Plain-English**: "${label}"
 
 ## 2. Minimal Definitional Statement (MDS)
-> ${values.mds}
+> ${mds}
 
 ## 3. Context of Meaning
-Defined within the **${values.context}** Bounded Context.
+Defined within the **${context}** Bounded Context.
 
 ## 4. Sense-Seed Validation (Self-Check)
-- [x] **S1 Add**: "Add a new ${values.label}..."
-- [x] **S2 Retrieve**: "Get a ${values.label} from..."
+- [x] **S1 Add**: "Add a new ${label}..."
+- [x] **S2 Retrieve**: "Get a ${label} from..."
 - [x] **WP Zero**: No prototypes violated.
 
 ## 5. Rationale
@@ -73,7 +89,7 @@ Minted via \`design/mint-name\`.
 `;
 
 // 4. Trace & Write
-console.log(`Minting Name Card: ${values.label} (${values.id})...`);
+console.log(`Minting Name Card: ${label} (${id})...`);
 await Bun.write(filePath, content);
 console.log(`Success: Created ${filePath}`);
 
@@ -87,8 +103,8 @@ if (existsSync(logScript)) {
         "bun", logScript,
         "--spec", "F.18",
         "--role", "Archivist",
-        "--context", values.context,
-        "--action", `Minted Name Card '${values.label}' (${values.id})`
+        "--context", context,
+        "--action", `Minted Name Card '${label}' (${id})`
     ]);
 
     await proc.exited;

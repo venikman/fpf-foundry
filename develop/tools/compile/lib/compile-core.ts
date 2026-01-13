@@ -52,9 +52,74 @@ export function compileOnce(inputs: CompileInputs): CompileResult {
   return { skillSpecJson, compileReportJson, rawOutput };
 }
 
+function parseCommandLine(commandLine: string): { command: string; args: string[] } {
+  const trimmed = commandLine.trim();
+  if (trimmed.length === 0) {
+    throw new Error("Model command is empty.");
+  }
+
+  const tokens: string[] = [];
+  let current = "";
+  let tokenStarted = false;
+  let inSingle = false;
+  let inDouble = false;
+  let escaping = false;
+
+  const pushToken = () => {
+    if (!tokenStarted) return;
+    tokens.push(current);
+    current = "";
+    tokenStarted = false;
+  };
+
+  for (let i = 0; i < trimmed.length; i += 1) {
+    const ch = trimmed[i];
+    if (escaping) {
+      tokenStarted = true;
+      current += ch;
+      escaping = false;
+      continue;
+    }
+    if (!inSingle && ch === "\\") {
+      tokenStarted = true;
+      escaping = true;
+      continue;
+    }
+    if (ch === "'" && !inDouble) {
+      tokenStarted = true;
+      inSingle = !inSingle;
+      continue;
+    }
+    if (ch === '"' && !inSingle) {
+      tokenStarted = true;
+      inDouble = !inDouble;
+      continue;
+    }
+    if (!inSingle && !inDouble && /\s/.test(ch)) {
+      pushToken();
+      continue;
+    }
+    tokenStarted = true;
+    current += ch;
+  }
+
+  if (escaping) {
+    throw new Error("Model command has a trailing escape character.");
+  }
+  if (inSingle || inDouble) {
+    throw new Error("Model command has an unterminated quote.");
+  }
+  pushToken();
+
+  if (tokens.length === 0) {
+    throw new Error("Model command is empty.");
+  }
+  return { command: tokens[0], args: tokens.slice(1) };
+}
+
 function runModel(modelCmd: string, prompt: string): string {
-  const result = spawnSync(modelCmd, {
-    shell: true,
+  const { command, args } = parseCommandLine(modelCmd);
+  const result = spawnSync(command, args, {
     input: prompt,
     encoding: "utf8",
     maxBuffer: 10 * 1024 * 1024,

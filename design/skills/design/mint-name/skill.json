@@ -7,7 +7,8 @@
       "Do not include secrets or personal data in the Name Card unless explicitly provided and safe."
     ],
     "safety": [
-      "Do not overwrite an existing Name Card file."
+      "Do not overwrite an existing Name Card file.",
+      "Reject context/id values containing path separators or dot-segments."
     ]
   },
   "dependencies": {
@@ -60,7 +61,7 @@
   "id": "design/mint-name",
   "inputs": [
     {
-      "description": "Bounded context name used to locate runtime/contexts/<context>/design/names.",
+      "description": "Bounded context name used to locate runtime/contexts/<context>/design/names (must be a safe path segment).",
       "name": "context",
       "required": true,
       "type": "string"
@@ -112,7 +113,7 @@
   ],
   "procedure": [
     {
-      "instruction": "Validate required inputs: context, id, label, mds.",
+      "instruction": "Validate required inputs: context, id, label, mds (ensure context is a safe path segment and id is kebab-case).",
       "step_id": "step-validate-inputs"
     },
     {

@@ -49,12 +49,18 @@ for (const filePath of files) {
 
 for (const [id, entries] of entriesById.entries()) {
   if (entries.length <= 1) continue;
-  const locations = entries.map((entry) => entry.path).join(", ");
   for (const entry of entries) {
+    const otherLocations = entries
+      .filter((other) => other.path !== entry.path)
+      .map((other) => other.path)
+      .join(", ");
     errors.push({
       file: entry.path,
       path: "$.id",
-      message: `duplicate id '${id}' also defined in ${locations}`,
+      message:
+        otherLocations.length > 0
+          ? `duplicate id '${id}' also defined in ${otherLocations}`
+          : `duplicate id '${id}'`,
     });
   }
 }
@@ -109,4 +115,7 @@ function collectTargets(argsList: string[], root: string): string[] {
 
 function printUsage(): void {
   console.log("Usage: bun develop/tools/skill/index.ts [--all] [path ...]");
+  console.log("Defaults to searching skill.json under the repo root.");
+  console.log("Excluded directories: .git/, node_modules/, .codex/, runtime/.");
+  console.log("Note: .codex/ is reserved for Codex CLI SKILL.md packages (not SkillSpec).");
 }

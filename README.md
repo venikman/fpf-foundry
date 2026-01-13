@@ -27,6 +27,10 @@ bun develop/tools/skill/validate.ts path/to/skill.json
 
 The schema and normative spec live in `design/specs/skill/`.
 
+## Prerequisites
+
+* **Bun** is required for the tooling and pre-commit hook: https://bun.sh
+
 ## Quick Start
 
 * **Mint a Name**: `bun develop/skills/src/design/mint-name/index.ts`

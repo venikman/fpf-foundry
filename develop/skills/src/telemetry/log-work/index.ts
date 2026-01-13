@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 import { parseArgs } from "util";
 import { existsSync, mkdirSync } from "fs";
-import { join } from "path";
+import { dirname, join, resolve } from "path";
+import { fileURLToPath } from "url";
 
 // A.15.1 U.Work Generator
 // Usage: bun log-work.ts --spec <MethodId> --role <RoleAssigning> --context <Ctx> --action <Description>
@@ -23,9 +24,21 @@ if (!values.spec || !values.role || !values.context || !values.action) {
     process.exit(1);
 }
 
+function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
+    const trimmed = (value ?? "").trim();
+    if (trimmed.length === 0 || !pattern.test(trimmed)) {
+        console.error(`Invalid ${name} '${value ?? ""}'. Expected ${description}.`);
+        process.exit(1);
+    }
+    return trimmed;
+}
+
+const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
+
 // 1. Target: runtime/contexts/[Ctx]/telemetry/work/
-const repoRoot = process.cwd();
-const targetDir = join(repoRoot, "runtime", "contexts", values.context, "telemetry", "work");
+const scriptDir = dirname(fileURLToPath(import.meta.url));
+const repoRoot = resolve(scriptDir, "../../../../../");
+const targetDir = join(repoRoot, "runtime", "contexts", context, "telemetry", "work");
 
 if (!existsSync(targetDir)) {
     mkdirSync(targetDir, { recursive: true });
@@ -36,12 +49,17 @@ const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
 const filename = `work-${timestamp}.md`;
 const filePath = join(targetDir, filename);
 
+if (existsSync(filePath)) {
+    console.error(`Error: Work record already exists at ${filePath}`);
+    process.exit(1);
+}
+
 // 3. Content: A.15.1 U.Work Record
 const content = `---
 type: U.Work
 spec: ${values.spec}
 performer: ${values.role}
-context: ${values.context}
+context: ${context}
 timestamp_start: ${new Date().toISOString()}
 ---
 
@@ -50,7 +68,7 @@ timestamp_start: ${new Date().toISOString()}
 ## 1. Anchors
 - **Spec**: \`${values.spec}\`
 - **Performer**: \`${values.role}\`
-- **Context**: \`${values.context}\`
+- **Context**: \`${context}\`
 
 ## 2. Occurrence
 ${values.action}

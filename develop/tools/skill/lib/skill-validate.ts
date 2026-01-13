@@ -53,6 +53,9 @@ const rootAllowed = [
 
 /**
  * Validates a SkillSpec document against the project's schema rules.
+ *
+ * This intentionally enforces an explicit, narrow ruleset aligned to the repository's SkillSpec
+ * schema without pulling in a full JSON Schema runtime.
  */
 export function validateSchema(data: unknown): SchemaError[] {
   const errors: SchemaError[] = [];
@@ -104,12 +107,18 @@ export function runCrossChecks(skills: SkillDoc[]): CrossCheckError[] {
 
   for (const [id, entries] of idMap.entries()) {
     if (entries.length > 1) {
-      const locations = entries.map((entry) => entry.path).join(", ");
       for (const entry of entries) {
+        const otherLocations = entries
+          .filter((other) => other.path !== entry.path)
+          .map((other) => other.path)
+          .join(", ");
         errors.push({
           file: entry.path,
           path: "$.id",
-          message: `duplicate id '${id}' also defined in ${locations}`,
+          message:
+            otherLocations.length > 0
+              ? `duplicate id '${id}' also defined in ${otherLocations}`
+              : `duplicate id '${id}'`,
         });
       }
     }
@@ -504,15 +513,39 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
 function isIsoDate(value: string): boolean {
   const match = datePattern.exec(value);
   if (!match) return false;
+  const year = Number(match[1]);
   const month = Number(match[2]);
   const day = Number(match[3]);
   if (month < 1 || month > 12) return false;
-  if (day < 1 || day > 31) return false;
-  return true;
+  if (day < 1) return false;
+  const maxDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return day <= maxDay;
 }
 
 function isIsoDateTime(value: string): boolean {
-  if (!dateTimePattern.test(value)) return false;
+  const match = dateTimePattern.exec(value);
+  if (!match) return false;
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = Number(match[6]);
+  if (month < 1 || month > 12) return false;
+  const maxDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  if (day < 1 || day > maxDay) return false;
+  if (hour < 0 || hour > 23) return false;
+  if (minute < 0 || minute > 59) return false;
+  if (second < 0 || second > 59) return false;
+  const offset = match[8];
+  if (offset !== "Z") {
+    const offsetMatch = /^([+-])(\d{2}):(\d{2})$/.exec(offset);
+    if (!offsetMatch) return false;
+    const offsetHours = Number(offsetMatch[2]);
+    const offsetMinutes = Number(offsetMatch[3]);
+    if (offsetHours < 0 || offsetHours > 23) return false;
+    if (offsetMinutes < 0 || offsetMinutes > 59) return false;
+  }
   return !Number.isNaN(Date.parse(value));
 }
 

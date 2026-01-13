@@ -108,4 +108,7 @@ function collectTargets(argsList: string[], root: string): string[] {
 
 function printUsage(): void {
   console.log("Usage: bun develop/tools/skill/validate.ts [--all] [path ...]");
+  console.log("Defaults to searching skill.json under the repo root.");
+  console.log("Excluded directories: .git/, node_modules/, .codex/, runtime/.");
+  console.log("Note: .codex/ is reserved for Codex CLI SKILL.md packages (not SkillSpec).");
 }
