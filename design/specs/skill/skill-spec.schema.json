@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://fpf-foundry/specs/skill/skill-spec.schema.json",
+  "$id": "urn:fpf-foundry:specs:skill:skill-spec.schema:0.1.0",
   "title": "SkillSpec v0.1.0",
   "type": "object",
   "additionalProperties": false,

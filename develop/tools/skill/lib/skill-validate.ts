@@ -1,14 +1,23 @@
+/**
+ * Schema validation error describing a JSON path and message.
+ */
 export type SchemaError = {
   path: string;
   message: string;
 };
 
+/**
+ * Cross-file validation error (e.g., duplicate IDs, dependency references).
+ */
 export type CrossCheckError = {
   file: string;
   path: string;
   message: string;
 };
 
+/**
+ * Loaded SkillSpec document paired with its repo-relative path.
+ */
 export type SkillDoc = {
   path: string;
   data: Record<string, unknown>;
@@ -42,6 +51,9 @@ const rootAllowed = [
   "provenance",
 ];
 
+/**
+ * Validates a SkillSpec document against the project's schema rules.
+ */
 export function validateSchema(data: unknown): SchemaError[] {
   const errors: SchemaError[] = [];
   if (!isPlainObject(data)) {
@@ -74,6 +86,9 @@ export function validateSchema(data: unknown): SchemaError[] {
   return errors;
 }
 
+/**
+ * Runs cross-file checks that require a multi-skill view (duplicates, references, ordering constraints).
+ */
 export function runCrossChecks(skills: SkillDoc[]): CrossCheckError[] {
   const errors: CrossCheckError[] = [];
   const idMap = new Map<string, SkillDoc[]>();

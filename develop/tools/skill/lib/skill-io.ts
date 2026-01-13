@@ -9,11 +9,17 @@ type LineInfo = {
   content: string;
 };
 
+/**
+ * Loads and parses a YAML file using the project-restricted YAML subset parser.
+ */
 export function loadYamlFile(filePath: string): unknown {
   const text = readFileSync(filePath, "utf8");
   return parseYaml(text, filePath);
 }
 
+/**
+ * Parses YAML text using a strict subset (no tabs, no inline collections, stable indentation).
+ */
 export function parseYaml(text: string, sourceName: string): unknown {
   const lines = buildLineInfos(text, sourceName);
   const startIndex = nextNonEmptyIndex(lines, 0);
@@ -35,6 +41,9 @@ export function parseYaml(text: string, sourceName: string): unknown {
   return value;
 }
 
+/**
+ * Recursively sorts object keys to produce deterministic JSON output.
+ */
 export function sortKeys(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sortKeys);
@@ -52,21 +61,33 @@ export function sortKeys(value: unknown): unknown {
   return value;
 }
 
+/**
+ * JSON stringifier with stable indentation and trailing newline.
+ */
 export function stableStringify(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
+/**
+ * Recursively finds `skill.yaml` files beneath the given directory.
+ */
 export function findSkillFiles(rootDir: string): string[] {
   const results: string[] = [];
   walk(rootDir, results);
   return results.sort();
 }
 
+/**
+ * Converts a filesystem path to a repo-relative, POSIX-style path.
+ */
 export function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
   const rel = relative(rootDir, filePath);
   return rel.length === 0 ? "." : rel.split("\\").join("/");
 }
 
+/**
+ * Converts a path string to POSIX separators.
+ */
 export function toPosixPath(pathValue: string): string {
   return pathValue.split("\\").join("/");
 }

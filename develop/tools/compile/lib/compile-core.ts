@@ -1,7 +1,13 @@
 import { spawnSync } from "child_process";
 
+/**
+ * Compile mode affecting prompt and output parsing rules.
+ */
 export type Mode = "strict" | "trace" | "fast";
 
+/**
+ * Inputs for a single SkillSpec compile invocation.
+ */
 export type CompileInputs = {
   mode: Mode;
   promptTemplate: string;
@@ -11,6 +17,9 @@ export type CompileInputs = {
   modelCmd: string;
 };
 
+/**
+ * Parsed results from a single SkillSpec compile invocation.
+ */
 export type CompileResult = {
   skillYaml: string;
   compileReportJson?: string;
@@ -22,6 +31,9 @@ type FencedBlock = {
   content: string;
 };
 
+/**
+ * Expands a prompt template by injecting schema, source text, context, and mode fields.
+ */
 export function buildPrompt(template: string, inputs: CompileInputs): string {
   return template
     .replaceAll("{{TARGET_SCHEMA}}", inputs.targetSchema)
@@ -30,6 +42,9 @@ export function buildPrompt(template: string, inputs: CompileInputs): string {
     .replaceAll("{{MODE}}", inputs.mode);
 }
 
+/**
+ * Runs the model command once and parses the fenced-block output into YAML (+ optional report JSON).
+ */
 export function compileOnce(inputs: CompileInputs): CompileResult {
   const prompt = buildPrompt(inputs.promptTemplate, inputs);
   const rawOutput = runModel(inputs.modelCmd, prompt);

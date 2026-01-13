@@ -15,10 +15,11 @@ This workspace is the **FPF Foundry**. It serves as the "Holonic Prime" for:
 * `design/` - Design-time sources (specs, docs, decisions, prompts, examples, skill definitions).
 * `develop/` - Development-time tools, scripts, and skill implementations.
 * `runtime/` - Generated outputs (contexts, compile output, skill index).
+* `.codex/` - Codex CLI skill definitions (`SKILL.md`) used by the agent runtime.
 
 ## SkillSpec (soft launch)
 
-New or modified skills should include a `skill.yaml` and pass validation:
+SkillSpec is authored under `design/skills/**/skill.yaml` (and `design/examples/skills/**/skill.yaml` for fixtures) and must pass validation:
 
 ```sh
 bun develop/tools/skill/validate.ts path/to/skill.yaml

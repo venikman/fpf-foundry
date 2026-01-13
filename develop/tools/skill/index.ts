@@ -17,7 +17,7 @@ if (files.length === 0) {
   process.exit(1);
 }
 const errors: Array<{ file: string; path: string; message: string }> = [];
-const index: Record<string, { path: string; version: string }> = {};
+const entriesById = new Map<string, Array<{ path: string; version: string }>>();
 
 for (const filePath of files) {
   const relativePath = toRepoRelative(filePath, rootDir);
@@ -38,19 +38,21 @@ for (const filePath of files) {
   }
   const skill = data as Record<string, unknown>;
   const skillId = skill.id as string;
-  const existing = index[skillId];
-  if (existing) {
+  const list = entriesById.get(skillId) ?? [];
+  list.push({ path: relativePath, version: skill.version as string });
+  entriesById.set(skillId, list);
+}
+
+for (const [id, entries] of entriesById.entries()) {
+  if (entries.length <= 1) continue;
+  const locations = entries.map((entry) => entry.path).join(", ");
+  for (const entry of entries) {
     errors.push({
-      file: relativePath,
+      file: entry.path,
       path: "$.id",
-      message: `duplicate id '${skillId}' also defined in ${existing.path}`,
+      message: `duplicate id '${id}' also defined in ${locations}`,
     });
-    continue;
   }
-  index[skillId] = {
-    path: relativePath,
-    version: skill.version as string,
-  };
 }
 
 if (errors.length > 0) {
@@ -62,6 +64,12 @@ if (errors.length > 0) {
     console.error(`[SCHEMA] ${error.file}: ${error.path} ${error.message}`);
   }
   process.exit(1);
+}
+
+const index: Record<string, { path: string; version: string }> = {};
+for (const [id, entries] of entriesById.entries()) {
+  const entry = entries[0];
+  index[id] = { path: entry.path, version: entry.version };
 }
 
 const outputDir = resolve(rootDir, "runtime", "skills");
