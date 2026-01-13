@@ -1,0 +1,138 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in the work record.",
+      "If inputs contain sensitive data, redact before writing."
+    ],
+    "safety": [
+      "Use timestamp-based filenames to avoid collisions.",
+      "Do not overwrite existing work log files.",
+      "Reject context values containing path separators or dot-segments."
+    ]
+  },
+  "dependencies": {
+    "skills": [],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a markdown file under runtime/contexts/<context>/telemetry/work/.",
+      "The record includes spec, role, context, and action values.",
+      "The filename is timestamp-based to avoid collisions."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "work_record_path": "runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md",
+          "work_record_path_pattern": "^runtime/contexts/Tooling/telemetry/work/work-\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}-\\\\d{2}-\\\\d{2}-\\\\d{3}Z\\\\.md$"
+        },
+        "input_fixture": {
+          "action": "Validated skill inventory generation.",
+          "context": "Tooling",
+          "role": "Archivist",
+          "spec": "A.15.1"
+        },
+        "name": "basic-log",
+        "notes": "Machine-checkable: match work_record_path_pattern; <timestamp> is ISO-8601 with [:.] normalized to '-'."
+      },
+      {
+        "expected": {
+          "work_record_path": "runtime/contexts/Skills/telemetry/work/work-<timestamp>.md",
+          "work_record_path_pattern": "^runtime/contexts/Skills/telemetry/work/work-\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}-\\\\d{2}-\\\\d{2}-\\\\d{3}Z\\\\.md$"
+        },
+        "input_fixture": {
+          "action": "Minted Name Card 'Example Concept' (example-concept).",
+          "context": "Skills",
+          "role": "Archivist",
+          "spec": "F.18"
+        },
+        "name": "basic-log-2",
+        "notes": "Machine-checkable: match work_record_path_pattern; <timestamp> is ISO-8601 with [:.] normalized to '-'."
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (spec, role, context, action).",
+    "Failed to create or access runtime/contexts/<context>/telemetry/work.",
+    "Failed to write work record file."
+  ],
+  "id": "telemetry/log-work",
+  "inputs": [
+    {
+      "description": "Method or pattern identifier for the work being recorded.",
+      "name": "spec",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Role assignment performing the work.",
+      "name": "role",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Bounded context used to resolve the runtime work log directory (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Description of the work performed.",
+      "name": "action",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Generate a U.Work record for a specific action.",
+    "non_goals": [
+      "Does not perform the work; only records it.",
+      "Does not upload or sync work logs to external systems.",
+      "Does not add details not provided in inputs."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-12",
+    "tags": [
+      "telemetry"
+    ],
+    "updated": "2026-01-12"
+  },
+  "name": "Log Work",
+  "outputs": [
+    {
+      "description": "Path to the generated U.Work markdown file.",
+      "name": "work_record_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs: spec, role, context, action (ensure context is a safe path segment).",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Resolve runtime/contexts/<context>/telemetry/work and create it if missing.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the U.Work markdown content using the provided inputs and timestamps.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the U.Work markdown file using a timestamped filename.",
+      "step_id": "step-write-file"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Generates a U.Work record for an action (Pattern A.15.1).",
+  "version": "0.1.0"
+}

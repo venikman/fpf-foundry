@@ -1,0 +1,43 @@
+Skill ID: source1
+Name: Greeting Formatter
+Summary: Formats a greeting for a named recipient.
+Goal: Generate a greeting in the form "Hello, {recipient}."
+Non-goals: No multilingual greetings; no time-based greetings.
+
+Inputs:
+- recipient (string, required): name of the person to greet.
+
+Outputs:
+- greeting (string): greeting text in the format "Hello, {recipient}."
+
+Procedure:
+1) Read the recipient input.
+2) Format the greeting as "Hello, {recipient}."
+
+Constraints:
+- safety: Avoid offensive or abusive language.
+- privacy: Do not log or store recipient names.
+- licensing: No third-party content or data.
+
+Dependencies:
+- tools: none
+- skills: none
+
+Acceptance criteria:
+- Greeting starts with "Hello,".
+- Greeting includes the recipient name.
+- Greeting ends with a period.
+
+Tests:
+- name: basic-ada
+  input: recipient = "Ada"
+  expected: greeting = "Hello, Ada."
+- name: basic-kai
+  input: recipient = "Kai"
+  expected: greeting = "Hello, Kai."
+
+Version: 0.1.0
+Tags: example, greeting
+Authors: FPF Foundry
+Created: 2026-02-01
+Updated: 2026-02-01

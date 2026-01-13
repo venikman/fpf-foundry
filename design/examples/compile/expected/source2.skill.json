@@ -1,0 +1,92 @@
+{
+  "constraints": {
+    "licensing": [
+      "No third-party data."
+    ],
+    "privacy": [
+      "Do not store input text."
+    ],
+    "safety": [
+      "Do not introduce new content."
+    ]
+  },
+  "dependencies": {
+    "skills": [],
+    "tools": []
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Output is uppercase.",
+      "Output length matches input length.",
+      "Output contains the same characters as input, only uppercased."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "upper_text": "HELLO"
+        },
+        "input_fixture": {
+          "text": "Hello"
+        },
+        "name": "basic-hello"
+      },
+      {
+        "expected": {
+          "upper_text": "HI THERE"
+        },
+        "input_fixture": {
+          "text": "Hi there"
+        },
+        "name": "basic-mixed"
+      }
+    ]
+  },
+  "id": "source2",
+  "inputs": [
+    {
+      "description": "input text to convert.",
+      "name": "text",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Return an uppercase version of the input text.",
+    "non_goals": [
+      "No locale-specific casing rules.",
+      "No extra formatting."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-02-02",
+    "tags": [
+      "example",
+      "text"
+    ],
+    "updated": "2026-02-02"
+  },
+  "name": "Uppercase Transformer",
+  "outputs": [
+    {
+      "description": "uppercase version of the input text.",
+      "name": "upper_text",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Read the input text.",
+      "step_id": "step-read"
+    },
+    {
+      "instruction": "Convert the text to uppercase.",
+      "step_id": "step-convert"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Converts input text to uppercase.",
+  "version": "0.1.0"
+}

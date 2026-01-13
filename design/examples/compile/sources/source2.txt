@@ -1,0 +1,43 @@
+Skill ID: source2
+Name: Uppercase Transformer
+Summary: Converts input text to uppercase.
+Goal: Return an uppercase version of the input text.
+Non-goals: No locale-specific casing rules; no extra formatting.
+
+Inputs:
+- text (string, required): input text to convert.
+
+Outputs:
+- upper_text (string): uppercase version of the input text.
+
+Procedure:
+1) Read the input text.
+2) Convert the text to uppercase.
+
+Constraints:
+- safety: Do not introduce new content.
+- privacy: Do not store input text.
+- licensing: No third-party data.
+
+Dependencies:
+- tools: none
+- skills: none
+
+Acceptance criteria:
+- Output is uppercase.
+- Output length matches input length.
+- Output contains the same characters as input, only uppercased.
+
+Tests:
+- name: basic-hello
+  input: text = "Hello"
+  expected: upper_text = "HELLO"
+- name: basic-mixed
+  input: text = "Hi there"
+  expected: upper_text = "HI THERE"
+
+Version: 0.1.0
+Tags: example, text
+Authors: FPF Foundry
+Created: 2026-02-02
+Updated: 2026-02-02

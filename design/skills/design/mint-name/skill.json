@@ -1,0 +1,139 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original statements."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in the Name Card unless explicitly provided and safe."
+    ],
+    "safety": [
+      "Do not overwrite an existing Name Card file.",
+      "Reject context/id values containing path separators or dot-segments."
+    ]
+  },
+  "dependencies": {
+    "skills": [],
+    "tools": [
+      "list_dir",
+      "view_file",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a Name Card markdown file at runtime/contexts/<context>/design/names/<id>.md.",
+      "The Name Card includes the provided id, label, context, and mds.",
+      "If the target file already exists, the skill exits with an error."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "name_card_path": "runtime/contexts/Tooling/design/names/example-concept.md"
+        },
+        "input_fixture": {
+          "context": "Tooling",
+          "id": "example-concept",
+          "label": "Example Concept",
+          "mds": "A concept used to demonstrate Name Card minting."
+        },
+        "name": "basic-mint"
+      },
+      {
+        "expected": {
+          "name_card_path": "runtime/contexts/Skills/design/names/bounded-context.md"
+        },
+        "input_fixture": {
+          "context": "Skills",
+          "id": "bounded-context",
+          "label": "Bounded Context",
+          "mds": "A boundary within which a specific domain model is defined and consistent."
+        },
+        "name": "basic-mint-2"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing or invalid required inputs (context, id, label, mds).",
+    "Target directory runtime/contexts/<context>/design/names is not accessible.",
+    "Name Card already exists at runtime/contexts/<context>/design/names/<id>.md.",
+    "Failed to write Name Card file."
+  ],
+  "id": "design/mint-name",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context>/design/names (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Kebab-case technical id for the Name Card.",
+      "name": "id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Plain-English label for the Name Card.",
+      "name": "label",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Minimal definitional statement for the concept.",
+      "name": "mds",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Mint a new F.18 Name Card for a concept within a bounded context.",
+    "non_goals": [
+      "Does not edit or rename existing Name Cards.",
+      "Does not infer definitions beyond the provided MDS.",
+      "Does not write outside runtime/contexts/<context>/design/names."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-12",
+    "tags": [
+      "design"
+    ],
+    "updated": "2026-01-12"
+  },
+  "name": "Mint Name",
+  "outputs": [
+    {
+      "description": "Path to the generated Name Card markdown file under runtime/contexts.",
+      "name": "name_card_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs: context, id, label, mds (ensure context is a safe path segment and id is kebab-case).",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Resolve runtime/contexts/<context>/design/names and ensure it exists.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the Name Card markdown content using the provided inputs.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the Name Card file to runtime/contexts/<context>/design/names/<id>.md and fail if it already exists.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the mint action with spec F.18.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Mints a new F.18 Name Card with strict Twin-Label and Sense-Seed validation.",
+  "version": "0.1.0"
+}
