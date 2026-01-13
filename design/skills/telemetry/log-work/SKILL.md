@@ -13,6 +13,8 @@ allowed-tools:
 
 ## A.15.1 - U.Work
 
+> Implementation note (local tooling): When `POSTHOG_API_KEY` and `POSTHOG_DISTINCT_ID` are set, the reference implementation emits a PostHog event named `u_work_logged` with spec/context metadata. Set `POSTHOG_INCLUDE_ACTION=1` to include the action text and role.
+
 ### A.15.1:1 - Problem Frame
 
 After we have agreed **who is assigned** (via **Role assignment**), **what they can do** (via **Capability**), and **how in principle** it should be done (via **Method/MethodDescription**), we still need a precise concept for **what actually happened** in real time and space.

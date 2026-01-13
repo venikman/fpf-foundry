@@ -51,6 +51,9 @@ const content = renderInventory(entries);
 writeFileSync(options.outputPath, content, "utf8");
 console.log(`Wrote ${toRepoRelative(options.outputPath, rootDir)} (${entries.length} skills).`);
 
+/**
+ * Parses CLI arguments and resolves inventory paths.
+ */
 function parseArgs(argv: string[], repoRoot: string): Options {
   const options: Options = {
     skillsRoot: resolve(repoRoot, "design", "skills"),
@@ -74,6 +77,9 @@ function parseArgs(argv: string[], repoRoot: string): Options {
   return options;
 }
 
+/**
+ * Builds an inventory entry from a single skill.json file.
+ */
 function buildEntry(filePath: string, repoRoot: string): InventoryEntry {
   const skillData = loadJsonFile(filePath);
   if (!isPlainObject(skillData)) {
@@ -94,6 +100,7 @@ function buildEntry(filePath: string, repoRoot: string): InventoryEntry {
   const family = resolveFamily(frontmatter, id, skillData);
   const status = resolveStatus(frontmatter, impl);
   const patternRefs = resolvePatternRefs(frontmatter);
+  const outputs = resolveOutputs(frontmatter, skillData);
 
   return {
     id,
@@ -102,11 +109,14 @@ function buildEntry(filePath: string, repoRoot: string): InventoryEntry {
     policyRealization: "-",
     status,
     impl,
-    outputs: "-",
+    outputs,
     description: summary || "UNKNOWN",
   };
 }
 
+/**
+ * Loads YAML frontmatter from a SKILL.md file when present.
+ */
 function loadFrontmatter(filePath: string): Frontmatter | null {
   const text = readFileSync(filePath, "utf8");
   const match = text.match(/^---\s*\n([\s\S]*?)\n---\s*\n/);
@@ -122,6 +132,9 @@ function loadFrontmatter(filePath: string): Frontmatter | null {
   }
 }
 
+/**
+ * Resolves implementation availability for a skill.
+ */
 function resolveImpl(id: string, repoRoot: string, hasSkillMd: boolean): string {
   const codeRoot = resolve(repoRoot, "develop", "skills", "src");
   const parts = id.split("/");
@@ -133,6 +146,9 @@ function resolveImpl(id: string, repoRoot: string, hasSkillMd: boolean): string 
   return hasSkillMd ? "stub" : "none";
 }
 
+/**
+ * Resolves a skill family label based on frontmatter or metadata.
+ */
 function resolveFamily(frontmatter: Frontmatter | null, id: string, skillData: Record<string, unknown>): string {
   const frontFamily = frontmatter && typeof frontmatter.family === "string" ? frontmatter.family : "";
   if (frontFamily.trim().length > 0) {
@@ -149,6 +165,9 @@ function resolveFamily(frontmatter: Frontmatter | null, id: string, skillData: R
   return toTitleCase(segment);
 }
 
+/**
+ * Resolves a skill status based on frontmatter or implementation state.
+ */
 function resolveStatus(frontmatter: Frontmatter | null, impl: string): string {
   const status = frontmatter && typeof frontmatter.status === "string" ? frontmatter.status : "";
   if (status.trim().length > 0) {
@@ -163,6 +182,9 @@ function resolveStatus(frontmatter: Frontmatter | null, impl: string): string {
   return "planned";
 }
 
+/**
+ * Extracts pattern references declared in frontmatter.
+ */
 function resolvePatternRefs(frontmatter: Frontmatter | null): string {
   if (!frontmatter) {
     return "-";
@@ -192,6 +214,51 @@ function resolvePatternRefs(frontmatter: Frontmatter | null): string {
   return Array.from(refs).sort().join("; ");
 }
 
+/**
+ * Resolves outputs from SKILL.md frontmatter or falls back to skill.json outputs.
+ */
+function resolveOutputs(frontmatter: Frontmatter | null, skillData: Record<string, unknown>): string {
+  const entries: string[] = [];
+
+  const frontOutputs = frontmatter?.outputs;
+  if (typeof frontOutputs === "string") {
+    entries.push(frontOutputs);
+  } else if (Array.isArray(frontOutputs)) {
+    for (const entry of frontOutputs) {
+      if (typeof entry === "string") {
+        entries.push(entry);
+      }
+    }
+  }
+
+  if (entries.length === 0) {
+    const skillOutputs = skillData.outputs;
+    if (typeof skillOutputs === "string") {
+      entries.push(skillOutputs);
+    } else if (Array.isArray(skillOutputs)) {
+      for (const entry of skillOutputs) {
+        if (typeof entry === "string") {
+          entries.push(entry);
+        } else if (isPlainObject(entry) && typeof entry.name === "string") {
+          entries.push(entry.name);
+        }
+      }
+    }
+  }
+
+  const unique = Array.from(
+    new Set(entries.map((entry) => entry.trim()).filter((entry) => entry.length > 0)),
+  ).sort((a, b) => a.localeCompare(b));
+  if (unique.length === 0) {
+    return "-";
+  }
+
+  return unique.join("; ");
+}
+
+/**
+ * Renders the inventory markdown table from collected entries.
+ */
 function renderInventory(entries: InventoryEntry[]): string {
   const lines: string[] = [];
   lines.push("# FPF Skill Inventory (Generated)");
@@ -221,6 +288,9 @@ function renderInventory(entries: InventoryEntry[]): string {
   return lines.join("\n");
 }
 
+/**
+ * Converts a slug-like token into Title Case.
+ */
 function toTitleCase(value: string): string {
   return value
     .trim()
@@ -230,6 +300,9 @@ function toTitleCase(value: string): string {
     .join(" ");
 }
 
+/**
+ * Reads the next CLI argument value or exits.
+ */
 function getArgValue(argv: string[], index: number, name: string): string {
   const value = argv[index + 1];
   if (!value || value.startsWith("--")) {
@@ -239,10 +312,16 @@ function getArgValue(argv: string[], index: number, name: string): string {
   return value;
 }
 
+/**
+ * Returns true when a value is a plain object.
+ */
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+/**
+ * Prints CLI usage information.
+ */
 function printUsage(): void {
   console.log("Usage: bun develop/tools/skill/inventory.ts [--root <skills-root>] [--out <file>]");
 }
