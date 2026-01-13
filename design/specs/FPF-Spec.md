@@ -27288,7 +27288,7 @@ This pattern exports **Characteristics** and measurement templates **only**. It 
 * That work yields a **carrier** (doc/model/design/code), i.e., an **`U.Episteme`**.
 * We apply a **`U.CreativeEvaluation`** to that episteme (and linked work) to produce a **`U.CreativityProfile`** with evidence.
 
-**Cre­ativitySpace (first‑class CHR):**
+**CreativitySpace (first‑class CHR):**
 `U.CreativitySpace(Context) := 〈Novelty@context, ValueGain, Surprise, ConstraintFit, Diversity_P, AttributionIntegrity, EffortCost?〉`
 with **scale**/**unit** metadata from **MM‑CHR** (C.16), and Context‑specific **measurement methods** bound by **MethodDescription**.
 

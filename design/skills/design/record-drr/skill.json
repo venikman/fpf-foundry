@@ -12,9 +12,7 @@
     ]
   },
   "dependencies": {
-    "skills": [
-      "telemetry/log-work@^0.1.0"
-    ],
+    "skills": [],
     "tools": [
       "list_dir",
       "view_file",
@@ -30,7 +28,8 @@
     "tests": [
       {
         "expected": {
-          "drr_path": "design/decisions/001-adopt-skillspec-v0-1-0.md"
+          "drr_path": "design/decisions/<next_id>-adopt-skillspec-v0-1-0.md",
+          "drr_path_pattern": "^design/decisions/\\\\d{3}-adopt-skillspec-v0-1-0\\\\.md$"
         },
         "input_fixture": {
           "context": "We need a structured, machine-validated format for defining skills.",
@@ -39,11 +38,12 @@
           "work_context": "Skills"
         },
         "name": "basic-drr",
-        "notes": "Assumes an empty design/decisions directory so the next id is 001."
+        "notes": "Machine-checkable: match drr_path_pattern; <next_id> is the next sequential 3-digit prefix."
       },
       {
         "expected": {
-          "drr_path": "design/decisions/002-separate-design-and-runtime-artifacts.md"
+          "drr_path": "design/decisions/<next_id>-separate-design-and-runtime-artifacts.md",
+          "drr_path_pattern": "^design/decisions/\\\\d{3}-separate-design-and-runtime-artifacts\\\\.md$"
         },
         "input_fixture": {
           "context": "We need a clear separation between design-time docs and runtime outputs.",
@@ -52,7 +52,7 @@
           "work_context": "Tooling"
         },
         "name": "basic-drr-2",
-        "notes": "Assumes a single existing DRR so the next id is 002."
+        "notes": "Machine-checkable: match drr_path_pattern; <next_id> is the next sequential 3-digit prefix."
       }
     ]
   },

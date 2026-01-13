@@ -1,4 +1,4 @@
-# FPF Foundry ([`fpf-foundry`](runtime/contexts/Tooling/design/names/fpf-foundry.md))
+# FPF Foundry ([`fpf-foundry`](design/contexts/Tooling/design/names/fpf-foundry.md))
 
 > **The creative workshop for minting names, forging skills, and refining the FPF constitution.**
 
@@ -37,4 +37,18 @@ Inventory is generated from SkillSpec files:
 
 ```sh
 bun develop/tools/skill/inventory.ts
+```
+
+## Safety gates
+
+Unicode safety (Trojan Source class) scan:
+
+```sh
+bun develop/scripts/unicode_safety_check.js --all
+```
+
+Enable the pre-commit hook:
+
+```sh
+git config core.hooksPath .githooks
 ```

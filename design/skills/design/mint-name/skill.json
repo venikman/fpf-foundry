@@ -11,9 +11,7 @@
     ]
   },
   "dependencies": {
-    "skills": [
-      "telemetry/log-work@^0.1.0"
-    ],
+    "skills": [],
     "tools": [
       "list_dir",
       "view_file",

@@ -15,8 +15,7 @@
   "dependencies": {
     "skills": [],
     "tools": [
-      "write_to_file",
-      "run_command"
+      "write_to_file"
     ]
   },
   "eval": {
@@ -28,7 +27,8 @@
     "tests": [
       {
         "expected": {
-          "work_record_path": "runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md"
+          "work_record_path": "runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md",
+          "work_record_path_pattern": "^runtime/contexts/Tooling/telemetry/work/work-\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}-\\\\d{2}-\\\\d{2}-\\\\d{3}Z\\\\.md$"
         },
         "input_fixture": {
           "action": "Validated skill inventory generation.",
@@ -37,11 +37,12 @@
           "spec": "A.15.1"
         },
         "name": "basic-log",
-        "notes": "The filename includes an ISO timestamp; verify directory + prefix."
+        "notes": "Machine-checkable: match work_record_path_pattern; <timestamp> is ISO-8601 with [:.] normalized to '-'."
       },
       {
         "expected": {
-          "work_record_path": "runtime/contexts/Skills/telemetry/work/work-<timestamp>.md"
+          "work_record_path": "runtime/contexts/Skills/telemetry/work/work-<timestamp>.md",
+          "work_record_path_pattern": "^runtime/contexts/Skills/telemetry/work/work-\\\\d{4}-\\\\d{2}-\\\\d{2}T\\\\d{2}-\\\\d{2}-\\\\d{2}-\\\\d{3}Z\\\\.md$"
         },
         "input_fixture": {
           "action": "Minted Name Card 'Example Concept' (example-concept).",
@@ -50,7 +51,7 @@
           "spec": "F.18"
         },
         "name": "basic-log-2",
-        "notes": "The filename includes an ISO timestamp; verify directory + prefix."
+        "notes": "Machine-checkable: match work_record_path_pattern; <timestamp> is ISO-8601 with [:.] normalized to '-'."
       }
     ]
   },
