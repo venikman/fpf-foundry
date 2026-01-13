@@ -63,9 +63,7 @@ if (crossErrors.length > 0) {
 console.log(`SkillSpec validation passed for ${validSkills.length} file(s).`);
 
 function printSchemaErrors(errors: Array<{ file: string; path: string; message: string }>): void {
-  const sorted = errors
-    .slice()
-    .sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
+  const sorted = errors.slice().sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
   console.error("SkillSpec schema validation failed:");
   for (const error of sorted) {
     console.error(`[SCHEMA] ${error.file}: ${error.path} ${error.message}`);
@@ -73,9 +71,7 @@ function printSchemaErrors(errors: Array<{ file: string; path: string; message: 
 }
 
 function printCrossErrors(errors: CrossCheckError[]): void {
-  const sorted = errors
-    .slice()
-    .sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
+  const sorted = errors.slice().sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
   console.error("SkillSpec cross-checks failed:");
   for (const error of sorted) {
     console.error(`[CROSS] ${error.file}: ${error.path} ${error.message}`);

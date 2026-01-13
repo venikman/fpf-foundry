@@ -8,29 +8,29 @@ import { fileURLToPath } from "url";
 // Usage: bun log-work.ts --spec <MethodId> --role <RoleAssigning> --context <Ctx> --action <Description>
 
 const { values } = parseArgs({
-    args: Bun.argv,
-    options: {
-        spec: { type: 'string' },
-        role: { type: 'string' },
-        context: { type: 'string' },
-        action: { type: 'string' },
-    },
-    strict: true,
-    allowPositionals: true,
+  args: Bun.argv,
+  options: {
+    spec: { type: "string" },
+    role: { type: "string" },
+    context: { type: "string" },
+    action: { type: "string" },
+  },
+  strict: true,
+  allowPositionals: true,
 });
 
 if (!values.spec || !values.role || !values.context || !values.action) {
-    console.error("Usage: log-work --spec <id> --role <assigned> --context <ctx> --action <desc>");
-    process.exit(1);
+  console.error("Usage: log-work --spec <id> --role <assigned> --context <ctx> --action <desc>");
+  process.exit(1);
 }
 
 function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
-    const trimmed = (value ?? "").trim();
-    if (trimmed.length === 0 || !pattern.test(trimmed)) {
-        console.error(`Invalid ${name} '${value ?? ""}'. Expected ${description}.`);
-        process.exit(1);
-    }
-    return trimmed;
+  const trimmed = (value ?? "").trim();
+  if (trimmed.length === 0 || !pattern.test(trimmed)) {
+    console.error(`Invalid ${name} '${value ?? ""}'. Expected ${description}.`);
+    process.exit(1);
+  }
+  return trimmed;
 }
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
@@ -41,17 +41,17 @@ const repoRoot = resolve(scriptDir, "../../../../../");
 const targetDir = join(repoRoot, "runtime", "contexts", context, "telemetry", "work");
 
 if (!existsSync(targetDir)) {
-    mkdirSync(targetDir, { recursive: true });
+  mkdirSync(targetDir, { recursive: true });
 }
 
 // 2. Format: [Timestamp]-[Spec]-[Role].md (hashed or simplified)
-const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
 const filename = `work-${timestamp}.md`;
 const filePath = join(targetDir, filename);
 
 if (existsSync(filePath)) {
-    console.error(`Error: Work record already exists at ${filePath}`);
-    process.exit(1);
+  console.error(`Error: Work record already exists at ${filePath}`);
+  process.exit(1);
 }
 
 // 3. Content: A.15.1 U.Work Record

@@ -57,18 +57,13 @@ for (const [id, entries] of entriesById.entries()) {
     errors.push({
       file: entry.path,
       path: "$.id",
-      message:
-        otherLocations.length > 0
-          ? `duplicate id '${id}' also defined in ${otherLocations}`
-          : `duplicate id '${id}'`,
+      message: otherLocations.length > 0 ? `duplicate id '${id}' also defined in ${otherLocations}` : `duplicate id '${id}'`,
     });
   }
 }
 
 if (errors.length > 0) {
-  const sorted = errors
-    .slice()
-    .sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
+  const sorted = errors.slice().sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
   console.error("SkillSpec index generation failed:");
   for (const error of sorted) {
     console.error(`[SCHEMA] ${error.file}: ${error.path} ${error.message}`);

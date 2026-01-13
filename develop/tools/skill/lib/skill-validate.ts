@@ -28,28 +28,9 @@ const semverPattern = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const dateTimePattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
-const rootRequired = [
-  "schema_version",
-  "id",
-  "name",
-  "summary",
-  "intent",
-  "inputs",
-  "outputs",
-  "procedure",
-  "constraints",
-  "dependencies",
-  "eval",
-  "version",
-  "metadata",
-];
+const rootRequired = ["schema_version", "id", "name", "summary", "intent", "inputs", "outputs", "procedure", "constraints", "dependencies", "eval", "version", "metadata"];
 
-const rootAllowed = [
-  ...rootRequired,
-  "failure_modes",
-  "quality",
-  "provenance",
-];
+const rootAllowed = [...rootRequired, "failure_modes", "quality", "provenance"];
 
 /**
  * Validates a SkillSpec document against the project's schema rules.
@@ -115,10 +96,7 @@ export function runCrossChecks(skills: SkillDoc[]): CrossCheckError[] {
         errors.push({
           file: entry.path,
           path: "$.id",
-          message:
-            otherLocations.length > 0
-              ? `duplicate id '${id}' also defined in ${otherLocations}`
-              : `duplicate id '${id}'`,
+          message: otherLocations.length > 0 ? `duplicate id '${id}' also defined in ${otherLocations}` : `duplicate id '${id}'`,
         });
       }
     }
@@ -267,12 +245,7 @@ function validateProvenance(value: unknown, path: string, errors: SchemaError[])
   if (value === undefined) return;
   const provenance = ensureObject(value, path, errors);
   if (!provenance) return;
-  checkAllowedKeys(
-    provenance,
-    ["source_type", "source_ref", "compiled_by", "compiled_at", "field_evidence"],
-    path,
-    errors
-  );
+  checkAllowedKeys(provenance, ["source_type", "source_ref", "compiled_by", "compiled_at", "field_evidence"], path, errors);
   if (provenance.source_type !== undefined) {
     validateEnum(provenance, "source_type", `${path}.source_type`, ["article", "doc", "chat", "other"], errors);
   }
@@ -295,13 +268,7 @@ function validateFieldEvidence(value: unknown, path: string, errors: SchemaError
   validateString(evidence, "quote", `${path}.quote`, errors);
 }
 
-function validateConstString(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  expected: string,
-  errors: SchemaError[]
-): void {
+function validateConstString(obj: Record<string, unknown>, key: string, path: string, expected: string, errors: SchemaError[]): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
     errors.push({ path, message: "expected string" });
@@ -312,14 +279,7 @@ function validateConstString(
   }
 }
 
-function validatePatternString(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  pattern: RegExp,
-  label: string,
-  errors: SchemaError[]
-): void {
+function validatePatternString(obj: Record<string, unknown>, key: string, path: string, pattern: RegExp, label: string, errors: SchemaError[]): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
     errors.push({ path, message: "expected string" });
@@ -341,39 +301,21 @@ function validateSemver(obj: Record<string, unknown>, key: string, path: string,
   }
 }
 
-function validateString(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  errors: SchemaError[],
-  _optional = false
-): void {
+function validateString(obj: Record<string, unknown>, key: string, path: string, errors: SchemaError[], _optional = false): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
     errors.push({ path, message: "expected string" });
   }
 }
 
-function validateBoolean(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  errors: SchemaError[]
-): void {
+function validateBoolean(obj: Record<string, unknown>, key: string, path: string, errors: SchemaError[]): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "boolean") {
     errors.push({ path, message: "expected boolean" });
   }
 }
 
-function validateNumberRange(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  errors: SchemaError[],
-  min: number,
-  max: number
-): void {
+function validateNumberRange(obj: Record<string, unknown>, key: string, path: string, errors: SchemaError[], min: number, max: number): void {
   if (!(key in obj)) return;
   const value = obj[key];
   if (typeof value !== "number" || Number.isNaN(value)) {
@@ -385,13 +327,7 @@ function validateNumberRange(
   }
 }
 
-function validateEnum(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  allowed: string[],
-  errors: SchemaError[]
-): void {
+function validateEnum(obj: Record<string, unknown>, key: string, path: string, allowed: string[], errors: SchemaError[]): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
     errors.push({ path, message: "expected string" });
@@ -402,13 +338,7 @@ function validateEnum(
   }
 }
 
-function validateDate(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  errors: SchemaError[],
-  _optional = false
-): void {
+function validateDate(obj: Record<string, unknown>, key: string, path: string, errors: SchemaError[], _optional = false): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
     errors.push({ path, message: "expected string" });
@@ -419,13 +349,7 @@ function validateDate(
   }
 }
 
-function validateDateTime(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  errors: SchemaError[],
-  _optional = false
-): void {
+function validateDateTime(obj: Record<string, unknown>, key: string, path: string, errors: SchemaError[], _optional = false): void {
   if (!(key in obj)) return;
   if (typeof obj[key] !== "string") {
     errors.push({ path, message: "expected string" });
@@ -436,12 +360,7 @@ function validateDateTime(
   }
 }
 
-function validateStringArray(
-  value: unknown,
-  path: string,
-  errors: SchemaError[],
-  _optional = false
-): void {
+function validateStringArray(value: unknown, path: string, errors: SchemaError[], _optional = false): void {
   if (value === undefined) return;
   const arrayValue = ensureArray(value, path, errors);
   if (!arrayValue) return;
@@ -452,12 +371,7 @@ function validateStringArray(
   });
 }
 
-function validateObject(
-  obj: Record<string, unknown>,
-  key: string,
-  path: string,
-  errors: SchemaError[]
-): void {
+function validateObject(obj: Record<string, unknown>, key: string, path: string, errors: SchemaError[]): void {
   if (!(key in obj)) return;
   if (!isPlainObject(obj[key])) {
     errors.push({ path, message: "expected object" });
@@ -480,12 +394,7 @@ function ensureArray(value: unknown, path: string, errors: SchemaError[]): unkno
   return value;
 }
 
-function checkRequiredKeys(
-  obj: Record<string, unknown>,
-  keys: string[],
-  path: string,
-  errors: SchemaError[]
-): void {
+function checkRequiredKeys(obj: Record<string, unknown>, keys: string[], path: string, errors: SchemaError[]): void {
   for (const key of keys) {
     if (!(key in obj)) {
       errors.push({ path: `${path}.${key}`, message: "missing required property" });
@@ -493,12 +402,7 @@ function checkRequiredKeys(
   }
 }
 
-function checkAllowedKeys(
-  obj: Record<string, unknown>,
-  allowed: string[],
-  path: string,
-  errors: SchemaError[]
-): void {
+function checkAllowedKeys(obj: Record<string, unknown>, allowed: string[], path: string, errors: SchemaError[]): void {
   for (const key of Object.keys(obj)) {
     if (!allowed.includes(key)) {
       errors.push({ path: `${path}.${key}`, message: "unknown property" });
@@ -745,25 +649,14 @@ function checkInputOutputs(entries: unknown[], path: string, file: string, error
   });
 }
 
-function requireNonEmpty(
-  value: unknown,
-  file: string,
-  path: string,
-  errors: CrossCheckError[]
-): void {
+function requireNonEmpty(value: unknown, file: string, path: string, errors: CrossCheckError[]): void {
   if (typeof value !== "string") return;
   if (value.trim().length === 0) {
     errors.push({ file, path, message: "must be a non-empty string" });
   }
 }
 
-function requireNonEmptyArray(
-  value: unknown,
-  file: string,
-  path: string,
-  errors: CrossCheckError[],
-  optional = false
-): void {
+function requireNonEmptyArray(value: unknown, file: string, path: string, errors: CrossCheckError[], optional = false): void {
   if (value === undefined || value === null) {
     if (!optional) {
       errors.push({ file, path, message: "missing required array" });

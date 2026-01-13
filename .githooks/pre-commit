@@ -8,4 +8,5 @@ fi
 
 bun develop/scripts/no_js_files_check.ts --staged
 bun develop/scripts/unicode_safety_check.ts --staged
+bun run format:check
 bun run lint

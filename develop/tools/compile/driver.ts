@@ -192,9 +192,7 @@ function readText(filePath: string): string {
 
 function printSchemaErrors(errors: SchemaError[], skillPath: string): void {
   const relative = toRepoRelative(skillPath, rootDir);
-  const sorted = errors
-    .slice()
-    .sort((a, b) => a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
+  const sorted = errors.slice().sort((a, b) => a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
   console.error("SkillSpec schema validation failed:");
   for (const error of sorted) {
     console.error(`[SCHEMA] ${relative}: ${error.path} ${error.message}`);
@@ -202,9 +200,7 @@ function printSchemaErrors(errors: SchemaError[], skillPath: string): void {
 }
 
 function printCrossErrors(errors: CrossCheckError[]): void {
-  const sorted = errors
-    .slice()
-    .sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
+  const sorted = errors.slice().sort((a, b) => a.file.localeCompare(b.file) || a.path.localeCompare(b.path) || a.message.localeCompare(b.message));
   console.error("SkillSpec cross-checks failed:");
   for (const error of sorted) {
     console.error(`[CROSS] ${error.file}: ${error.path} ${error.message}`);

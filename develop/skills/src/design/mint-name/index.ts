@@ -8,29 +8,29 @@ import { fileURLToPath } from "url";
 // Usage: bun mint-name.ts --context <ctx> --id <kebab-id> --label <Title Case> --mds <definition>
 
 const { values } = parseArgs({
-    args: Bun.argv,
-    options: {
-        context: { type: 'string' },
-        id: { type: 'string' },
-        label: { type: 'string' },
-        mds: { type: 'string' },
-    },
-    strict: true,
-    allowPositionals: true,
+  args: Bun.argv,
+  options: {
+    context: { type: "string" },
+    id: { type: "string" },
+    label: { type: "string" },
+    mds: { type: "string" },
+  },
+  strict: true,
+  allowPositionals: true,
 });
 
 if (!values.context || !values.id || !values.label || !values.mds) {
-    console.error("Usage: mint-name --context <ctx> --id <kebab-id> --label <Title Case> --mds <definition>");
-    process.exit(1);
+  console.error("Usage: mint-name --context <ctx> --id <kebab-id> --label <Title Case> --mds <definition>");
+  process.exit(1);
 }
 
 function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
-    const trimmed = (value ?? "").trim();
-    if (trimmed.length === 0 || !pattern.test(trimmed)) {
-        console.error(`Invalid ${name} '${value ?? ""}'. Expected ${description}.`);
-        process.exit(1);
-    }
-    return trimmed;
+  const trimmed = (value ?? "").trim();
+  if (trimmed.length === 0 || !pattern.test(trimmed)) {
+    console.error(`Invalid ${name} '${value ?? ""}'. Expected ${description}.`);
+    process.exit(1);
+  }
+  return trimmed;
 }
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
@@ -46,16 +46,16 @@ const targetDir = join(repoRoot, "runtime", "contexts", context, "design", "name
 
 // 2. Ensure Constraints
 if (!existsSync(targetDir)) {
-    console.log(`Creating directory: ${targetDir}`);
-    mkdirSync(targetDir, { recursive: true });
+  console.log(`Creating directory: ${targetDir}`);
+  mkdirSync(targetDir, { recursive: true });
 }
 
 const filename = `${id}.md`;
 const filePath = join(targetDir, filename);
 
 if (existsSync(filePath)) {
-    console.error(`Error: Name Card already exists at ${filePath}`);
-    process.exit(1);
+  console.error(`Error: Name Card already exists at ${filePath}`);
+  process.exit(1);
 }
 
 // 3. Generate Content (Pattern F.18)
@@ -98,21 +98,15 @@ console.log(`Success: Created ${filePath}`);
 const logScript = join(repoRoot, "develop", "skills", "src", "telemetry", "log-work", "index.ts");
 
 if (existsSync(logScript)) {
-    console.log("Logging Work Record via A.15.1...");
-    const proc = Bun.spawn([
-        "bun", logScript,
-        "--spec", "F.18",
-        "--role", "Archivist",
-        "--context", context,
-        "--action", `Minted Name Card '${label}' (${id})`
-    ]);
+  console.log("Logging Work Record via A.15.1...");
+  const proc = Bun.spawn(["bun", logScript, "--spec", "F.18", "--role", "Archivist", "--context", context, "--action", `Minted Name Card '${label}' (${id})`]);
 
-    await proc.exited;
-    if (proc.exitCode === 0) {
-        console.log("✔ Work Logged Successfully.");
-    } else {
-        console.error("⚠ Failed to log work.");
-    }
+  await proc.exited;
+  if (proc.exitCode === 0) {
+    console.log("✔ Work Logged Successfully.");
+  } else {
+    console.error("⚠ Failed to log work.");
+  }
 } else {
-    console.warn("⚠ Log-Work skill not found; skipping audit trace.");
+  console.warn("⚠ Log-Work skill not found; skipping audit trace.");
 }

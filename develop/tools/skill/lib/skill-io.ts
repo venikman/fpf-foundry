@@ -50,9 +50,7 @@ export function parseYaml(text: string, sourceName: string): unknown {
   const trailingIndex = nextNonEmptyIndex(lines, nextIndex);
   if (trailingIndex < lines.length) {
     const trailingLine = lines[trailingIndex];
-    throw new Error(
-      `${sourceName}:${trailingLine.lineNumber} unexpected content after document end`
-    );
+    throw new Error(`${sourceName}:${trailingLine.lineNumber} unexpected content after document end`);
   }
   return value;
 }
@@ -65,9 +63,7 @@ export function sortKeys(value: unknown): unknown {
     return value.map(sortKeys);
   }
   if (isPlainObject(value)) {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) =>
-      a.localeCompare(b)
-    );
+    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
     const sorted: Record<string, unknown> = {};
     for (const [key, entryValue] of entries) {
       sorted[key] = sortKeys(entryValue);
@@ -117,10 +113,7 @@ function walk(currentDir: string, results: string[]): void {
     const fullPath = join(currentDir, entry.name);
     if (entry.isDirectory()) {
       walk(fullPath, results);
-    } else if (
-      entry.isFile() &&
-      (entry.name === "skill.json" || entry.name === "skill.yaml" || entry.name === "skill.yml")
-    ) {
+    } else if (entry.isFile() && (entry.name === "skill.json" || entry.name === "skill.yaml" || entry.name === "skill.yml")) {
       results.push(fullPath);
     }
   }
@@ -192,9 +185,7 @@ function parseBlock(lines: LineInfo[], startIndex: number, indentLevel: number):
     return { value: null, nextIndex: index };
   }
   const isSequence = lines[index].content.trimStart().startsWith("-");
-  return isSequence
-    ? parseSequence(lines, index, indentLevel)
-    : parseMapping(lines, index, indentLevel);
+  return isSequence ? parseSequence(lines, index, indentLevel) : parseMapping(lines, index, indentLevel);
 }
 
 function parseSequence(lines: LineInfo[], startIndex: number, indentLevel: number): { value: unknown[]; nextIndex: number } {
@@ -224,12 +215,7 @@ function parseSequence(lines: LineInfo[], startIndex: number, indentLevel: numbe
   return { value: items, nextIndex: index };
 }
 
-function parseSequenceItem(
-  lines: LineInfo[],
-  lineIndex: number,
-  indentLevel: number,
-  remainder: string
-): { value: unknown; nextIndex: number } {
+function parseSequenceItem(lines: LineInfo[], lineIndex: number, indentLevel: number, remainder: string): { value: unknown; nextIndex: number } {
   if (remainder.trim().length === 0) {
     const nextIndex = nextNonEmptyIndex(lines, lineIndex + 1);
     if (nextIndex >= lines.length || lines[nextIndex].indent <= indentLevel) {
@@ -274,7 +260,7 @@ function parseInlineMapping(
   lines: LineInfo[],
   lineIndex: number,
   indentLevel: number,
-  inline: { key: string; remainder: string }
+  inline: { key: string; remainder: string },
 ): { value: Record<string, unknown>; nextIndex: number } {
   const obj: Record<string, unknown> = {};
   const valuePart = inline.remainder.trim();
@@ -300,12 +286,7 @@ function parseInlineMapping(
   return merged;
 }
 
-function mergeInlineMapping(
-  lines: LineInfo[],
-  nextIndex: number,
-  indentLevel: number,
-  baseObject: Record<string, unknown>
-): { value: Record<string, unknown>; nextIndex: number } {
+function mergeInlineMapping(lines: LineInfo[], nextIndex: number, indentLevel: number, baseObject: Record<string, unknown>): { value: Record<string, unknown>; nextIndex: number } {
   const followingIndex = nextNonEmptyIndex(lines, nextIndex);
   if (followingIndex >= lines.length || lines[followingIndex].indent <= indentLevel) {
     return { value: baseObject, nextIndex: followingIndex };
@@ -350,11 +331,7 @@ function parseMapping(lines: LineInfo[], startIndex: number, indentLevel: number
         index = nextIndex;
         continue;
       }
-      const { value: nestedValue, nextIndex: afterIndex } = parseBlock(
-        lines,
-        nextIndex,
-        lines[nextIndex].indent
-      );
+      const { value: nestedValue, nextIndex: afterIndex } = parseBlock(lines, nextIndex, lines[nextIndex].indent);
       obj[key] = nestedValue;
       index = afterIndex;
       continue;
@@ -371,12 +348,7 @@ function parseMapping(lines: LineInfo[], startIndex: number, indentLevel: number
   return { value: obj, nextIndex: index };
 }
 
-function parseBlockScalar(
-  lines: LineInfo[],
-  startIndex: number,
-  indentLevel: number,
-  style: string
-): { value: string; nextIndex: number } {
+function parseBlockScalar(lines: LineInfo[], startIndex: number, indentLevel: number, style: string): { value: string; nextIndex: number } {
   const firstContentIndex = nextNonEmptyIndex(lines, startIndex);
   if (firstContentIndex >= lines.length || lines[firstContentIndex].indent <= indentLevel) {
     return { value: "", nextIndex: firstContentIndex };

@@ -91,14 +91,7 @@ if (failures > 0) {
 
 console.log("Compile regression passed.");
 
-function runCompile(
-  sourcePath: string,
-  mode: string,
-  outDir: string,
-  modelCmd: string,
-  schemaPath?: string,
-  contextPath?: string
-): boolean {
+function runCompile(sourcePath: string, mode: string, outDir: string, modelCmd: string, schemaPath?: string, contextPath?: string): boolean {
   const cmd = ["bun", "develop/tools/compile/driver.ts", "--source", sourcePath, "--mode", mode, "--out", outDir, "--model-cmd", modelCmd];
   if (schemaPath) {
     cmd.push("--schema", schemaPath);
