@@ -1,6 +1,6 @@
 {
   "name": "@venikman/fpf",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "FPF Foundry CLI (Bun-first).",
   "license": "MIT",
   "type": "module",
