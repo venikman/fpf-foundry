@@ -11,6 +11,15 @@
       "Use the next available numeric prefix based on existing files."
     ]
   },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
   "dependencies": {
     "skills": [],
     "tools": [
@@ -142,7 +151,7 @@
       "step_id": "step-write-file"
     },
     {
-      "instruction": "If telemetry/log-work is available, log the DRR action with spec E.9.",
+      "instruction": "If telemetry/log-work is available, log the DRR action with method design/record-drr (Pattern E.9).",
       "step_id": "step-log-work"
     }
   ],

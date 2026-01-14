@@ -14,6 +14,15 @@
       "Reject context values containing path separators or dot-segments."
     ]
   },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
   "dependencies": {
     "skills": [],
     "tools": [
@@ -23,7 +32,7 @@
   "eval": {
     "acceptance_criteria": [
       "Creates a markdown file under runtime/contexts/<context>/telemetry/work/.",
-      "The record includes spec, role, context, and action values.",
+      "The record includes method_description_ref, role_assignment_ref, inputs_digest, outputs, and related_decisions fields.",
       "The filename is timestamp-based to avoid collisions."
     ],
     "tests": [
@@ -35,8 +44,9 @@
         "input_fixture": {
           "action": "Validated skill inventory generation.",
           "context": "Tooling",
-          "role": "Archivist",
-          "spec": "A.15.1"
+          "method": "telemetry/log-work",
+          "outputs": "design/skills/SKILL_INVENTORY.md",
+          "role_assignment": "Archivist"
         },
         "name": "basic-log",
         "notes": "Machine-checkable: match work_record_path_pattern; <timestamp> is ISO-8601 with [:.] normalized to '-'."
@@ -49,8 +59,9 @@
         "input_fixture": {
           "action": "Minted Name Card 'Example Concept' (example-concept).",
           "context": "Skills",
-          "role": "Archivist",
-          "spec": "F.18"
+          "method": "design/mint-name",
+          "outputs": "runtime/contexts/Skills/design/names/example-concept.md",
+          "role_assignment": "Archivist"
         },
         "name": "basic-log-2",
         "notes": "Machine-checkable: match work_record_path_pattern; <timestamp> is ISO-8601 with [:.] normalized to '-'."
@@ -58,7 +69,7 @@
     ]
   },
   "failure_modes": [
-    "Missing required inputs (spec, role, context, action).",
+    "Missing required inputs (method, role_assignment, context, action).",
     "Failed to create or access runtime/contexts/<context>/telemetry/work.",
     "Failed to write work record file.",
     "Optional telemetry emission failed (non-fatal)."
@@ -66,14 +77,14 @@
   "id": "telemetry/log-work",
   "inputs": [
     {
-      "description": "Method or pattern identifier for the work being recorded.",
-      "name": "spec",
+      "description": "MethodDescription identifier for the work being recorded (typically a Skill id like design/mint-name).",
+      "name": "method",
       "required": true,
       "type": "string"
     },
     {
-      "description": "Role assignment performing the work.",
-      "name": "role",
+      "description": "RoleAssignment performing the work (string reference).",
+      "name": "role_assignment",
       "required": true,
       "type": "string"
     },
@@ -87,6 +98,30 @@
       "description": "Description of the work performed.",
       "name": "action",
       "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional repo-relative path to the MethodDescription (defaults to design/skills/<method>/skill.json when present).",
+      "name": "method_path",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of output artifact paths produced by the work.",
+      "name": "outputs",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
       "type": "string"
     }
   ],
@@ -118,12 +153,20 @@
   ],
   "procedure": [
     {
-      "instruction": "Validate required inputs: spec, role, context, action (ensure context is a safe path segment).",
+      "instruction": "Validate required inputs: method, role_assignment, context, action (ensure context is a safe path segment).",
       "step_id": "step-validate-inputs"
     },
     {
       "instruction": "Resolve runtime/contexts/<context>/telemetry/work and create it if missing.",
       "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Resolve method_description_ref (id + optional path/version enrichment).",
+      "step_id": "step-resolve-method"
+    },
+    {
+      "instruction": "Compute inputs_digest from normalized input bindings (excluding timestamps).",
+      "step_id": "step-compute-digest"
     },
     {
       "instruction": "Construct the U.Work markdown content using the provided inputs and timestamps.",

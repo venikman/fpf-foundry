@@ -25,12 +25,16 @@ export type SkillDoc = {
 
 const idPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*(?:\/[a-z0-9]+(?:-[a-z0-9]+)*)*$/;
 const semverPattern = /^[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/;
+const singleLinePattern = /^[^\r\n]*$/;
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const dateTimePattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
-const rootRequired = ["schema_version", "id", "name", "summary", "intent", "inputs", "outputs", "procedure", "constraints", "dependencies", "eval", "version", "metadata"];
+const rootRequired = ["schema_version", "id", "name", "summary", "conformance", "intent", "inputs", "outputs", "procedure", "constraints", "dependencies", "eval", "version", "metadata"];
 
 const rootAllowed = [...rootRequired, "failure_modes", "quality", "provenance"];
+
+const conformanceChecklistItems = ["inputs_validated", "outputs_listed", "u_work_emitted", "deterministic_naming", "inventory_updated"] as const;
+type ConformanceChecklistItem = (typeof conformanceChecklistItems)[number];
 
 /**
  * Validates a SkillSpec document against the project's schema rules.
@@ -51,10 +55,11 @@ export function validateSchema(data: unknown): SchemaError[] {
 
   validateConstString(root, "schema_version", "$.schema_version", "0.1.0", errors);
   validatePatternString(root, "id", "$.id", idPattern, "kebab-case or path segment", errors);
-  validateString(root, "name", "$.name", errors);
-  validateString(root, "summary", "$.summary", errors);
+  validatePatternString(root, "name", "$.name", singleLinePattern, "single-line string", errors);
+  validatePatternString(root, "summary", "$.summary", singleLinePattern, "single-line string", errors);
   validateSemver(root, "version", "$.version", errors);
 
+  validateConformance(root.conformance, "$.conformance", errors);
   validateIntent(root.intent, "$.intent", errors);
   validateInputs(root.inputs, "$.inputs", errors);
   validateOutputs(root.outputs, "$.outputs", errors);
@@ -120,6 +125,45 @@ function validateIntent(value: unknown, path: string, errors: SchemaError[]): vo
   checkRequiredKeys(intent, ["goal", "non_goals"], path, errors);
   validateString(intent, "goal", `${path}.goal`, errors);
   validateStringArray(intent.non_goals, `${path}.non_goals`, errors);
+}
+
+function validateConformance(value: unknown, path: string, errors: SchemaError[]): void {
+  const conformance = ensureObject(value, path, errors);
+  if (!conformance) return;
+  checkAllowedKeys(conformance, ["checklist"], path, errors);
+  checkRequiredKeys(conformance, ["checklist"], path, errors);
+
+  const checklist = ensureArray(conformance.checklist, `${path}.checklist`, errors);
+  if (!checklist) return;
+  const seen = new Set<ConformanceChecklistItem>();
+
+  checklist.forEach((entry, index) => {
+    if (typeof entry !== "string") {
+      errors.push({ path: `${path}.checklist[${index}]`, message: "expected string" });
+      return;
+    }
+    const trimmed = entry.trim();
+    if (trimmed.length === 0) {
+      errors.push({ path: `${path}.checklist[${index}]`, message: "must be non-empty" });
+      return;
+    }
+    if (!conformanceChecklistItems.includes(trimmed as ConformanceChecklistItem)) {
+      errors.push({ path: `${path}.checklist[${index}]`, message: `unknown checklist item '${trimmed}'` });
+      return;
+    }
+    const item = trimmed as ConformanceChecklistItem;
+    if (seen.has(item)) {
+      errors.push({ path: `${path}.checklist[${index}]`, message: `duplicate checklist item '${trimmed}'` });
+      return;
+    }
+    seen.add(item);
+  });
+
+  for (const required of conformanceChecklistItems) {
+    if (!seen.has(required)) {
+      errors.push({ path: `${path}.checklist`, message: `missing required checklist item '${required}'` });
+    }
+  }
 }
 
 function validateInputs(value: unknown, path: string, errors: SchemaError[]): void {

@@ -11,6 +11,15 @@
       "Reject context/id values containing path separators or dot-segments."
     ]
   },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
   "dependencies": {
     "skills": [],
     "tools": [
@@ -129,7 +138,7 @@
       "step_id": "step-write-file"
     },
     {
-      "instruction": "If telemetry/log-work is available, log the mint action with spec F.18.",
+      "instruction": "If telemetry/log-work is available, log the mint action with method design/mint-name (Pattern F.18).",
       "step_id": "step-log-work"
     }
   ],

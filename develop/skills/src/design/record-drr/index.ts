@@ -56,7 +56,7 @@ const filename = `${nextId}-${kebabTitle}.md`;
 const filePath = join(targetDir, filename);
 
 // 4. Generate Content (Pattern E.9)
-const dateStr = new Date().toISOString().split("T")[0];
+const dateStr = resolveNow().toISOString().split("T")[0];
 
 const content = `# ${nextId}. ${values.title}
 
@@ -113,7 +113,22 @@ if (logScript) {
   console.log("Logging Work Record via A.15.1...");
   try {
     const proc = Bun.spawn({
-      cmd: ["bun", logScript, "--spec", "E.9", "--role", "Archivist", "--context", workContext, "--action", `Recorded DRR '${values.title}' (${filename})`],
+      cmd: [
+        "bun",
+        logScript,
+        "--method",
+        "design/record-drr",
+        "--role-assignment",
+        "Archivist",
+        "--context",
+        workContext,
+        "--action",
+        `Recorded DRR '${values.title}' (${filename})`,
+        "--outputs",
+        filePath,
+        "--decisions",
+        filePath,
+      ],
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -142,4 +157,18 @@ if (logScript) {
   }
 } else {
   console.warn(`WARN: ${logWorkSkillId} skill not found; skipping audit trace.`);
+}
+
+function resolveNow(): Date {
+  const fixedNow = process.env.FPF_FIXED_NOW?.trim();
+  if (fixedNow && fixedNow.length > 0) {
+    const parsed = new Date(fixedNow);
+    if (Number.isNaN(parsed.getTime())) {
+      console.error(`Invalid FPF_FIXED_NOW '${fixedNow}'. Expected an ISO-8601 date-time.`);
+      process.exit(1);
+    }
+    return parsed;
+  }
+
+  return new Date();
 }

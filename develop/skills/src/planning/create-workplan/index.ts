@@ -106,7 +106,7 @@ if (existsSync(filePath)) {
   process.exit(1);
 }
 
-const dateStr = new Date().toISOString().split("T")[0];
+const dateStr = resolveNow().toISOString().split("T")[0];
 const deliverableLines = deliverables.length > 0 ? deliverables.map((entry) => `- ${entry}`) : ["- TBD"];
 
 const content = `---
@@ -158,7 +158,20 @@ if (logScript) {
   console.log("Logging Work Record via A.15.1...");
   try {
     const proc = Bun.spawn({
-      cmd: ["bun", logScript, "--spec", "A.15.2", "--role", "Planner", "--context", context, "--action", `Created WorkPlan '${title}' (${id})`],
+      cmd: [
+        "bun",
+        logScript,
+        "--method",
+        "planning/create-workplan",
+        "--role-assignment",
+        "Planner",
+        "--context",
+        context,
+        "--action",
+        `Created WorkPlan '${title}' (${id})`,
+        "--outputs",
+        filePath,
+      ],
       stdout: "pipe",
       stderr: "pipe",
     });
@@ -187,4 +200,18 @@ if (logScript) {
   }
 } else {
   console.warn(`WARN: ${logWorkSkillId} skill not found; skipping audit trace.`);
+}
+
+function resolveNow(): Date {
+  const fixedNow = process.env.FPF_FIXED_NOW?.trim();
+  if (fixedNow && fixedNow.length > 0) {
+    const parsed = new Date(fixedNow);
+    if (Number.isNaN(parsed.getTime())) {
+      console.error(`Invalid FPF_FIXED_NOW '${fixedNow}'. Expected an ISO-8601 date-time.`);
+      process.exit(1);
+    }
+    return parsed;
+  }
+
+  return new Date();
 }
