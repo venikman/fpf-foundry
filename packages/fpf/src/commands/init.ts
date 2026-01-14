@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSy
 import { dirname, join, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 import { CliError } from "../lib/errors.ts";
+import { generateSkillIndexJson } from "../skill/skill-index.ts";
 import { stableStringify } from "../skill/skill-io.ts";
 import { generateSkillInventoryMarkdown } from "../skill/skill-inventory.ts";
 
@@ -57,6 +58,13 @@ export async function runInitAsync(ctx: CommandContext, argv: string[]): Promise
   const inventoryExisted = existsSync(inventoryAbsPath);
   writeFileSync(inventoryAbsPath, inventoryContent, "utf8");
   (inventoryExisted ? updated : created).push("design/skills/SKILL_INVENTORY.md");
+
+  const indexAbsPath = join(ctx.rootDir, "design", "skills", "SKILL_INDEX.json");
+  const indexContent = generateSkillIndexJson({ rootDir: ctx.rootDir });
+  mkdirSync(dirname(indexAbsPath), { recursive: true });
+  const indexExisted = existsSync(indexAbsPath);
+  writeFileSync(indexAbsPath, indexContent, "utf8");
+  (indexExisted ? updated : created).push("design/skills/SKILL_INDEX.json");
 
   return {
     exitCode: 0,

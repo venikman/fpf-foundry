@@ -1,5 +1,6 @@
 import { accessSync, constants, existsSync, statSync } from "fs";
 import * as os from "os";
+import { dirname, join } from "path";
 import { CliError } from "../lib/errors.ts";
 import { runCheckAsync } from "./check.ts";
 
@@ -20,9 +21,14 @@ export async function runDoctorAsync(
   const exists = existsSync(root);
   const isDirectory = exists ? safeIsDirectory(root) : false;
   const writable = exists ? safeIsWritable(root) : false;
+  const rootParentWritable = !exists ? safeIsCreatable(root) : false;
+  const targetsSkipped = !exists || !isDirectory;
+  const targets = targetsSkipped ? [] : buildTargetReports(root);
+  const targetsOk = targetsSkipped ? (exists ? isDirectory && writable : rootParentWritable) : targets.every((target) => target.ok);
+  const bunOk = typeof Bun.version === "string" && Bun.version.trim().length > 0;
 
   const report = {
-    ok: true,
+    ok: bunOk && (exists ? isDirectory && writable : rootParentWritable) && targetsOk,
     command: "doctor",
     root,
     platform: process.platform,
@@ -32,12 +38,29 @@ export async function runDoctorAsync(
     exists,
     isDirectory,
     writable,
+    rootParentWritable,
+    targetsSkipped,
+    targets,
     lineEndingsRisk: process.platform === "win32" ? "high" : "low",
   };
 
   stdout.push(`Root: ${root}`);
   stdout.push(`Platform: ${report.platform} (${report.arch}), Bun ${report.bunVersion}`);
-  stdout.push(`Exists: ${exists}, Directory: ${isDirectory}, Writable: ${writable}`);
+  stdout.push(
+    `Exists: ${exists}, Directory: ${isDirectory}, Writable: ${writable}${exists ? "" : `, Parent writable: ${rootParentWritable}`}`,
+  );
+  if (targetsSkipped) {
+    stdout.push("Target paths: skipped (root missing or not a directory).");
+  } else {
+    stdout.push("Target paths:");
+    for (const target of targets) {
+      const parts = [`exists=${target.exists}`, `dir=${target.isDirectory}`, `writable=${target.writable}`];
+      if (!target.exists) {
+        parts.push(`parentWritable=${target.parentWritable}`);
+      }
+      stdout.push(`- ${target.path}: ${parts.join(", ")}`);
+    }
+  }
   stdout.push(`Line endings risk: ${report.lineEndingsRisk}`);
 
   if (!options.check) {
@@ -105,3 +128,38 @@ function safeIsWritable(pathValue: string): boolean {
   }
 }
 
+function safeIsCreatable(pathValue: string): boolean {
+  let current = dirname(pathValue);
+  while (true) {
+    if (existsSync(current)) {
+      return safeIsDirectory(current) && safeIsWritable(current);
+    }
+    const next = dirname(current);
+    if (next === current) {
+      return false;
+    }
+    current = next;
+  }
+}
+
+type TargetReport = {
+  path: string;
+  exists: boolean;
+  isDirectory: boolean;
+  writable: boolean;
+  parentWritable: boolean;
+  ok: boolean;
+};
+
+function buildTargetReports(root: string): TargetReport[] {
+  const targets = ["design/skills", "design/decisions", "runtime/contexts"];
+  return targets.map((target) => {
+    const absPath = join(root, ...target.split("/"));
+    const exists = existsSync(absPath);
+    const isDirectory = exists ? safeIsDirectory(absPath) : false;
+    const writable = exists ? safeIsWritable(absPath) : false;
+    const parentWritable = !exists ? safeIsCreatable(absPath) : false;
+    const ok = exists ? isDirectory && writable : parentWritable;
+    return { path: target, exists, isDirectory, writable, parentWritable, ok };
+  });
+}

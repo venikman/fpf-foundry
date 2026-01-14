@@ -17,6 +17,34 @@ FPF_REPO=/path/to/fpf-foundry
 "$FPF_REPO"/packages/fpf/bin/fpf --help
 ```
 
+Quickstart (one command -> artifact):
+
+```bash
+mkdir my-fpf && cd my-fpf
+bunx --bun @venikman/fpf quickstart
+```
+
+Local fallback:
+
+```bash
+FPF_REPO=/path/to/fpf-foundry
+mkdir my-fpf && cd my-fpf
+"$FPF_REPO"/packages/fpf/bin/fpf quickstart --root .
+```
+
+Troubleshooting:
+
+```bash
+bunx --bun @venikman/fpf doctor --root .
+```
+
+Local fallback:
+
+```bash
+FPF_REPO=/path/to/fpf-foundry
+"$FPF_REPO"/packages/fpf/bin/fpf doctor --root .
+```
+
 Initialize a minimal workspace and verify invariants:
 
 ```bash
@@ -37,6 +65,7 @@ mkdir my-fpf && cd my-fpf
 Machine output:
 
 ```bash
+bunx --bun @venikman/fpf quickstart --json
 bunx --bun @venikman/fpf init --json
 bunx --bun @venikman/fpf check --json
 ```
@@ -45,6 +74,7 @@ Local fallback:
 
 ```bash
 FPF_REPO=/path/to/fpf-foundry
+"$FPF_REPO"/packages/fpf/bin/fpf quickstart --root . --json
 "$FPF_REPO"/packages/fpf/bin/fpf init --root . --json
 "$FPF_REPO"/packages/fpf/bin/fpf check --root . --json
 ```

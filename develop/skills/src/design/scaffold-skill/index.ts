@@ -53,16 +53,25 @@ const specPath = join(skillDir, "skill.json");
 const skillMdPath = join(skillDir, "SKILL.md");
 const codeDir = join(repoRoot, "develop", "skills", "src", ...skillId.split("/"));
 const codePath = join(codeDir, "index.ts");
+const fixturesDir = join(codeDir, "fixtures");
+const fixtureInputPath = join(fixturesDir, "input.json");
+const fixtureExpectedPath = join(fixturesDir, "expected.json");
+const testPath = join(codeDir, "index.test.ts");
 
 assertDoesNotExist(specPath);
 assertDoesNotExist(skillMdPath);
 assertDoesNotExist(codePath);
+assertDoesNotExist(fixtureInputPath);
+assertDoesNotExist(fixtureExpectedPath);
+assertDoesNotExist(testPath);
 
 mkdirSync(skillDir, { recursive: true });
-mkdirSync(codeDir, { recursive: true });
+mkdirSync(fixturesDir, { recursive: true });
 
 const today = resolveNow().toISOString().slice(0, 10);
 const metaTags = tags.length > 0 ? tags : [family.toLowerCase()];
+const inputFixture = { example: "value" };
+const expectedFixture = { example: "value" };
 
 const skillSpec = {
   schema_version: "0.1.0",
@@ -98,8 +107,8 @@ const skillSpec = {
     tests: [
       {
         name: "placeholder",
-        input_fixture: {},
-        expected: {},
+        input_fixture: inputFixture,
+        expected: expectedFixture,
         notes: "Scaffolded placeholder test. Replace with real harnessed expectations.",
       },
     ],
@@ -129,9 +138,17 @@ writeFileSync(
   "utf8",
 );
 writeFileSync(codePath, renderCodeStub(skillId), "utf8");
+writeFileSync(fixtureInputPath, stableStringify(inputFixture), "utf8");
+writeFileSync(fixtureExpectedPath, stableStringify(expectedFixture), "utf8");
+writeFileSync(testPath, renderTestStub(skillId), "utf8");
 
 runOrExit(["bun", "develop/tools/skill/validate.ts", toRepoRelative(specPath, repoRoot)], repoRoot, "SkillSpec validation failed.");
 runOrExit(["bun", "develop/tools/skill/inventory.ts"], repoRoot, "Inventory regeneration failed.");
+runOrExit(
+  ["bun", "develop/tools/skill/index.ts", "--out", "design/skills/SKILL_INDEX.json"],
+  repoRoot,
+  "Skill index regeneration failed.",
+);
 
 logWork({
   repoRoot,
@@ -142,7 +159,11 @@ logWork({
     toRepoRelative(specPath, repoRoot),
     toRepoRelative(skillMdPath, repoRoot),
     toRepoRelative(codePath, repoRoot),
+    toRepoRelative(fixtureInputPath, repoRoot),
+    toRepoRelative(fixtureExpectedPath, repoRoot),
+    toRepoRelative(testPath, repoRoot),
     "design/skills/SKILL_INVENTORY.md",
+    "design/skills/SKILL_INDEX.json",
   ],
   decisions,
 });
@@ -151,6 +172,11 @@ console.log(`Scaffolded ${skillId}`);
 console.log(`- ${toRepoRelative(specPath, repoRoot)}`);
 console.log(`- ${toRepoRelative(skillMdPath, repoRoot)}`);
 console.log(`- ${toRepoRelative(codePath, repoRoot)}`);
+console.log(`- ${toRepoRelative(fixtureInputPath, repoRoot)}`);
+console.log(`- ${toRepoRelative(fixtureExpectedPath, repoRoot)}`);
+console.log(`- ${toRepoRelative(testPath, repoRoot)}`);
+console.log("- design/skills/SKILL_INVENTORY.md");
+console.log("- design/skills/SKILL_INDEX.json");
 
 function parseCliOptions(): CliOptions {
   const { values } = parseArgs({
@@ -235,14 +261,112 @@ function renderSkillMd(input: {
 
 function renderCodeStub(skillIdValue: string): string {
   return `#!/usr/bin/env bun
+import { readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 
-if (Bun.argv.includes("-h") || Bun.argv.includes("--help")) {
-  console.log("TODO: Implement ${skillIdValue}.");
-  process.exit(0);
+export type SkillInput = {
+  example: string;
+};
+
+export type SkillOutput = {
+  example: string;
+};
+
+export function runSkill(input: SkillInput): SkillOutput {
+  throw new Error("TODO: Implement ${skillIdValue}.");
 }
 
-console.error("TODO: Implement ${skillIdValue}.");
-process.exit(1);
+if (import.meta.main) {
+  if (Bun.argv.includes("-h") || Bun.argv.includes("--help")) {
+    printUsage();
+    process.exit(0);
+  }
+
+  const options = parseArgs(Bun.argv.slice(2));
+  const input = loadJson<SkillInput>(options.inputPath);
+  const output = runSkill(input);
+  const serialized = JSON.stringify(output, null, 2) + "\\n";
+  if (options.outputPath) {
+    writeFileSync(options.outputPath, serialized, "utf8");
+  } else {
+    process.stdout.write(serialized);
+  }
+}
+
+type CliOptions = {
+  inputPath: string;
+  outputPath?: string;
+};
+
+function parseArgs(argv: string[]): CliOptions {
+  let inputPath = "";
+  let outputPath: string | undefined;
+
+  for (let i = 0; i < argv.length; i += 1) {
+    const arg = argv[i];
+    if (arg === "--input") {
+      inputPath = requireArgValue(argv, i, arg);
+      i += 1;
+      continue;
+    }
+    if (arg === "--output") {
+      outputPath = requireArgValue(argv, i, arg);
+      i += 1;
+      continue;
+    }
+    fail(\"Unknown argument '\" + arg + \"'.\");
+  }
+
+  if (inputPath.trim().length === 0) {
+    inputPath = join(import.meta.dir, "fixtures", "input.json");
+  }
+
+  return { inputPath, outputPath };
+}
+
+function loadJson<T>(filePath: string): T {
+  const text = readFileSync(filePath, "utf8");
+  return JSON.parse(text) as T;
+}
+
+function requireArgValue(argv: string[], index: number, name: string): string {
+  const value = argv[index + 1];
+  if (!value || value.startsWith("-")) {
+    fail(\"Missing value for \" + name + \".\");
+  }
+  return value;
+}
+
+function fail(message: string): never {
+  console.error(message);
+  printUsage();
+  process.exit(1);
+}
+
+function printUsage(): void {
+  console.log("Usage: bun develop/skills/src/${skillIdValue}/index.ts [--input <path>] [--output <path>]");
+}
+`;
+}
+
+function renderTestStub(skillIdValue: string): string {
+  return `import { expect, test } from "bun:test";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { runSkill, type SkillInput, type SkillOutput } from "./index";
+
+function loadFixture<T>(name: string): T {
+  const filePath = join(import.meta.dir, "fixtures", name);
+  const content = readFileSync(filePath, "utf8");
+  return JSON.parse(content) as T;
+}
+
+test("${skillIdValue} fixtures", () => {
+  const input = loadFixture<SkillInput>("input.json");
+  const expected = loadFixture<SkillOutput>("expected.json");
+  const result = runSkill(input);
+  expect(result).toEqual(expected);
+});
 `;
 }
 

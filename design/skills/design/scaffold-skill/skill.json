@@ -35,16 +35,23 @@
       "Creates design/skills/<skill_id>/skill.json.",
       "Creates design/skills/<skill_id>/SKILL.md with valid frontmatter name=<skill_id>.",
       "Creates develop/skills/src/<skill_id>/index.ts stub.",
+      "Creates develop/skills/src/<skill_id>/fixtures/input.json and expected.json.",
+      "Creates develop/skills/src/<skill_id>/index.test.ts harness.",
       "Regenerates design/skills/SKILL_INVENTORY.md.",
+      "Regenerates design/skills/SKILL_INDEX.json.",
       "Attempts to log U.Work via telemetry/log-work."
     ],
     "tests": [
       {
         "expected": {
           "code_stub_path": "develop/skills/src/design/example-skill/index.ts",
+          "fixture_expected_path": "develop/skills/src/design/example-skill/fixtures/expected.json",
+          "fixture_input_path": "develop/skills/src/design/example-skill/fixtures/input.json",
           "inventory_path": "design/skills/SKILL_INVENTORY.md",
+          "skill_index_path": "design/skills/SKILL_INDEX.json",
           "skill_md_path": "design/skills/design/example-skill/SKILL.md",
-          "skill_spec_path": "design/skills/design/example-skill/skill.json"
+          "skill_spec_path": "design/skills/design/example-skill/skill.json",
+          "test_harness_path": "develop/skills/src/design/example-skill/index.test.ts"
         },
         "input_fixture": {
           "family": "design",
@@ -67,6 +74,7 @@
     "One or more target files already exist.",
     "Failed to write one or more scaffolded files.",
     "Inventory regeneration failed.",
+    "Skill index regeneration failed.",
     "Optional telemetry logging failed (telemetry/log-work unavailable or errored)."
   ],
   "id": "design/scaffold-skill",
@@ -145,7 +153,7 @@
     }
   ],
   "intent": {
-    "goal": "Mint a deterministic scaffold for a new Skill (SkillSpec + SKILL.md + code stub) and register it in the inventory.",
+    "goal": "Mint a deterministic scaffold for a new Skill (SkillSpec + SKILL.md + code stub + fixtures + test harness) and register it in the inventory index.",
     "non_goals": [
       "Does not implement the new skill's behavior; only scaffolds files.",
       "Does not infer domain rules beyond provided name/summary."
@@ -159,7 +167,7 @@
     "tags": [
       "design"
     ],
-    "updated": "2026-01-14"
+    "updated": "2026-01-15"
   },
   "name": "Scaffold Skill",
   "outputs": [
@@ -179,8 +187,28 @@
       "type": "string"
     },
     {
+      "description": "Path to the scaffolded input fixture JSON.",
+      "name": "fixture_input_path",
+      "type": "string"
+    },
+    {
+      "description": "Path to the scaffolded expected output fixture JSON.",
+      "name": "fixture_expected_path",
+      "type": "string"
+    },
+    {
+      "description": "Path to the scaffolded test harness.",
+      "name": "test_harness_path",
+      "type": "string"
+    },
+    {
       "description": "Path to the regenerated skill inventory file.",
       "name": "inventory_path",
+      "type": "string"
+    },
+    {
+      "description": "Path to the regenerated skill index file.",
+      "name": "skill_index_path",
       "type": "string"
     }
   ],
@@ -206,8 +234,20 @@
       "step_id": "step-write-code"
     },
     {
+      "instruction": "Write scaffolded input/output fixtures to develop/skills/src/<skill_id>/fixtures.",
+      "step_id": "step-write-fixtures"
+    },
+    {
+      "instruction": "Write a minimal test harness to develop/skills/src/<skill_id>/index.test.ts.",
+      "step_id": "step-write-test"
+    },
+    {
       "instruction": "Regenerate design/skills/SKILL_INVENTORY.md via develop/tools/skill/inventory.ts.",
       "step_id": "step-regenerate-inventory"
+    },
+    {
+      "instruction": "Regenerate design/skills/SKILL_INDEX.json via develop/tools/skill/index.ts.",
+      "step_id": "step-regenerate-index"
     },
     {
       "instruction": "Log the scaffolding action via telemetry/log-work with method design/scaffold-skill.",
@@ -215,7 +255,6 @@
     }
   ],
   "schema_version": "0.1.0",
-  "summary": "Scaffolds a new Skill folder (SkillSpec + SKILL.md + code stub) and registers it in the inventory.",
-  "version": "0.1.0"
+  "summary": "Scaffolds a new Skill folder (SkillSpec + SKILL.md + code stub + fixtures + test harness) and registers it in the inventory index.",
+  "version": "0.1.1"
 }
-

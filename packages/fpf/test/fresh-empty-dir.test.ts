@@ -42,6 +42,8 @@ test("fresh empty dir: init then check succeeds (json-only stdout)", () => {
     expect(initJson.created).toContain("design/skills/example/hello/skill.json");
     expect(existsSync(path.join(root, "design", "skills", "example", "hello", "skill.json"))).toBe(true);
     expect(existsSync(path.join(root, "design", "skills", "SKILL_INVENTORY.md"))).toBe(true);
+    expect(initJson.created).toContain("design/skills/SKILL_INDEX.json");
+    expect(existsSync(path.join(root, "design", "skills", "SKILL_INDEX.json"))).toBe(true);
 
     const check = runFpf(["check", "--root", root, "--json"]);
     expect(check.exitCode).toBe(0);
@@ -51,6 +53,30 @@ test("fresh empty dir: init then check succeeds (json-only stdout)", () => {
     expect(checkJson.issues).toEqual([]);
   } finally {
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("quickstart creates a DRR and work log in a new root", () => {
+  const parent = mkTempDir();
+  const root = path.join(parent, "workspace");
+  try {
+    const fixedNow = "2026-01-01T00:00:00.000Z";
+    const quickstart = runFpf(["quickstart", "--root", root, "--json"], { env: { FPF_FIXED_NOW: fixedNow } });
+    expect(quickstart.exitCode).toBe(0);
+    expect(quickstart.stderr).toBe("");
+    const quickstartJson = JSON.parse(quickstart.stdout) as { ok: boolean; command: string; drrPath: string; created: string[] };
+    expect(quickstartJson.ok).toBe(true);
+    expect(quickstartJson.command).toBe("quickstart");
+    expect(quickstartJson.drrPath).toBe("design/decisions/001-fpf-quickstart.md");
+
+    const timestamp = fixedNow.replace(/[:.]/g, "-");
+    const drrPath = path.join(root, "design", "decisions", "001-fpf-quickstart.md");
+    const workPath = path.join(root, "runtime", "contexts", "Quickstart", "telemetry", "work", `work-${timestamp}.md`);
+    expect(quickstartJson.created).toContain("design/decisions/001-fpf-quickstart.md");
+    expect(existsSync(drrPath)).toBe(true);
+    expect(existsSync(workPath)).toBe(true);
+  } finally {
+    rmSync(parent, { recursive: true, force: true });
   }
 });
 

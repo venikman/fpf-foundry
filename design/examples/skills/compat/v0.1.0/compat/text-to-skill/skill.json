@@ -1,0 +1,136 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not include licensed text verbatim."
+    ],
+    "privacy": [
+      "Do not include PII in examples."
+    ],
+    "safety": [
+      "Do not invent constraints not implied by the text."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "compat/hello@^0.1.0"
+    ],
+    "tools": [
+      "develop/tools/skill/validate.ts"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Output is valid SkillSpec JSON.",
+      "Output id matches target_id."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "id": "compat/hello",
+          "schema_version": "0.1.0"
+        },
+        "input_fixture": {
+          "source_text": "Create a greeting skill.",
+          "target_id": "compat/hello"
+        },
+        "name": "simple"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required fields in the draft."
+  ],
+  "id": "compat/text-to-skill",
+  "inputs": [
+    {
+      "description": "Natural language description of the skill.",
+      "name": "source_text",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Desired skill id to use in output.",
+      "examples": [
+        "compat/hello"
+      ],
+      "name": "target_id",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Produce a SkillSpec v0.1.0 draft from input text.",
+    "non_goals": [
+      "Executing the described skill.",
+      "Fetching external sources."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-02",
+    "tags": [
+      "compat",
+      "authoring"
+    ],
+    "updated": "2026-01-02"
+  },
+  "name": "Compat Text to Skill",
+  "outputs": [
+    {
+      "description": "Draft SkillSpec JSON.",
+      "name": "skill_json",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "checks": [
+        "Goal and non-goals are explicit."
+      ],
+      "instruction": "Extract intent, inputs, outputs, and constraints from the source text.",
+      "step_id": "step-parse"
+    },
+    {
+      "checks": [
+        "All required fields are present."
+      ],
+      "instruction": "Draft SkillSpec fields using schema_version 0.1.0 and the requested id.",
+      "step_id": "step-structure"
+    },
+    {
+      "instruction": "Run the SkillSpec validator and fix any schema issues.",
+      "step_id": "step-validate"
+    }
+  ],
+  "provenance": {
+    "compiled_at": "2026-01-02T12:00:00Z",
+    "compiled_by": "human",
+    "field_evidence": [
+      {
+        "json_path": "$.intent.goal",
+        "quote": "Create a greeting skill."
+      }
+    ],
+    "source_ref": "local:compat-fixture",
+    "source_type": "doc"
+  },
+  "quality": {
+    "cost_priority": 0.3,
+    "latency_priority": 0.4,
+    "precision_priority": 0.8
+  },
+  "schema_version": "0.1.0",
+  "summary": "Compatibility fixture with optional fields.",
+  "version": "0.1.0"
+}

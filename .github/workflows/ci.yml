@@ -27,6 +27,24 @@ jobs:
       - name: Tests (fresh dir)
         run: bun test
 
+      - name: First-run budget (quickstart)
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist/metrics
+          bun develop/scripts/first_run_budget.ts --runs 10 --min-success-rate 0.9 --max-median-ms 300000 --json | tee dist/metrics/first-run-budget.json
+
+      - name: Upload first-run budget
+        uses: actions/upload-artifact@v4
+        with:
+          name: first-run-budget-${{ matrix.os }}
+          path: dist/metrics/first-run-budget.json
+
+      - name: README examples
+        if: runner.os == 'Linux'
+        run: bun develop/scripts/readme_examples_check.ts
+      # TODO: Upload first-run budget metrics once a metrics endpoint is available.
+
       - name: Smoke (publish artifact)
         shell: bash
         run: |

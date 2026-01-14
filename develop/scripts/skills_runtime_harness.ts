@@ -172,14 +172,22 @@ function buildScenarios(input: { sandboxRepo: string; fixedNow: string }): Scena
       `design/skills/${scaffoldId}/skill.json`,
       `design/skills/${scaffoldId}/SKILL.md`,
       `develop/skills/src/${scaffoldId}/index.ts`,
+      `develop/skills/src/${scaffoldId}/fixtures/input.json`,
+      `develop/skills/src/${scaffoldId}/fixtures/expected.json`,
+      `develop/skills/src/${scaffoldId}/index.test.ts`,
       "design/skills/SKILL_INVENTORY.md",
+      "design/skills/SKILL_INDEX.json",
       workFile,
     ],
     expectedFilesForDigest: [
       `design/skills/${scaffoldId}/skill.json`,
       `design/skills/${scaffoldId}/SKILL.md`,
       `develop/skills/src/${scaffoldId}/index.ts`,
+      `develop/skills/src/${scaffoldId}/fixtures/input.json`,
+      `develop/skills/src/${scaffoldId}/fixtures/expected.json`,
+      `develop/skills/src/${scaffoldId}/index.test.ts`,
       "design/skills/SKILL_INVENTORY.md",
+      "design/skills/SKILL_INDEX.json",
       workFile,
     ],
   });
@@ -374,4 +382,3 @@ function runCapture(command: string, args: string[], options: { cwd: string; env
   }
   return result.stdout ?? "";
 }
-

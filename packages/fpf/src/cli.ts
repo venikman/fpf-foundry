@@ -6,8 +6,11 @@ import { runCheckAsync } from "./commands/check.ts";
 import { runDoctorAsync } from "./commands/doctor.ts";
 import { runInitAsync } from "./commands/init.ts";
 import { runLogWorkAsync } from "./commands/log-work.ts";
+import { runListAsync } from "./commands/list.ts";
 import { runMintNameAsync } from "./commands/mint-name.ts";
+import { runQuickstartAsync } from "./commands/quickstart.ts";
 import { runRecordDrrAsync } from "./commands/record-drr.ts";
+import { runScaffoldAsync } from "./commands/scaffold.ts";
 
 type GlobalOptions = {
   json: boolean;
@@ -45,6 +48,18 @@ export async function runCliAsync(argv: string[]): Promise<number> {
 
     if (parsed.command === "init") {
       const result = await runInitAsync({ rootDir: parsed.rootDir }, parsed.commandArgs);
+      return flushResult(parsed.json, result);
+    }
+    if (parsed.command === "quickstart") {
+      const result = await runQuickstartAsync({ rootDir: parsed.rootDir }, parsed.commandArgs);
+      return flushResult(parsed.json, result);
+    }
+    if (parsed.command === "list") {
+      const result = await runListAsync({ rootDir: parsed.rootDir }, parsed.commandArgs);
+      return flushResult(parsed.json, result);
+    }
+    if (parsed.command === "scaffold") {
+      const result = await runScaffoldAsync({ rootDir: parsed.rootDir }, parsed.commandArgs);
       return flushResult(parsed.json, result);
     }
     if (parsed.command === "check") {
@@ -191,6 +206,9 @@ function writeHelp(json: boolean, command: string | null): number {
     "",
     "Commands:",
     "  init",
+    "  quickstart",
+    "  list",
+    "  scaffold skill",
     "  check",
     "  doctor",
     "  mint-name",

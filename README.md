@@ -13,9 +13,56 @@ You don't "install a library" here; you run skills that mint real artifacts you 
 - **Work traces you can audit**: U.Work records under `runtime/contexts/<Context>/telemetry/work/...`
 - **A living skill inventory** generated from SkillSpec (`design/skills/SKILL_INVENTORY.md`)
 
-## Quickstart (fresh empty dir -> deterministic diff)
+## Quickstart (one command -> artifact)
 
 Prereq: Bun installed.
+
+```sh
+mkdir fpf-demo && cd fpf-demo
+git init -q
+
+bunx --bun @venikman/fpf quickstart
+
+git status --short
+```
+
+Local fallback (no npm):
+
+```sh
+FPF_REPO=/path/to/fpf-foundry
+mkdir fpf-demo && cd fpf-demo
+git init -q
+
+"$FPF_REPO"/packages/fpf/bin/fpf quickstart --root .
+```
+
+Troubleshooting:
+
+```sh
+bunx --bun @venikman/fpf doctor --root .
+```
+
+Local fallback:
+
+```sh
+FPF_REPO=/path/to/fpf-foundry
+"$FPF_REPO"/packages/fpf/bin/fpf doctor --root .
+```
+
+Machine mode examples:
+
+```sh
+bunx --bun @venikman/fpf quickstart --json | cat
+```
+
+Local fallback:
+
+```sh
+FPF_REPO=/path/to/fpf-foundry
+"$FPF_REPO"/packages/fpf/bin/fpf quickstart --root . --json | cat
+```
+
+## Initialize + check (fresh empty dir -> deterministic diff)
 
 ```sh
 mkdir fpf-demo && cd fpf-demo
@@ -144,8 +191,8 @@ User-level (personal install):
 # Codex: $CODEX_HOME/skills (default ~/.codex/skills)
 CODEX_SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 mkdir -p "$CODEX_SKILLS_DIR" ~/.claude/skills
-cp -R .codex/skills/<skill> "$CODEX_SKILLS_DIR/"
-cp -R .codex/skills/<skill> ~/.claude/skills/
+cp -R .codex/skills/mint-name "$CODEX_SKILLS_DIR/"
+cp -R .codex/skills/mint-name ~/.claude/skills/
 ```
 
 Restart Codex after copying (Claude reloads on save). If needed, enable skills in Codex with `codex --enable skills`. Avoid symlinking `.codex/skills/<skill>`; Codex ignores symlinked skill directories.
@@ -242,9 +289,17 @@ Regenerate inventory:
 bun develop/tools/skill/inventory.ts
 ```
 
+Regenerate machine index:
+
+```sh
+bun develop/tools/skill/index.ts --out design/skills/SKILL_INDEX.json
+```
+
 Inventory files:
 
 design/skills/SKILL_INVENTORY.md (generated; do not hand-edit)
+
+design/skills/SKILL_INDEX.json (generated; machine index)
 
 design/skills/SKILL_BACKLOG.md (planned skills)
 

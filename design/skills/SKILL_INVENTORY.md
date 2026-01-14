@@ -19,6 +19,6 @@ Columns
 | `design/init-context` | Design | A.15 | - | experimental | code | context_root; readme_path | Initializes a bounded context skeleton under runtime/contexts to prevent directory drift. |
 | `design/mint-name` | Design | E.5.1; F.18 | - | experimental | code | name_card_path | Mints a new F.18 Name Card with strict Twin-Label and Sense-Seed validation. |
 | `design/record-drr` | Design | A.10; E.9 | - | experimental | code | drr_path | Records a formal Design-Rationale Record (DRR) for architectural decisions. |
-| `design/scaffold-skill` | Design | A.15; E.19 | - | experimental | code | code_stub_path; inventory_path; skill_md_path; skill_spec_path | Scaffolds a new Skill folder (SkillSpec + SKILL.md + code stub) and registers it in the inventory. |
+| `design/scaffold-skill` | Design | A.15; E.19 | - | experimental | code | code_stub_path; fixture_expected_path; fixture_input_path; inventory_path; skill_index_path; skill_md_path; skill_spec_path; test_harness_path | Scaffolds a new Skill folder (SkillSpec + SKILL.md + code stub + fixtures + test harness) and registers it in the inventory index. |
 | `planning/create-workplan` | Planning | A.15.1; A.15.2 | - | experimental | code | WorkPlan | Creates a WorkPlan (Schedule of Intent) and stores it under runtime/contexts. |
 | `telemetry/log-work` | Telemetry | A.15.1 | - | experimental | code | work_record_path | Generates a U.Work record for an action (Pattern A.15.1). |

@@ -1,0 +1,47 @@
+{
+  "schema_version": "1.0.0",
+  "skills": [
+    {
+      "id": "design/init-context",
+      "invocation": "design/init-context",
+      "package": "@venikman/fpf-skill-design-init-context",
+      "spec_path": "design/skills/design/init-context/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "design/mint-name",
+      "invocation": "design/mint-name",
+      "package": "@venikman/fpf-skill-design-mint-name",
+      "spec_path": "design/skills/design/mint-name/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "design/record-drr",
+      "invocation": "design/record-drr",
+      "package": "@venikman/fpf-skill-design-record-drr",
+      "spec_path": "design/skills/design/record-drr/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "design/scaffold-skill",
+      "invocation": "design/scaffold-skill",
+      "package": "@venikman/fpf-skill-design-scaffold-skill",
+      "spec_path": "design/skills/design/scaffold-skill/skill.json",
+      "version": "0.1.1"
+    },
+    {
+      "id": "planning/create-workplan",
+      "invocation": "planning/create-workplan",
+      "package": "@venikman/fpf-skill-planning-create-workplan",
+      "spec_path": "design/skills/planning/create-workplan/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "telemetry/log-work",
+      "invocation": "telemetry/log-work",
+      "package": "@venikman/fpf-skill-telemetry-log-work",
+      "spec_path": "design/skills/telemetry/log-work/skill.json",
+      "version": "0.1.0"
+    }
+  ]
+}

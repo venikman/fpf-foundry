@@ -1,0 +1,76 @@
+{
+  "constraints": {
+    "licensing": [],
+    "privacy": [],
+    "safety": []
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [],
+    "tools": []
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Includes the recipient name."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "greeting": "Hello, Ada."
+        },
+        "input_fixture": {
+          "recipient": "Ada"
+        },
+        "name": "basic"
+      }
+    ]
+  },
+  "id": "compat/hello",
+  "inputs": [
+    {
+      "description": "Name of the person to greet.",
+      "name": "recipient",
+      "required": true,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Generate a greeting message.",
+    "non_goals": []
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-01",
+    "tags": [
+      "compat"
+    ],
+    "updated": "2026-01-01"
+  },
+  "name": "Compat Hello Skill",
+  "outputs": [
+    {
+      "description": "Greeting message.",
+      "name": "greeting",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Create a greeting using the recipient name.",
+      "step_id": "step-greet"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Compatibility fixture for SkillSpec v0.1.0.",
+  "version": "0.1.0"
+}

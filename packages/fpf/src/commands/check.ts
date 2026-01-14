@@ -3,6 +3,7 @@ import { join, resolve } from "path";
 import { CliError } from "../lib/errors.ts";
 import { toPosixPath } from "../lib/paths.ts";
 import { findSkillFiles, loadJsonFile, toRepoRelative } from "../skill/skill-io.ts";
+import { generateSkillIndexJson } from "../skill/skill-index.ts";
 import { SkillDoc, validateSchema, runCrossChecks } from "../skill/skill-validate.ts";
 import { generateSkillInventoryMarkdown } from "../skill/skill-inventory.ts";
 import { runInventoryChecks } from "../skill/skill-inventory-checks.ts";
@@ -51,6 +52,27 @@ export async function runCheckAsync(ctx: CommandContext, argv: string[]): Promis
         stdout.push("Updated design/skills/SKILL_INVENTORY.md");
       } else {
         issues.push({ check: "inventory", message: "design/skills/SKILL_INVENTORY.md is out of date. Run `fpf check --fix`." });
+      }
+    }
+  }
+
+  const indexPath = join(root, "design", "skills", "SKILL_INDEX.json");
+  const expectedIndex = generateSkillIndexJson({ rootDir: root });
+  if (!existsSync(indexPath)) {
+    if (options.fix) {
+      writeFileSync(indexPath, expectedIndex, "utf8");
+      stdout.push("Wrote design/skills/SKILL_INDEX.json");
+    } else {
+      issues.push({ check: "skill-index", message: "Missing design/skills/SKILL_INDEX.json" });
+    }
+  } else {
+    const actual = readFileSync(indexPath, "utf8");
+    if (actual !== expectedIndex) {
+      if (options.fix) {
+        writeFileSync(indexPath, expectedIndex, "utf8");
+        stdout.push("Updated design/skills/SKILL_INDEX.json");
+      } else {
+        issues.push({ check: "skill-index", message: "design/skills/SKILL_INDEX.json is out of date. Run `fpf check --fix`." });
       }
     }
   }
@@ -112,7 +134,7 @@ function parseArgs(argv: string[]): CheckOptions {
           "Usage: fpf check [--fix]",
           "",
           "Options:",
-          "  --fix  Update generated files (currently: design/skills/SKILL_INVENTORY.md)",
+          "  --fix  Update generated files (design/skills/SKILL_INVENTORY.md, design/skills/SKILL_INDEX.json)",
         ].join("\n"),
         0,
       );
@@ -169,4 +191,3 @@ function validateSkills(root: string): CheckIssue[] {
 
   return [];
 }
-
