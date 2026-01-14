@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { parseArgs } from "util";
 import { existsSync, mkdirSync, readFileSync } from "fs";
-import { dirname, isAbsolute, join, relative, resolve } from "path";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "path";
 import { fileURLToPath } from "url";
 import { createHash } from "crypto";
 import { parseSemicolonList, sortKeys, stableStringify } from "../../_shared/utils";
@@ -301,10 +301,14 @@ function resolveMethodDescriptionRef(methodId: string, explicitPath: string | un
 function normalizeArtifactRef(value: string, repoRootDir: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return trimmed;
+
   const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
-  if (absolute.startsWith(repoRootDir + "/") || absolute === repoRootDir) {
+  const rel = relative(repoRootDir, absolute);
+  const isOutsideRepoRoot = isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`);
+  if (!isOutsideRepoRoot) {
     return toRepoRelative(absolute, repoRootDir);
   }
+
   return trimmed;
 }
 
