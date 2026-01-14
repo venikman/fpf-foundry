@@ -50,15 +50,15 @@ bun develop/skills/src/design/mint-name/index.ts \
 
 Outputs:
 
+```
 runtime/contexts/Tooling/design/names/fpf-foundry.md
-
 runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md (via telemetry/log-work)
+```
 
 Constraints (enforced):
 
---context must be a safe path segment ([A-Za-z0-9_-], starts with alnum)
-
---id must be kebab-case (lowercase, digits, -)
+- `--context` must be a safe path segment ([A-Za-z0-9_-], starts with alnum)
+- `--id` must be kebab-case (lowercase, digits, -)
 
 ### 2) Record a DRR (E.9)
 
@@ -74,9 +74,10 @@ bun develop/skills/src/design/record-drr/index.ts \
 
 Outputs:
 
+```
 design/decisions/NNN-adopt-skillspec-json-as-the-canonical-format.md
-
 runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md
+```
 
 Notes:
 
@@ -96,7 +97,9 @@ bun develop/skills/src/telemetry/log-work/index.ts \
 
 Output:
 
+```
 runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md
+```
 
 ## Using skills with Claude and Codex
 
@@ -201,11 +204,9 @@ git config core.hooksPath .githooks
 
 Skills have three "layers":
 
-SkillSpec (machine-readable): design/skills/**/skill.json
-
-Skill doc (human-facing, optional but expected for non-none): design/skills/**/SKILL.md (frontmatter is used by tooling)
-
-Implementation (runnable, optional): develop/skills/src/<skill-id>/index.ts
+1. **SkillSpec** (machine-readable): `design/skills/**/skill.json`
+2. **Skill doc** (human-facing, optional but expected for non-none): `design/skills/**/SKILL.md` (frontmatter is used by tooling)
+3. **Implementation** (runnable, optional): `develop/skills/src/<skill-id>/index.ts`
 
 Validate all SkillSpec:
 
@@ -261,11 +262,9 @@ runtime/ - generated outputs (contexts, emitted artifacts, indexes). Expect chur
 
 Everything is experimental. The point is fast iteration with strict invariants:
 
-skills should be small, deterministic, and file-output based
-
-any "real" action should leave a U.Work trail (A.15.1)
-
-generated inventories must match what's actually implemented
+- skills should be small, deterministic, and file-output based
+- any "real" action should leave a U.Work trail (A.15.1)
+- generated inventories must match what's actually implemented
 
 Start with design/skills/SKILL_INVENTORY.md to see what exists, and design/skills/SKILL_BACKLOG.md to see what's planned.
 
