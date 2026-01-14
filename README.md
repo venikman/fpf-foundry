@@ -1,235 +1,201 @@
-# FPF Foundry
+Here’s a complete `README.md` you can paste to replace the whole file.
+FPF note: none.
 
-FPF Foundry is a Bun + TypeScript workspace for turning “how we think and work” into concrete, auditable artifacts: names, decisions, and work logs. It’s opinionated on purpose: small tools (“skills”) generate files in predictable places, with safety and consistency checks baked in.
+````md
+# Agent Skills (Claude Code + OpenAI Codex)
 
-FPF references used in this repo today: **F.18 (Name Card)**, **E.9 (Design-Rationale Record / DRR)**, **A.15.1 (U.Work record)**.
+This repo contains filesystem-based Agent Skills: small folders with a `SKILL.md` (YAML front matter + Markdown instructions), plus optional scripts/resources. The goal is that each Skill works in both Claude Code and OpenAI Codex.
 
-## What you get (practical outputs)
+## Quick start
 
-You don’t “install a library” here; you run skills that mint real artifacts you can review in Git:
+### Option A: Use in a repo (team-friendly)
 
-- **Vocabulary you can point to**: Name Cards under `runtime/contexts/<Context>/design/names/…`
-- **Decisions you can diff**: DRRs under `design/decisions/…`
-- **Work traces you can audit**: U.Work records under `runtime/contexts/<Context>/telemetry/work/…`
-- **A living skill inventory** generated from SkillSpec (`design/skills/SKILL_INVENTORY.md`)
+1) Put Skills in both repo locations:
+- Claude Code: `.claude/skills/<skill>/SKILL.md`
+- Codex: `.codex/skills/<skill>/SKILL.md`
 
-## Current usable skills (run from repo root)
+2) Claude Code: open the repo and ask:
+- `What Skills are available?`
+Claude auto-loads Skills when files change.
 
-### 1) Mint a Name (F.18)
-Creates a Name Card in a bounded context (directory) and logs the action as U.Work.
+3) Codex: start Codex in the repo root, then:
+- enable Skills if needed: `codex --enable skills`
+- restart Codex after adding Skills
+- list Skills: `/skills`
 
-```sh
-bun develop/skills/src/design/mint-name/index.ts \
-  --context Tooling \
-  --id fpf-foundry \
-  --label "FPF Foundry" \
-  --mds "The workshop repo that mints names, skills, and audit-ready artifacts."
+### Option B: Install for one user (personal Skills)
+
+Claude Code (personal):
+```bash
+mkdir -p ~/.claude/skills
+cp -R .claude/skills/<skill> ~/.claude/skills/
+````
+
+Codex (personal; macOS/Linux default):
+
+```bash
+mkdir -p ~/.codex/skills
+cp -R .codex/skills/<skill> ~/.codex/skills/
 ```
 
-Outputs:
+Restart Codex after copying.
 
-runtime/contexts/Tooling/design/names/fpf-foundry.md
+## How Skills work (conceptual model)
 
-runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md (via telemetry/log-work)
+Discovery: only `name` + `description` are loaded at startup.
+Activation: a Skill triggers when your request matches its description (implicit). Codex also supports explicit invocation.
+Execution: the agent reads `SKILL.md` and any referenced files; it may run bundled scripts when instructed.
 
-Constraints (enforced):
+## Skill structure
 
---context must be a safe path segment ([A-Za-z0-9_-], starts with alnum)
+Recommended layout (both tools):
 
---id must be kebab-case (lowercase, digits, -)
-
-### 2) Record a DRR (E.9)
-
-Creates a numbered decision record (ADR-like) and logs the action as U.Work.
-
-```sh
-bun develop/skills/src/design/record-drr/index.ts \
-  --title "Adopt SkillSpec JSON as the canonical format" \
-  --context "We need a strict, toolable, cross-checkable skill definition format." \
-  --decision "Use skill.json as the only SkillSpec source of truth; validate + inventory from it." \
-  --work-context Tooling
+```
+<skill>/
+  SKILL.md
+  scripts/        (optional; executable helpers)
+  references/     (optional; docs)
+  assets/         (optional; templates/resources)
 ```
 
+## SKILL.md format
 
-Outputs:
+`SKILL.md` starts with YAML front matter between `---` markers, then Markdown instructions.
 
-design/decisions/NNN-adopt-skillspec-json-as-the-canonical-format.md
+Minimal cross-tool template:
 
-runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md
+```md
+---
+name: my-skill
+description: One line. Include trigger keywords a user would naturally say. Use when <conditions>.
+---
 
-Notes:
+# Goal
+State what the Skill accomplishes.
 
---work-context defaults to Skills if omitted.
+# Inputs
+List what the user may provide (files, diffs, URLs, text).
 
-### 3) Log Work (A.15.1)
+# Output
+State the required output format.
 
-Writes a standalone work record (used by other skills for audit trace).
+# Procedure
+Step-by-step instructions.
 
-```sh
-bun develop/skills/src/telemetry/log-work/index.ts \
-  --spec "A.15.1" \
-  --role "Archivist" \
-  --context Tooling \
-  --action "Ran a manual work log example."
+# Edge cases
+What to do when inputs are missing/ambiguous.
 ```
 
+Cross-tool compatibility rules (safe defaults):
 
-Output:
+* `name`: lowercase letters, numbers, hyphens only; keep length ≤64 chars; match the directory name.
+* `description`: single line; keep length ≤500 chars; include “Use when …” + natural keywords.
+* Keep `SKILL.md` short; move long reference material into separate files (progressive disclosure).
 
-runtime/contexts/Tooling/telemetry/work/work-<timestamp>.md
+Metadata notes:
 
-## Using skills with Claude and Codex
+* Claude supports additional YAML fields like `allowed-tools`, `model`, `context`, `hooks`, `user-invocable`, etc.
+* Codex ignores extra YAML keys, so Claude-specific fields are usually safe to include.
+* Codex optionally supports `metadata.short-description`.
 
-These skills are file-output based, so AI agents work well here: ask them to run a skill and report back with the created file path(s) + `git diff`.
+## Where Skills live
 
-### Claude (prompt examples)
+### Claude Code
 
-Mint a Name Card (F.18):
+Paths:
 
-```text
-In this repo root, run:
-bun develop/skills/src/design/mint-name/index.ts --context Tooling --id demo-name --label "Demo Name" --mds "A short, context-local definition."
+* Personal: `~/.claude/skills/<skill>/`
+* Project: `.claude/skills/<skill>/`
+* Enterprise / managed (org-controlled)
+* Plugin-bundled (via plugins)
 
-Then show me the created file path(s) and `git diff`.
+Precedence: managed > personal > project > plugin.
+
+### OpenAI Codex
+
+Repo scopes (highest precedence wins; Codex searches these when launched inside a repo):
+
+* `$CWD/.codex/skills`
+* `$CWD/../.codex/skills`
+* `$REPO_ROOT/.codex/skills`
+
+User scope:
+
+* `$CODEX_HOME/skills` (macOS/Linux default: `~/.codex/skills`)
+
+Admin scope:
+
+* `/etc/codex/skills`
+
+System scope:
+
+* bundled with Codex.
+
+## Using a Skill
+
+### Claude Code
+
+* Trigger implicitly: ask for something matching the Skill description.
+* Verify loaded: `What Skills are available?`
+* If it doesn’t trigger: rephrase using keywords from the description.
+
+### Codex
+
+* List Skills: `/skills`
+* Explicit invoke: type `$` and select a Skill, or type `$skill-name` in your prompt.
+* Implicit invoke: describe the task; Codex may choose a matching Skill.
+
+If Skills don’t appear in Codex:
+
+* enable Skills: `codex --enable skills`
+* restart Codex
+* confirm the folder is not symlinked (Codex ignores symlinked Skill directories)
+* confirm `SKILL.md` YAML is valid and `name`/`description` fit length rules
+
+## Creating a new Skill
+
+Fastest (Codex):
+
+1. Run in Codex:
+
+   * `$skill-creator`
+2. Follow prompts (what it does, when it triggers, instruction-only vs script-backed).
+3. Copy the created Skill folder into `.claude/skills/` if you want Claude Code support too.
+
+Manual (works everywhere):
+
+```bash
+SKILL=my-skill
+mkdir -p .codex/skills/$SKILL .claude/skills/$SKILL
+$EDITOR .codex/skills/$SKILL/SKILL.md
+cp .codex/skills/$SKILL/SKILL.md .claude/skills/$SKILL/SKILL.md
 ```
 
-Record a DRR (E.9):
+Do not symlink `.codex/skills/<skill>`: Codex ignores symlinked Skill directories.
 
-```text
-In this repo root, run:
-bun develop/skills/src/design/record-drr/index.ts --title "Adopt X" --context "We need Y because Z." --decision "We will do X." --work-context Tooling
+## Troubleshooting
 
-Then show me the created file path(s) and `git diff`.
-```
+Codex:
 
-### Codex (prompt examples)
+* Skill doesn’t appear: enable Skills + restart; confirm `SKILL.md` exists; no symlink; YAML valid; `name`/`description` within limits.
+* Skill doesn’t trigger: rewrite `description` to be concrete and keyword-rich; avoid overlapping Skills with similar descriptions.
 
-Mint a Name Card via Codex skill (`.codex/skills`):
+Claude Code:
 
-```text
-Use $design-mint-name to mint a Name Card:
-- context: Tooling
-- id: demo-name
-- label: "Demo Name"
-- mds: "A short, context-local definition."
+* Skill doesn’t appear: confirm location, YAML validity, and `name` rules; Claude reloads on save.
+* Conflicts: same `name` resolves by precedence; rename to avoid collisions.
 
-Return the created file path(s) and `git diff`.
-```
+## References (primary docs; accessed 2026-01-14)
 
-Record a DRR via Codex skill:
+OpenAI Codex:
 
-```text
-Use $design/record-drr to record a DRR:
-- title: "Adopt X"
-- context: "We need Y because Z."
-- decision: "We will do X."
-- work-context: Tooling
+* [https://developers.openai.com/codex/skills/](https://developers.openai.com/codex/skills/)
+* [https://developers.openai.com/codex/skills/create-skill/](https://developers.openai.com/codex/skills/create-skill/)
+* [https://developers.openai.com/codex/cli/](https://developers.openai.com/codex/cli/)
+* [https://developers.openai.com/codex/cli/reference/](https://developers.openai.com/codex/cli/reference/)
+* Agent Skills standard: [https://agentskills.io](https://agentskills.io)
 
-Return the created file path(s) and `git diff`.
-```
+Anthropic / Claude:
 
-Log Work via Codex skill:
-
-```text
-Use $telemetry/log-work:
-- spec: "A.15.1"
-- role: "Archivist"
-- context: Tooling
-- action: "Ran a manual work log example."
-
-Return the created file path.
-```
-
-## Setup
-
-Prereq: [Bun](https://bun.sh)
-
-```sh
-bun install
-```
-
-
-Optional: enable the pre-commit hook for local safety checks:
-
-```sh
-git config core.hooksPath .githooks
-```
-
-## Skill inventory & SkillSpec
-
-Skills have three “layers”:
-
-SkillSpec (machine-readable): design/skills/**/skill.json
-
-Skill doc (human-facing, optional but expected for non-none): design/skills/**/SKILL.md (frontmatter is used by tooling)
-
-Implementation (runnable, optional): develop/skills/src/<skill-id>/index.ts
-
-Validate all SkillSpec:
-
-```sh
-bun develop/tools/skill/validate.ts --all
-```
-
-
-Regenerate inventory:
-
-```sh
-bun develop/tools/skill/inventory.ts
-```
-
-
-Inventory files:
-
-design/skills/SKILL_INVENTORY.md (generated; do not hand-edit)
-
-design/skills/SKILL_BACKLOG.md (planned skills)
-
-## Safety & consistency gates
-
-This repo is intentionally hostile to subtle corruption and drift:
-
-No JavaScript source (TypeScript only):
-
-```sh
-bun develop/scripts/no_js_files_check.ts --all
-```
-
-
-Unicode safety scan (hidden/bidi/control characters; Trojan Source class):
-
-```sh
-bun develop/scripts/unicode_safety_check.ts --all
-```
-
-
-Repo checks (format, lint, safety scan, SkillSpec validation, inventory cross-checks):
-
-```sh
-bun run check
-```
-
-## Repo layout (mental model)
-
-design/ — specs, decisions, examples, skill definitions (source-of-truth docs/specs)
-
-develop/ — tooling + runnable skill implementations
-
-runtime/ — generated outputs (contexts, emitted artifacts, indexes). Expect churn here.
-
-.codex/ — Codex CLI SKILL.md packages (separate from SkillSpec; reserved by tooling)
-
-## Status
-
-Everything is experimental. The point is fast iteration with strict invariants:
-
-skills should be small, deterministic, and file-output based
-
-any “real” action should leave a U.Work trail (A.15.1)
-
-generated inventories must match what’s actually implemented
-
-Start with design/skills/SKILL_INVENTORY.md to see what exists, and design/skills/SKILL_BACKLOG.md to see what’s planned.
-
-
-FPF patterns/specs referenced above: **F.18**, **E.9**, **A.15.1**.
+* [https://code.claude.com/docs/en/skills](https://code.claude.com/docs/en/skills)
+* [https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
