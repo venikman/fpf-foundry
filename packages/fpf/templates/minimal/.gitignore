@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+.env
+dist/
+coverage/
+.bun/
+runtime/out/
+runtime/contexts/
+runtime/skills/index.json
+

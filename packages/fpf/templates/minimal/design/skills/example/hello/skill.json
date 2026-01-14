@@ -1,0 +1,62 @@
+{
+  "schema_version": "0.1.0",
+  "id": "example/hello",
+  "name": "Hello Skill",
+  "summary": "Demonstration SkillSpec created by fpf init.",
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "intent": {
+    "goal": "Demonstrate a minimal SkillSpec.",
+    "non_goals": [
+      "Does not perform real work."
+    ]
+  },
+  "inputs": [],
+  "outputs": [],
+  "procedure": [
+    {
+      "step_id": "step-1",
+      "instruction": "Do nothing; this is an example SkillSpec."
+    }
+  ],
+  "constraints": {
+    "safety": [],
+    "privacy": [],
+    "licensing": []
+  },
+  "dependencies": {
+    "tools": [],
+    "skills": []
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Schema validation passes."
+    ],
+    "tests": [
+      {
+        "name": "example-test",
+        "input_fixture": {},
+        "expected": {}
+      }
+    ]
+  },
+  "version": "0.1.0",
+  "metadata": {
+    "tags": [
+      "example"
+    ],
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-01",
+    "updated": "2026-01-01"
+  }
+}
+

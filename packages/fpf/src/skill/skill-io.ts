@@ -9,17 +9,11 @@ type LineInfo = {
   content: string;
 };
 
-/**
- * Loads and parses a YAML file using the project-restricted YAML subset parser.
- */
 export function loadYamlFile(filePath: string): unknown {
   const text = readFileSync(filePath, "utf8");
   return parseYaml(text, filePath);
 }
 
-/**
- * Loads and parses a JSON file using `JSON.parse`.
- */
 export function loadJsonFile(filePath: string): unknown {
   const text = readFileSync(filePath, "utf8");
   try {
@@ -30,12 +24,6 @@ export function loadJsonFile(filePath: string): unknown {
   }
 }
 
-/**
- * Parses YAML text using a strict subset (no tabs, no inline collections, stable indentation).
- *
- * This is intentionally not a general-purpose YAML parser. It exists to keep SkillSpec tooling
- * deterministic and dependency-free for the limited YAML we accept.
- */
 export function parseYaml(text: string, sourceName: string): unknown {
   const lines = buildLineInfos(text, sourceName);
   const startIndex = nextNonEmptyIndex(lines, 0);
@@ -55,9 +43,6 @@ export function parseYaml(text: string, sourceName: string): unknown {
   return value;
 }
 
-/**
- * Recursively sorts object keys to produce deterministic JSON output.
- */
 export function sortKeys(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sortKeys);
@@ -73,33 +58,21 @@ export function sortKeys(value: unknown): unknown {
   return value;
 }
 
-/**
- * JSON stringifier with stable indentation and trailing newline.
- */
 export function stableStringify(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
 
-/**
- * Recursively finds SkillSpec files beneath the given directory.
- */
 export function findSkillFiles(rootDir: string): string[] {
   const results: string[] = [];
   walk(rootDir, results);
   return results.sort();
 }
 
-/**
- * Converts a filesystem path to a repo-relative, POSIX-style path.
- */
 export function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
   const rel = relative(rootDir, filePath);
   return rel.length === 0 ? "." : rel.split("\\").join("/");
 }
 
-/**
- * Converts a path string to POSIX separators.
- */
 export function toPosixPath(pathValue: string): string {
   return pathValue.split("\\").join("/");
 }
@@ -252,271 +225,211 @@ function parseSequenceItem(lines: LineInfo[], lineIndex: number, indentLevel: nu
   return { value: parseScalar(trimmed), nextIndex: lineIndex + 1 };
 }
 
-function parseInlineMappingCandidate(value: string): { key: string; remainder: string } | null {
-  const colonIndex = findUnquotedChar(value, ":");
-  if (colonIndex === -1) {
-    return null;
-  }
-  const key = value.slice(0, colonIndex).trim();
-  if (!/^[A-Za-z0-9_-]+$/.test(key)) {
-    return null;
-  }
-  return { key, remainder: value.slice(colonIndex + 1) };
-}
-
-function parseInlineMapping(
-  lines: LineInfo[],
-  lineIndex: number,
-  indentLevel: number,
-  inline: { key: string; remainder: string },
-): { value: Record<string, unknown>; nextIndex: number } {
-  const obj: Record<string, unknown> = {};
-  const valuePart = inline.remainder.trim();
-  if (valuePart.length === 0) {
-    const nextIndex = nextNonEmptyIndex(lines, lineIndex + 1);
-    if (nextIndex >= lines.length || lines[nextIndex].indent <= indentLevel) {
-      obj[inline.key] = null;
-      return { value: obj, nextIndex };
-    }
-    const { value, nextIndex: afterIndex } = parseBlock(lines, nextIndex, lines[nextIndex].indent);
-    obj[inline.key] = value;
-    const merged = mergeInlineMapping(lines, afterIndex, indentLevel, obj);
-    return merged;
-  }
-  if (valuePart === "|" || valuePart === ">") {
-    const { value, nextIndex } = parseBlockScalar(lines, lineIndex + 1, indentLevel, valuePart);
-    obj[inline.key] = value;
-    const merged = mergeInlineMapping(lines, nextIndex, indentLevel, obj);
-    return merged;
-  }
-  obj[inline.key] = parseScalar(valuePart);
-  const merged = mergeInlineMapping(lines, lineIndex + 1, indentLevel, obj);
-  return merged;
-}
-
-function mergeInlineMapping(lines: LineInfo[], nextIndex: number, indentLevel: number, baseObject: Record<string, unknown>): { value: Record<string, unknown>; nextIndex: number } {
-  const followingIndex = nextNonEmptyIndex(lines, nextIndex);
-  if (followingIndex >= lines.length || lines[followingIndex].indent <= indentLevel) {
-    return { value: baseObject, nextIndex: followingIndex };
-  }
-  const { value, nextIndex: afterIndex } = parseBlock(lines, followingIndex, lines[followingIndex].indent);
-  if (!isPlainObject(value)) {
-    throw new Error(`${lineInfo(lines[followingIndex])} inline mapping must expand into an object`);
-  }
-  for (const [key, entryValue] of Object.entries(value as Record<string, unknown>)) {
-    if (Object.prototype.hasOwnProperty.call(baseObject, key)) {
-      throw new Error(`${lineInfo(lines[followingIndex])} duplicate key '${key}' in mapping`);
-    }
-    baseObject[key] = entryValue;
-  }
-  return { value: baseObject, nextIndex: afterIndex };
-}
-
 function parseMapping(lines: LineInfo[], startIndex: number, indentLevel: number): { value: Record<string, unknown>; nextIndex: number } {
-  const obj: Record<string, unknown> = {};
+  const map: Record<string, unknown> = {};
   let index = startIndex;
   while (true) {
     index = nextNonEmptyIndex(lines, index);
     if (index >= lines.length || lines[index].indent < indentLevel) {
       break;
     }
+
     const line = lines[index];
     if (line.indent !== indentLevel) {
       throw new Error(`${lineInfo(line)} unexpected indent for mapping`);
     }
-    const trimmed = line.content.trim();
-    if (trimmed.startsWith("-")) {
-      throw new Error(`${lineInfo(line)} unexpected sequence item in mapping`);
+
+    const { key, remainder } = parseKeyValue(line);
+    if (Object.prototype.hasOwnProperty.call(map, key)) {
+      throw new Error(`${lineInfo(line)} duplicate key '${key}'`);
     }
-    const { key, value } = splitKeyValue(trimmed, line);
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      throw new Error(`${lineInfo(line)} duplicate key '${key}' in mapping`);
-    }
-    if (value.length === 0) {
+
+    if (remainder.trim().length === 0) {
       const nextIndex = nextNonEmptyIndex(lines, index + 1);
       if (nextIndex >= lines.length || lines[nextIndex].indent <= indentLevel) {
-        obj[key] = null;
+        map[key] = null;
         index = nextIndex;
         continue;
       }
-      const { value: nestedValue, nextIndex: afterIndex } = parseBlock(lines, nextIndex, lines[nextIndex].indent);
-      obj[key] = nestedValue;
+      const { value, nextIndex: afterIndex } = parseBlock(lines, nextIndex, lines[nextIndex].indent);
+      map[key] = value;
       index = afterIndex;
       continue;
     }
-    if (value === "|" || value === ">") {
-      const { value: blockValue, nextIndex } = parseBlockScalar(lines, index + 1, indentLevel, value);
-      obj[key] = blockValue;
+
+    const trimmed = remainder.trimEnd();
+    if (trimmed === "|" || trimmed === ">") {
+      const { value, nextIndex } = parseBlockScalar(lines, index + 1, indentLevel, trimmed);
+      map[key] = value;
       index = nextIndex;
       continue;
     }
-    obj[key] = parseScalar(value);
-    index += 1;
+
+    if (trimmed.startsWith("{") || trimmed.startsWith("[")) {
+      throw new Error(`${lineInfo(line)} inline collections are not supported`);
+    }
+
+    map[key] = parseScalar(trimmed);
+    index = index + 1;
   }
-  return { value: obj, nextIndex: index };
+
+  return { value: map, nextIndex: index };
 }
 
-function parseBlockScalar(lines: LineInfo[], startIndex: number, indentLevel: number, style: string): { value: string; nextIndex: number } {
-  const firstContentIndex = nextNonEmptyIndex(lines, startIndex);
-  if (firstContentIndex >= lines.length || lines[firstContentIndex].indent <= indentLevel) {
-    return { value: "", nextIndex: firstContentIndex };
-  }
-  const blockIndent = lines[firstContentIndex].indent;
-  const collected: string[] = [];
-  let index = firstContentIndex;
-  while (index < lines.length) {
-    const line = lines[index];
-    const isEmptyLine = line.raw.trim().length === 0;
-    if (!isEmptyLine && line.indent < blockIndent) {
-      break;
-    }
-    collected.push(isEmptyLine ? "" : line.raw.slice(blockIndent));
-    index += 1;
-  }
-  const value = style === ">" ? foldBlockScalar(collected) : collected.join("\n");
-  return { value, nextIndex: index };
-}
-
-function foldBlockScalar(lines: string[]): string {
-  let result = "";
-  let previousBlank = false;
-  for (const line of lines) {
-    if (line.length === 0) {
-      result = result.length === 0 ? "\n" : `${result}\n`;
-      previousBlank = true;
-      continue;
-    }
-    if (result.length === 0 || previousBlank) {
-      result += line;
-    } else {
-      result += ` ${line}`;
-    }
-    previousBlank = false;
-  }
-  return result;
-}
-
-function splitKeyValue(content: string, line: LineInfo): { key: string; value: string } {
-  const colonIndex = findUnquotedChar(content, ":");
+function parseKeyValue(line: LineInfo): { key: string; remainder: string } {
+  const colonIndex = line.content.indexOf(":");
   if (colonIndex === -1) {
-    throw new Error(`${lineInfo(line)} missing ':' in mapping entry`);
+    throw new Error(`${lineInfo(line)} expected ':' in mapping entry`);
   }
-  const key = content.slice(0, colonIndex).trim();
-  const value = content.slice(colonIndex + 1).trim();
+  const key = line.content.slice(0, colonIndex).trim();
   if (key.length === 0) {
     throw new Error(`${lineInfo(line)} empty mapping key`);
   }
-  return { key, value };
+  const remainder = line.content.slice(colonIndex + 1);
+  return { key, remainder };
 }
 
-function findUnquotedChar(value: string, target: string): number {
-  let inSingle = false;
-  let inDouble = false;
-  for (let i = 0; i < value.length; i += 1) {
-    const char = value[i];
-    if (char === "'" && !inDouble) {
-      if (inSingle && value[i + 1] === "'") {
-        i += 1;
-        continue;
+function parseInlineMappingCandidate(value: string): Array<{ key: string; value: string | null }> | null {
+  const colonIndex = value.indexOf(":");
+  if (colonIndex === -1) {
+    return null;
+  }
+  const key = value.slice(0, colonIndex).trim();
+  if (key.length === 0) {
+    return null;
+  }
+  const remainder = value.slice(colonIndex + 1).trimEnd();
+  return [{ key, value: remainder.trim().length === 0 ? null : remainder.trim() }];
+}
+
+function parseInlineMapping(
+  lines: LineInfo[],
+  lineIndex: number,
+  indentLevel: number,
+  entries: Array<{ key: string; value: string | null }>,
+): { value: Record<string, unknown>; nextIndex: number } {
+  const map: Record<string, unknown> = {};
+  for (const entry of entries) {
+    map[entry.key] = entry.value === null ? null : parseScalar(entry.value);
+  }
+
+  const nextIndex = nextNonEmptyIndex(lines, lineIndex + 1);
+  if (nextIndex >= lines.length || lines[nextIndex].indent <= indentLevel) {
+    return { value: map, nextIndex };
+  }
+
+  const { value: nestedValue, nextIndex: afterIndex } = parseBlock(lines, nextIndex, lines[nextIndex].indent);
+  const lastKey = entries[entries.length - 1]?.key ?? "";
+  map[lastKey] = nestedValue;
+  return { value: map, nextIndex: afterIndex };
+}
+
+function parseBlockScalar(lines: LineInfo[], startIndex: number, parentIndent: number, style: string): { value: string; nextIndex: number } {
+  const index = nextNonEmptyIndex(lines, startIndex);
+  if (index >= lines.length || lines[index].indent <= parentIndent) {
+    return { value: "", nextIndex: index };
+  }
+
+  const indentLevel = lines[index].indent;
+  const collected: string[] = [];
+  let currentIndex = index;
+  while (currentIndex < lines.length) {
+    const line = lines[currentIndex];
+    if (line.indent < indentLevel) {
+      break;
+    }
+    if (line.indent !== indentLevel) {
+      throw new Error(`${lineInfo(line)} unexpected indent in block scalar`);
+    }
+    collected.push(line.raw.slice(indentLevel));
+    currentIndex += 1;
+  }
+
+  if (style === ">") {
+    return { value: foldBlockScalar(collected), nextIndex: currentIndex };
+  }
+  return { value: collected.join("\n"), nextIndex: currentIndex };
+}
+
+function foldBlockScalar(lines: string[]): string {
+  const out: string[] = [];
+  let buffer = "";
+  for (const line of lines) {
+    if (line.trim().length === 0) {
+      if (buffer.length > 0) {
+        out.push(buffer);
+        buffer = "";
       }
-      inSingle = !inSingle;
+      out.push("");
       continue;
     }
-    if (char === '"' && !inSingle) {
-      if (!isEscaped(value, i)) {
-        inDouble = !inDouble;
-      }
-      continue;
-    }
-    if (!inSingle && !inDouble && char === target) {
-      return i;
+    if (buffer.length === 0) {
+      buffer = line;
+    } else {
+      buffer = `${buffer} ${line.trimStart()}`;
     }
   }
-  return -1;
+  if (buffer.length > 0) {
+    out.push(buffer);
+  }
+  return out.join("\n");
 }
 
 function parseScalar(value: string): unknown {
-  const trimmed = value.trim();
-  if (trimmed.startsWith('"')) {
-    return parseDoubleQuoted(trimmed);
+  if (value === "null" || value === "~") return null;
+  if (value === "true") return true;
+  if (value === "false") return false;
+  if (/^-?\d+(?:\.\d+)?$/.test(value)) {
+    const num = Number(value);
+    if (!Number.isNaN(num)) {
+      return num;
+    }
   }
-  if (trimmed.startsWith("'")) {
-    return parseSingleQuoted(trimmed);
+
+  const singleMatch = value.match(/^'(.*)'$/);
+  if (singleMatch) {
+    return singleMatch[1].replace(/''/g, "'");
   }
-  if (trimmed === "[]") {
-    return [];
+
+  const doubleMatch = value.match(/^"(.*)"$/);
+  if (doubleMatch) {
+    return parseDoubleQuoted(doubleMatch[1]);
   }
-  if (trimmed === "{}") {
-    return {};
-  }
-  if (trimmed === "true") {
-    return true;
-  }
-  if (trimmed === "false") {
-    return false;
-  }
-  if (trimmed === "null" || trimmed === "~") {
-    return null;
-  }
-  if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
-    return Number(trimmed);
-  }
-  return trimmed;
+
+  return value;
 }
 
 function parseDoubleQuoted(value: string): string {
-  if (!value.endsWith('"')) {
-    throw new Error(`Unterminated double-quoted string: ${value}`);
-  }
-  const inner = value.slice(1, -1);
-  let result = "";
-  for (let i = 0; i < inner.length; i += 1) {
-    const char = inner[i];
-    if (char === "\\" && i + 1 < inner.length) {
-      const next = inner[i + 1];
-      switch (next) {
-        case "n":
-          result += "\n";
-          break;
-        case "r":
-          result += "\r";
-          break;
-        case "t":
-          result += "\t";
-          break;
-        case "\\":
-        case '"':
-          result += next;
-          break;
-        default:
-          result += next;
-          break;
-      }
-      i += 1;
+  let out = "";
+  for (let i = 0; i < value.length; i += 1) {
+    const char = value[i];
+    if (char !== "\\") {
+      out += char;
       continue;
     }
-    result += char;
-  }
-  return result;
-}
-
-function parseSingleQuoted(value: string): string {
-  if (!value.endsWith("'")) {
-    throw new Error(`Unterminated single-quoted string: ${value}`);
-  }
-  const inner = value.slice(1, -1);
-  return inner.replace(/''/g, "'");
-}
-
-function nextNonEmptyIndex(lines: LineInfo[], startIndex: number): number {
-  let index = startIndex;
-  while (index < lines.length) {
-    if (lines[index].content.trim().length !== 0) {
-      return index;
+    const next = value[i + 1];
+    if (!next) {
+      out += "\\";
+      continue;
     }
-    index += 1;
+    i += 1;
+    if (next === "n") out += "\n";
+    else if (next === "r") out += "\r";
+    else if (next === "t") out += "\t";
+    else if (next === '"') out += '"';
+    else if (next === "\\") out += "\\";
+    else out += next;
   }
-  return index;
+  return out;
+}
+
+function nextNonEmptyIndex(lines: LineInfo[], start: number): number {
+  for (let i = start; i < lines.length; i += 1) {
+    if (lines[i].content.trim().length > 0) {
+      return i;
+    }
+  }
+  return lines.length;
 }
 
 function lineInfo(line: LineInfo): string {

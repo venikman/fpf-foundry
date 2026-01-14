@@ -1,0 +1,25 @@
+{
+  "name": "@venikman/fpf",
+  "version": "0.1.0",
+  "description": "FPF Foundry CLI (Bun-first).",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "fpf": "bin/fpf"
+  },
+  "files": [
+    "LICENSE",
+    "bin/",
+    "src/",
+    "templates/"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "test": "bun test"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}
