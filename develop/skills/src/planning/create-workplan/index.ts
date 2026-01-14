@@ -3,6 +3,7 @@ import { parseArgs } from "util";
 import { existsSync, mkdirSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { resolveNow } from "../../_shared/utils";
 
 // A.15.2 WorkPlan Generator
 // Usage: bun create-workplan.ts --context <ctx> --id <kebab-id> --title <title> --intent <intent> [--deliverables "Item; Item"]
@@ -200,18 +201,4 @@ if (logScript) {
   }
 } else {
   console.warn(`WARN: ${logWorkSkillId} skill not found; skipping audit trace.`);
-}
-
-function resolveNow(): Date {
-  const fixedNow = process.env.FPF_FIXED_NOW?.trim();
-  if (fixedNow && fixedNow.length > 0) {
-    const parsed = new Date(fixedNow);
-    if (Number.isNaN(parsed.getTime())) {
-      console.error(`Invalid FPF_FIXED_NOW '${fixedNow}'. Expected an ISO-8601 date-time.`);
-      process.exit(1);
-    }
-    return parsed;
-  }
-
-  return new Date();
 }

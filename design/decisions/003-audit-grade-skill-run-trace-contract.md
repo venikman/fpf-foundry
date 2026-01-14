@@ -40,10 +40,10 @@ Every emitted `U.Work` record MUST include these link anchors:
 
 1. `method_description_ref` (Work → MethodDescription)
    - MUST identify the MethodDescription id (Skill id).
-   - SHOULD include the repo path to the SkillSpec (`design/skills/<id>/skill.json`) when resolvable.
+   - SHOULD include the repo path to the SkillSpec (`design/skills/<skill-id>/skill.json`) when resolvable.
    - SHOULD include the pinned version when known.
 2. `role_assignment_ref` (Work → RoleAssignment)
-   - SHOULD identify the performer under an explicit RoleAssignment string.
+   - SHOULD identify the performer under an explicit RoleAssignment identifier.
 3. `related_decisions` (Work → DRR) (optional)
    - MAY link to DRR ids or repo paths under `design/decisions/`.
 
@@ -76,11 +76,10 @@ This prevents “paper conformance” where a checklist exists but does not bloc
 
 ### Negative
 
-- [x] Skills must carry a small amount of extra plumbing (pass method/role/outputs into `telemetry/log-work`).
-- [x] Some runs may not know a strong RoleAssignment string; we accept best-effort values initially.
+- [x] Skills must carry a small amount of extra plumbing (pass method/role_assignment/outputs into `telemetry/log-work`).
+- [x] Some runs may not know a strong RoleAssignment identifier; we accept best-effort values initially.
 - [x] Work logs increase in volume; mitigation is deterministic naming + digesting and (later) optional aggregation.
 
 ## Compliance
 
 - [x] **E.9 DRR**: Follows the standard Context-Decision-Rationale-Consequences format.
-

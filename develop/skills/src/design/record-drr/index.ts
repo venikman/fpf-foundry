@@ -2,6 +2,7 @@
 import { parseArgs } from "util";
 import { existsSync, mkdirSync, readdirSync } from "fs";
 import { join } from "path";
+import { resolveNow } from "../../_shared/utils";
 
 // E.9 Design-Rationale Record (DRR) Generator
 // Usage: bun record-drr.ts --title <title> --context <context-string> --decision <decision> [--work-context <ctx>]
@@ -157,18 +158,4 @@ if (logScript) {
   }
 } else {
   console.warn(`WARN: ${logWorkSkillId} skill not found; skipping audit trace.`);
-}
-
-function resolveNow(): Date {
-  const fixedNow = process.env.FPF_FIXED_NOW?.trim();
-  if (fixedNow && fixedNow.length > 0) {
-    const parsed = new Date(fixedNow);
-    if (Number.isNaN(parsed.getTime())) {
-      console.error(`Invalid FPF_FIXED_NOW '${fixedNow}'. Expected an ISO-8601 date-time.`);
-      process.exit(1);
-    }
-    return parsed;
-  }
-
-  return new Date();
 }

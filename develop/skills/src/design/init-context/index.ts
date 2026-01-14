@@ -3,6 +3,7 @@ import { parseArgs } from "util";
 import { existsSync, mkdirSync, writeFileSync } from "fs";
 import { dirname, join } from "path";
 import { fileURLToPath } from "url";
+import { parseSemicolonList } from "../../_shared/utils";
 
 const args = Bun.argv.slice(2);
 if (args.includes("-h") || args.includes("--help")) {
@@ -55,7 +56,7 @@ logWork({
   repoRoot,
   context,
   roleAssignment,
-  action: description.length > 0 ? `Initialized context '${context}': ${description}` : `Initialized context '${context}'.`,
+  action: `Initialized context '${context}'${description.length > 0 ? `: ${description}` : "."}`,
   outputs: [
     `runtime/contexts/${context}/README.md`,
     `runtime/contexts/${context}/design/names`,
@@ -130,14 +131,6 @@ function logWork(input: {
   }
 }
 
-function parseSemicolonList(value?: string): string[] {
-  if (!value) return [];
-  return value
-    .split(";")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
-}
-
 function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
   const trimmed = (value ?? "").trim();
   if (trimmed.length === 0 || !pattern.test(trimmed)) {
@@ -165,4 +158,3 @@ function findRepoRoot(startDir: string): string {
 function printUsage(): void {
   console.log("Usage: bun develop/skills/src/design/init-context/index.ts --context <Context> [--description \"...\"] [--role-assignment <Role>] [--decisions \"...\"]");
 }
-

@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync } from "fs";
 import { dirname, isAbsolute, join, relative, resolve } from "path";
 import { fileURLToPath } from "url";
 import { createHash } from "crypto";
+import { parseSemicolonList, sortKeys, stableStringify } from "../../_shared/utils";
 
 // A.15.1 U.Work Generator
 // Usage: bun log-work.ts --method <MethodId> --role-assignment <RoleAssignment> --context <Ctx> --action <Description> [--outputs "..."] [--decisions "..."]
@@ -171,8 +172,8 @@ type: U.Work
 timestamp_start: ${JSON.stringify(isoTimestamp)}
 context: ${JSON.stringify(context)}
 method_description_ref:
-  id: ${JSON.stringify(methodRef.id)}
-${methodRef.path ? `  path: ${JSON.stringify(methodRef.path)}\n` : ""}${methodRef.version ? `  version: ${JSON.stringify(methodRef.version)}\n` : ""}role_assignment_ref: ${JSON.stringify(roleAssignment)}
+${renderMethodDescriptionRefYaml(methodRef)}
+role_assignment_ref: ${JSON.stringify(roleAssignment)}
 inputs_digest: ${JSON.stringify(inputsDigest)}
 outputs: ${renderYamlStringList(outputs)}
 related_decisions: ${renderYamlStringList(relatedDecisions)}
@@ -181,7 +182,7 @@ related_decisions: ${renderYamlStringList(relatedDecisions)}
 # U.Work: Execution of ${method}
 
 ## 1. Links
-- **MethodDescription**: \`${methodRef.id}\`${methodRef.version ? ` (v${methodRef.version})` : ""}
+- **MethodDescription**: \`${methodRef.id}${methodRef.version ? ` (v${methodRef.version})` : ""}\`
 - **RoleAssignment**: \`${roleAssignment}\`
 - **Context**: \`${context}\`
 - **InputsDigest**: \`${inputsDigest}\`
@@ -215,6 +216,17 @@ type MethodDescriptionRef = {
   path?: string;
   version?: string;
 };
+
+function renderMethodDescriptionRefYaml(value: MethodDescriptionRef): string {
+  const lines = [`  id: ${JSON.stringify(value.id)}`];
+  if (value.path && value.path.trim().length > 0) {
+    lines.push(`  path: ${JSON.stringify(value.path.trim())}`);
+  }
+  if (value.version && value.version.trim().length > 0) {
+    lines.push(`  version: ${JSON.stringify(value.version.trim())}`);
+  }
+  return lines.join("\n");
+}
 
 type InputsDigestPayload = {
   methodDescriptionRef: MethodDescriptionRef;
@@ -286,14 +298,6 @@ function resolveMethodDescriptionRef(methodId: string, explicitPath: string | un
   };
 }
 
-function parseSemicolonList(value?: string): string[] {
-  if (!value) return [];
-  return value
-    .split(";")
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
-}
-
 function normalizeArtifactRef(value: string, repoRootDir: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return trimmed;
@@ -326,23 +330,4 @@ function renderMarkdownList(values: string[]): string {
 function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
   const rel = relative(rootDir, filePath);
   return rel.length === 0 ? "." : rel.split("\\").join("/");
-}
-
-function sortKeys(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    return value.map(sortKeys);
-  }
-  if (value && typeof value === "object") {
-    const entries = Object.entries(value as Record<string, unknown>).sort(([a], [b]) => a.localeCompare(b));
-    const sorted: Record<string, unknown> = {};
-    for (const [key, entryValue] of entries) {
-      sorted[key] = sortKeys(entryValue);
-    }
-    return sorted;
-  }
-  return value;
-}
-
-function stableStringify(value: unknown): string {
-  return `${JSON.stringify(value, null, 2)}\n`;
 }
