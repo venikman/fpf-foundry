@@ -28,11 +28,33 @@ git add -A
 git diff --cached
 ```
 
+Local fallback (no npm):
+
+```sh
+FPF_REPO=/path/to/fpf-foundry
+mkdir fpf-demo && cd fpf-demo
+git init -q
+
+"$FPF_REPO"/packages/fpf/bin/fpf init --root .
+"$FPF_REPO"/packages/fpf/bin/fpf check --root .
+
+git add -A
+git diff --cached
+```
+
 Machine mode examples:
 
 ```sh
 bunx --bun @venikman/fpf init --json | cat
 bunx --bun @venikman/fpf check --json | cat
+```
+
+Local fallback:
+
+```sh
+FPF_REPO=/path/to/fpf-foundry
+"$FPF_REPO"/packages/fpf/bin/fpf init --root . --json | cat
+"$FPF_REPO"/packages/fpf/bin/fpf check --root . --json | cat
 ```
 
 ## Current usable skills (run from repo root)
