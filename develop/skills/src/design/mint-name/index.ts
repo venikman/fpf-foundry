@@ -102,7 +102,20 @@ const logScript = join(repoRoot, "develop", "skills", "src", "telemetry", "log-w
 
 if (existsSync(logScript)) {
   console.log("Logging Work Record via A.15.1...");
-  const proc = Bun.spawn(["bun", logScript, "--spec", "F.18", "--role", "Archivist", "--context", context, "--action", `Minted Name Card '${label}' (${id})`]);
+  const proc = Bun.spawn([
+    "bun",
+    logScript,
+    "--method",
+    "design/mint-name",
+    "--role-assignment",
+    "Archivist",
+    "--context",
+    context,
+    "--action",
+    `Minted Name Card '${label}' (${id})`,
+    "--outputs",
+    filePath,
+  ]);
 
   await proc.exited;
   if (proc.exitCode === 0) {

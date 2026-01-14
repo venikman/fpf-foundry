@@ -13,6 +13,7 @@ const steps: Step[] = [
   { name: "inventory-generate", command: "bun", args: ["develop/tools/skill/inventory.ts"] },
   { name: "inventory-diff", command: "git", args: ["diff", "--exit-code", "--", "design/skills/SKILL_INVENTORY.md"] },
   { name: "inventory-checks", command: "bun", args: ["develop/scripts/skill_inventory_checks.ts"] },
+  { name: "skills-runtime-harness", command: "bun", args: ["develop/scripts/skills_runtime_harness.ts"] },
   { name: "compile-verify", command: "bun", args: ["develop/tools/compile/verify.ts", "--model-cmd", "bun develop/tools/compile/mock-model.ts"] },
 ];
 

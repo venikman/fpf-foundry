@@ -1,26 +1,37 @@
 #!/usr/bin/env bun
 import { parseArgs } from "util";
-import { existsSync, mkdirSync } from "fs";
-import { dirname, join, resolve } from "path";
+import { existsSync, mkdirSync, readFileSync } from "fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "path";
 import { fileURLToPath } from "url";
+import { createHash } from "crypto";
+import { parseSemicolonList, sortKeys, stableStringify } from "../../_shared/utils";
 
 // A.15.1 U.Work Generator
-// Usage: bun log-work.ts --spec <MethodId> --role <RoleAssigning> --context <Ctx> --action <Description>
+// Usage: bun log-work.ts --method <MethodId> --role-assignment <RoleAssignment> --context <Ctx> --action <Description> [--outputs "..."] [--decisions "..."]
 
 const { values } = parseArgs({
   args: Bun.argv,
   options: {
+    method: { type: "string" },
+    "method-path": { type: "string" },
+    "role-assignment": { type: "string" },
     spec: { type: "string" },
     role: { type: "string" },
     context: { type: "string" },
     action: { type: "string" },
+    outputs: { type: "string" },
+    decisions: { type: "string" },
+    "timestamp-start": { type: "string" },
   },
   strict: true,
   allowPositionals: true,
 });
 
-if (!values.spec || !values.role || !values.context || !values.action) {
-  console.error("Usage: log-work --spec <id> --role <assigned> --context <ctx> --action <desc>");
+const rawMethod = values.method ?? values.spec;
+const rawRoleAssignment = values["role-assignment"] ?? values.role;
+
+if (!rawMethod || !rawRoleAssignment || !values.context || !values.action) {
+  console.error("Usage: log-work --method <id> --role-assignment <assigned> --context <ctx> --action <desc> [--outputs \"a; b\"] [--decisions \"drr; drr\"]");
   process.exit(1);
 }
 
@@ -49,10 +60,11 @@ function requireNonEmpty(value: string | undefined, name: string): string {
 }
 
 type PosthogEvent = {
-  spec: string;
-  role: string;
+  method: string;
+  roleAssignment: string;
   context: string;
   action: string;
+  outputsCount: number;
   timestamp: string;
 };
 
@@ -77,14 +89,15 @@ async function emitPosthogEvent(event: PosthogEvent): Promise<void> {
 
   const includeAction = process.env.POSTHOG_INCLUDE_ACTION === "1";
   const properties: Record<string, unknown> = {
-    spec: event.spec,
+    method: event.method,
     context: event.context,
+    outputs_count: event.outputsCount,
     action_length: event.action.length,
     action_included: includeAction,
   };
   if (includeAction) {
     properties.action = event.action;
-    properties.role = event.role;
+    properties.role_assignment = event.roleAssignment;
   }
 
   const payload = JSON.stringify({
@@ -116,12 +129,10 @@ async function emitPosthogEvent(event: PosthogEvent): Promise<void> {
   }
 }
 
-const spec = requireNonEmpty(values.spec, "spec");
-const role = requireNonEmpty(values.role, "role");
+const method = requireNonEmpty(rawMethod, "method");
+const roleAssignment = requireNonEmpty(rawRoleAssignment, "role-assignment");
 const action = requireNonEmpty(values.action, "action");
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
-const specYaml = JSON.stringify(spec);
-const roleYaml = JSON.stringify(role);
 
 // 1. Target: runtime/contexts/[Ctx]/telemetry/work/
 const scriptDir = dirname(fileURLToPath(import.meta.url));
@@ -132,9 +143,8 @@ if (!existsSync(targetDir)) {
   mkdirSync(targetDir, { recursive: true });
 }
 
-// 2. Format: [Timestamp]-[Spec]-[Role].md (hashed or simplified)
-const now = new Date();
-const isoTimestamp = now.toISOString();
+const timestampStart = resolveTimestampStart(values["timestamp-start"]);
+const isoTimestamp = timestampStart.toISOString();
 const timestamp = isoTimestamp.replace(/[:.]/g, "-");
 const filename = `work-${timestamp}.md`;
 const filePath = join(targetDir, filename);
@@ -144,35 +154,184 @@ if (existsSync(filePath)) {
   process.exit(1);
 }
 
+const methodRef = resolveMethodDescriptionRef(method, values["method-path"], repoRoot);
+const outputs = parseSemicolonList(values.outputs).map((entry) => normalizeArtifactRef(entry, repoRoot));
+const relatedDecisions = parseSemicolonList(values.decisions).map((entry) => normalizeArtifactRef(entry, repoRoot));
+const inputsDigest = computeInputsDigest({
+  methodDescriptionRef: methodRef,
+  roleAssignmentRef: roleAssignment,
+  context,
+  action,
+  outputs,
+  relatedDecisions,
+});
+
 // 3. Content: A.15.1 U.Work Record
 const content = `---
 type: U.Work
-spec: ${specYaml}
-performer: ${roleYaml}
-context: ${context}
-timestamp_start: ${isoTimestamp}
+timestamp_start: ${JSON.stringify(isoTimestamp)}
+context: ${JSON.stringify(context)}
+method_description_ref:
+${renderMethodDescriptionRefYaml(methodRef)}
+role_assignment_ref: ${JSON.stringify(roleAssignment)}
+inputs_digest: ${JSON.stringify(inputsDigest)}
+outputs: ${renderYamlStringList(outputs)}
+related_decisions: ${renderYamlStringList(relatedDecisions)}
 ---
 
-# U.Work: Execution of ${spec}
+# U.Work: Execution of ${method}
 
-## 1. Anchors
-- **Spec**: \`${spec}\`
-- **Performer**: \`${role}\`
+## 1. Links
+- **MethodDescription**: \`${methodRef.id}${methodRef.version ? ` (v${methodRef.version})` : ""}\`
+- **RoleAssignment**: \`${roleAssignment}\`
 - **Context**: \`${context}\`
+- **InputsDigest**: \`${inputsDigest}\`
 
 ## 2. Occurrence
 ${action}
 
-## 3. Evidence
+## 3. Outputs
+${renderMarkdownList(outputs)}
+
+## 4. Related Decisions
+${renderMarkdownList(relatedDecisions)}
+
+## 5. Evidence
 - **Trace**: Generated by \`telemetry/log-work\`
 `;
 
 await Bun.write(filePath, content);
 await emitPosthogEvent({
-  spec,
-  role,
+  method: methodRef.id,
+  roleAssignment,
   context,
   action,
+  outputsCount: outputs.length,
   timestamp: isoTimestamp,
 });
 console.log(`Work Logged: ${filePath}`);
+
+type MethodDescriptionRef = {
+  id: string;
+  path?: string;
+  version?: string;
+};
+
+function renderMethodDescriptionRefYaml(value: MethodDescriptionRef): string {
+  const lines = [`  id: ${JSON.stringify(value.id)}`];
+  if (value.path && value.path.trim().length > 0) {
+    lines.push(`  path: ${JSON.stringify(value.path.trim())}`);
+  }
+  if (value.version && value.version.trim().length > 0) {
+    lines.push(`  version: ${JSON.stringify(value.version.trim())}`);
+  }
+  return lines.join("\n");
+}
+
+type InputsDigestPayload = {
+  methodDescriptionRef: MethodDescriptionRef;
+  roleAssignmentRef: string;
+  context: string;
+  action: string;
+  outputs: string[];
+  relatedDecisions: string[];
+};
+
+function resolveTimestampStart(value?: string): Date {
+  const explicit = (value ?? "").trim();
+  if (explicit.length > 0) {
+    return parseIsoTimestamp(explicit, `timestamp-start '${value}'`);
+  }
+
+  const fixedNow = (process.env.FPF_FIXED_NOW ?? "").trim();
+  if (fixedNow.length > 0) {
+    return parseIsoTimestamp(fixedNow, "FPF_FIXED_NOW");
+  }
+
+  return new Date();
+}
+
+function parseIsoTimestamp(value: string, source: string): Date {
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    console.error(`Invalid ${source} '${value}'. Expected an ISO-8601 date-time.`);
+    process.exit(1);
+  }
+  return parsed;
+}
+
+function resolveMethodDescriptionRef(methodId: string, explicitPath: string | undefined, repoRootDir: string): MethodDescriptionRef {
+  let resolvedPath: string | undefined;
+
+  const trimmedPath = (explicitPath ?? "").trim();
+  if (trimmedPath.length > 0) {
+    const candidate = resolve(repoRootDir, trimmedPath);
+    if (!existsSync(candidate)) {
+      console.error(`Invalid method-path '${explicitPath}'. File not found.`);
+      process.exit(1);
+    }
+    resolvedPath = toRepoRelative(candidate, repoRootDir);
+  } else {
+    const candidate = join(repoRootDir, "design", "skills", ...methodId.split("/"), "skill.json");
+    if (existsSync(candidate)) {
+      resolvedPath = toRepoRelative(candidate, repoRootDir);
+    }
+  }
+
+  let version: string | undefined;
+  if (resolvedPath) {
+    try {
+      const fullPath = resolve(repoRootDir, resolvedPath);
+      const parsed = JSON.parse(readFileSync(fullPath, "utf8")) as Record<string, unknown>;
+      if (typeof parsed.version === "string" && parsed.version.trim().length > 0) {
+        version = parsed.version.trim();
+      }
+    } catch {
+      // Best-effort: version/path enrichment is optional.
+    }
+  }
+
+  return {
+    id: methodId,
+    ...(resolvedPath ? { path: resolvedPath } : {}),
+    ...(version ? { version } : {}),
+  };
+}
+
+function normalizeArtifactRef(value: string, repoRootDir: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return trimmed;
+
+  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
+  const rel = relative(repoRootDir, absolute);
+  const isOutsideRepoRoot = isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`);
+  if (!isOutsideRepoRoot) {
+    return toRepoRelative(absolute, repoRootDir);
+  }
+
+  return trimmed;
+}
+
+function computeInputsDigest(payload: InputsDigestPayload): string {
+  const canonical = stableStringify(sortKeys(payload));
+  return `sha256:${createHash("sha256").update(canonical, "utf8").digest("hex")}`;
+}
+
+function renderYamlStringList(values: string[]): string {
+  if (values.length === 0) {
+    return "[]";
+  }
+  return `\n${values.map((value) => `  - ${JSON.stringify(value)}`).join("\n")}`;
+}
+
+function renderMarkdownList(values: string[]): string {
+  if (values.length === 0) {
+    return "- (none)";
+  }
+  return values.map((value) => `- \`${value}\``).join("\n");
+}
+
+function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
+  const rel = relative(rootDir, filePath);
+  return rel.length === 0 ? "." : rel.split("\\").join("/");
+}

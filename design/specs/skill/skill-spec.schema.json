@@ -9,6 +9,7 @@
     "id",
     "name",
     "summary",
+    "conformance",
     "intent",
     "inputs",
     "outputs",
@@ -29,10 +30,15 @@
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*(?:\\/[a-z0-9]+(?:-[a-z0-9]+)*)*$"
     },
     "name": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[^\\r\\n]*$"
     },
     "summary": {
-      "type": "string"
+      "type": "string",
+      "pattern": "^[^\\r\\n]*$"
+    },
+    "conformance": {
+      "$ref": "#/$defs/conformance"
     },
     "intent": {
       "$ref": "#/$defs/intent"
@@ -382,6 +388,21 @@
         },
         "quote": {
           "type": "string"
+        }
+      }
+    },
+    "conformance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "checklist"
+      ],
+      "properties": {
+        "checklist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     }

@@ -10,6 +10,15 @@
       "Do not invent constraints not implied by the text."
     ]
   },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
   "dependencies": {
     "skills": [
       "hello-skill@^0.1.0"

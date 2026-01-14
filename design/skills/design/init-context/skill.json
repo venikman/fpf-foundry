@@ -1,0 +1,142 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary context descriptions; author original statements."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in context README files."
+    ],
+    "safety": [
+      "Reject context values containing path separators or dot-segments.",
+      "Do not overwrite existing runtime/contexts/<context>/README.md."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.0"
+    ],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Ensures runtime/contexts/<context>/ exists.",
+      "Ensures standard subdirectories exist: design/names, planning/workplans, telemetry/work.",
+      "Creates runtime/contexts/<context>/README.md if missing (does not overwrite).",
+      "Attempts to log U.Work via telemetry/log-work under the same context."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "context_root": "runtime/contexts/Tooling",
+          "readme_path": "runtime/contexts/Tooling/README.md"
+        },
+        "input_fixture": {
+          "context": "Tooling",
+          "description": "Tools and generators for FPF Foundry."
+        },
+        "name": "basic-init"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required input (context).",
+    "Invalid context value (not a safe path segment).",
+    "Failed to create one or more context directories.",
+    "Failed to write README.md.",
+    "Optional telemetry logging failed (telemetry/log-work unavailable or errored)."
+  ],
+  "id": "design/init-context",
+  "inputs": [
+    {
+      "description": "Bounded context name to initialize under runtime/contexts (must be a safe path segment).",
+      "examples": [
+        "Skills",
+        "Tooling"
+      ],
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional one-paragraph description for the context README.",
+      "name": "description",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Steward).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths to attach to the U.Work record.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Initialize a bounded context skeleton under runtime/contexts/<context> with standard subdirectories.",
+    "non_goals": [
+      "Does not create design-time context definitions under design/.",
+      "Does not infer context boundaries beyond provided description."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-14",
+    "tags": [
+      "design"
+    ],
+    "updated": "2026-01-14"
+  },
+  "name": "Init Context",
+  "outputs": [
+    {
+      "description": "Path to the initialized context root under runtime/contexts.",
+      "name": "context_root",
+      "type": "string"
+    },
+    {
+      "description": "Path to the context README file.",
+      "name": "readme_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context) and ensure context is a safe path segment.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Create runtime/contexts/<context> and standard subdirectories if missing.",
+      "step_id": "step-create-dirs"
+    },
+    {
+      "instruction": "Write runtime/contexts/<context>/README.md if missing (do not overwrite).",
+      "step_id": "step-write-readme"
+    },
+    {
+      "instruction": "Log the initialization action via telemetry/log-work with method design/init-context.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Initializes a bounded context skeleton under runtime/contexts to prevent directory drift.",
+  "version": "0.1.0"
+}
+

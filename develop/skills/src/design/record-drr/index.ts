@@ -2,6 +2,7 @@
 import { parseArgs } from "util";
 import { existsSync, mkdirSync, readdirSync } from "fs";
 import { join } from "path";
+import { resolveNow } from "../../_shared/utils";
 
 // E.9 Design-Rationale Record (DRR) Generator
 // Usage: bun record-drr.ts --title <title> --context <context-string> --decision <decision> [--work-context <ctx>]
@@ -56,7 +57,7 @@ const filename = `${nextId}-${kebabTitle}.md`;
 const filePath = join(targetDir, filename);
 
 // 4. Generate Content (Pattern E.9)
-const dateStr = new Date().toISOString().split("T")[0];
+const dateStr = resolveNow().toISOString().split("T")[0];
 
 const content = `# ${nextId}. ${values.title}
 
@@ -113,7 +114,22 @@ if (logScript) {
   console.log("Logging Work Record via A.15.1...");
   try {
     const proc = Bun.spawn({
-      cmd: ["bun", logScript, "--spec", "E.9", "--role", "Archivist", "--context", workContext, "--action", `Recorded DRR '${values.title}' (${filename})`],
+      cmd: [
+        "bun",
+        logScript,
+        "--method",
+        "design/record-drr",
+        "--role-assignment",
+        "Archivist",
+        "--context",
+        workContext,
+        "--action",
+        `Recorded DRR '${values.title}' (${filename})`,
+        "--outputs",
+        filePath,
+        "--decisions",
+        filePath,
+      ],
       stdout: "pipe",
       stderr: "pipe",
     });

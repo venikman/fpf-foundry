@@ -11,6 +11,15 @@
       "Reject context/id values containing path separators or dot-segments."
     ]
   },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
   "dependencies": {
     "skills": [],
     "tools": [
@@ -136,7 +145,7 @@
       "step_id": "step-write-file"
     },
     {
-      "instruction": "If telemetry/log-work is available, log the WorkPlan action with spec A.15.2.",
+      "instruction": "If telemetry/log-work is available, log the WorkPlan action with method planning/create-workplan (Pattern A.15.2).",
       "step_id": "step-log-work"
     }
   ],

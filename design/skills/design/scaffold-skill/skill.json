@@ -1,0 +1,221 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary templates; author original SkillSpec and SKILL.md content."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in scaffolded artifacts."
+    ],
+    "safety": [
+      "Do not overwrite existing skill.json, SKILL.md, or index.ts files.",
+      "Reject skill_id values containing dot-segments or path separators other than '/'.",
+      "Reject skill_id segments that are not lowercase kebab-case."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.0"
+    ],
+    "tools": [
+      "run_command",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates design/skills/<skill_id>/skill.json.",
+      "Creates design/skills/<skill_id>/SKILL.md with valid frontmatter name=<skill_id>.",
+      "Creates develop/skills/src/<skill_id>/index.ts stub.",
+      "Regenerates design/skills/SKILL_INVENTORY.md.",
+      "Attempts to log U.Work via telemetry/log-work."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "code_stub_path": "develop/skills/src/design/example-skill/index.ts",
+          "inventory_path": "design/skills/SKILL_INVENTORY.md",
+          "skill_md_path": "design/skills/design/example-skill/SKILL.md",
+          "skill_spec_path": "design/skills/design/example-skill/skill.json"
+        },
+        "input_fixture": {
+          "family": "design",
+          "name": "Example Skill",
+          "role": "Toolsmith",
+          "skill_id": "design/example-skill",
+          "status": "planned",
+          "summary": "Example scaffolded skill.",
+          "version": "0.1.0",
+          "work_context": "Skills"
+        },
+        "name": "basic-scaffold",
+        "notes": "Golden paths are deterministic given skill_id."
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (skill_id, name, summary).",
+    "Invalid skill_id format (not lowercase kebab-case segments).",
+    "One or more target files already exist.",
+    "Failed to write one or more scaffolded files.",
+    "Inventory regeneration failed.",
+    "Optional telemetry logging failed (telemetry/log-work unavailable or errored)."
+  ],
+  "id": "design/scaffold-skill",
+  "inputs": [
+    {
+      "description": "Skill id to scaffold (lowercase kebab-case segments, slash-separated), e.g. design/my-skill.",
+      "examples": [
+        "design/scaffold-skill"
+      ],
+      "name": "skill_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Human title for the new skill.",
+      "examples": [
+        "Scaffold Skill"
+      ],
+      "name": "name",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "1-3 sentence summary of the new skill.",
+      "name": "summary",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional family taxonomy (defaults to the first segment of skill_id).",
+      "name": "family",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label to place in the scaffolded SKILL.md (and use when logging U.Work).",
+      "name": "role",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional status for the scaffolded skill (planned | experimental | stable | deprecated).",
+      "name": "status",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semver for the scaffolded skill (default 0.1.0).",
+      "name": "version",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited tags for the scaffolded skill metadata.",
+      "name": "tags",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited policy/pattern references to place in the scaffolded SKILL.md.",
+      "name": "policies",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional work context used when logging U.Work (default: Skills).",
+      "name": "work_context",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths to attach to the U.Work record.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Mint a deterministic scaffold for a new Skill (SkillSpec + SKILL.md + code stub) and register it in the inventory.",
+    "non_goals": [
+      "Does not implement the new skill's behavior; only scaffolds files.",
+      "Does not infer domain rules beyond provided name/summary."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-14",
+    "tags": [
+      "design"
+    ],
+    "updated": "2026-01-14"
+  },
+  "name": "Scaffold Skill",
+  "outputs": [
+    {
+      "description": "Path to the generated SkillSpec JSON file.",
+      "name": "skill_spec_path",
+      "type": "string"
+    },
+    {
+      "description": "Path to the generated SKILL.md file.",
+      "name": "skill_md_path",
+      "type": "string"
+    },
+    {
+      "description": "Path to the generated code stub (index.ts).",
+      "name": "code_stub_path",
+      "type": "string"
+    },
+    {
+      "description": "Path to the regenerated skill inventory file.",
+      "name": "inventory_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (skill_id, name, summary) and ensure skill_id is safe and canonical.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Resolve target paths for design/skills/<skill_id> and develop/skills/src/<skill_id>.",
+      "step_id": "step-resolve-paths"
+    },
+    {
+      "instruction": "Write scaffolded SkillSpec JSON to design/skills/<skill_id>/skill.json.",
+      "step_id": "step-write-skillspec"
+    },
+    {
+      "instruction": "Write scaffolded SKILL.md to design/skills/<skill_id>/SKILL.md.",
+      "step_id": "step-write-skillmd"
+    },
+    {
+      "instruction": "Write a minimal Bun/TypeScript index.ts stub to develop/skills/src/<skill_id>/index.ts.",
+      "step_id": "step-write-code"
+    },
+    {
+      "instruction": "Regenerate design/skills/SKILL_INVENTORY.md via develop/tools/skill/inventory.ts.",
+      "step_id": "step-regenerate-inventory"
+    },
+    {
+      "instruction": "Log the scaffolding action via telemetry/log-work with method design/scaffold-skill.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Scaffolds a new Skill folder (SkillSpec + SKILL.md + code stub) and registers it in the inventory.",
+  "version": "0.1.0"
+}
+

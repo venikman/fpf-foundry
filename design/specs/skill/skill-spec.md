@@ -15,8 +15,9 @@ If a required field cannot be derived, use the explicit placeholder value `"UNKN
 ### Top-level required fields
 - `schema_version` (string, exact `"0.1.0"`)
 - `id` (string, kebab-case or slash-separated segments, globally unique in repo)
-- `name` (string, human title)
-- `summary` (string, 1-3 sentences)
+- `name` (string, human title; single-line)
+- `summary` (string, 1-3 sentences; single-line)
+- `conformance` (object)
 - `intent` (object)
 - `inputs` (array)
 - `outputs` (array)
@@ -30,6 +31,16 @@ If a required field cannot be derived, use the explicit placeholder value `"UNKN
 ### intent (required)
 - `goal` (string)
 - `non_goals` (array of strings, can be empty)
+
+### conformance (required)
+
+`conformance.checklist` is a small, mechanical checklist that MUST be present and MUST include all items below:
+
+- `inputs_validated`
+- `outputs_listed`
+- `u_work_emitted`
+- `deterministic_naming`
+- `inventory_updated`
 
 ### inputs (required)
 Array of input objects:
@@ -117,6 +128,15 @@ Each test object:
   "id": "hello-skill",
   "name": "Hello Skill",
   "summary": "Returns a friendly greeting.",
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
   "intent": {
     "goal": "Generate a greeting message.",
     "non_goals": []
