@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { parseArgs } from "util";
-import { existsSync, mkdirSync } from "fs";
-import { dirname, join, resolve } from "path";
-import { fileURLToPath } from "url";
+import { parseArgs } from "node:util";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 
 // F.18 Name Card Generator
 // Usage: bun mint-name.ts --context <ctx> --id <kebab-id> --label <Title Case> --mds <definition>

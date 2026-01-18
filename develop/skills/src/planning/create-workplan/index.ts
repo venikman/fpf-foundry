@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { parseArgs } from "util";
-import { existsSync, mkdirSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { parseArgs } from "node:util";
+import { existsSync, mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { resolveNow } from "../../_shared/utils";
 
 // A.15.2 WorkPlan Generator
@@ -22,7 +22,7 @@ const { values } = parseArgs({
 });
 
 if (!values.context || !values.id || !values.title || !values.intent) {
-  console.error("Usage: create-workplan --context <ctx> --id <kebab-id> --title <title> --intent <intent> [--deliverables \"Item; Item\"]");
+  console.error('Usage: create-workplan --context <ctx> --id <kebab-id> --title <title> --intent <intent> [--deliverables "Item; Item"]');
   process.exit(1);
 }
 

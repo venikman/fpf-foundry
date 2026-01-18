@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import { mkdirSync, readFileSync, writeFileSync } from "fs";
-import { resolve } from "path";
-import { compileOnce, Mode } from "./lib/compile-core";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { compileOnce, type CompileResult, type Mode } from "./lib/compile-core";
 import { sortKeys, stableStringify, toRepoRelative } from "../skill/lib/skill-io";
-import { CrossCheckError, SchemaError, runCrossChecks, validateSchema } from "../skill/lib/skill-validate";
+import { type CrossCheckError, type SchemaError, runCrossChecks, validateSchema } from "../skill/lib/skill-validate";
 
 type CliOptions = {
   sourcePath: string;
@@ -40,7 +40,7 @@ const contextText = options.contextPath ? readText(options.contextPath) : "NONE"
 const promptPath = options.promptPath ?? defaultPromptPath(options.mode, rootDir);
 const promptTemplate = readText(promptPath);
 
-let compileResult;
+let compileResult: CompileResult;
 try {
   compileResult = compileOnce({
     mode: options.mode,
@@ -152,7 +152,6 @@ function parseArgs(argv: string[], repoRoot: string): CliOptions {
     if (arg === "--model-cmd") {
       options.modelCmd = getArgValue(argv, i, "--model-cmd");
       i += 1;
-      continue;
     }
   }
 

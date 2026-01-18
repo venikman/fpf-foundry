@@ -1,6 +1,6 @@
-import { parseArgs } from "util";
-import { mkdir, writeFile, readFile } from "fs/promises";
-import { join } from "path";
+import { parseArgs } from "node:util";
+import { mkdir, writeFile, readFile } from "node:fs/promises";
+import { join } from "node:path";
 
 /**
  * Strict kebab-case with fpf- prefix.
@@ -55,7 +55,7 @@ async function parseSpec(specPath: string, patternId: string): Promise<[string, 
     return [null, null];
   }
 
-  const patternContent = lines.slice(startLine, endLine + 1).join("\n") + "\n";
+  const patternContent = `${lines.slice(startLine, endLine + 1).join("\n")}\n`;
   return [title, patternContent];
 }
 
@@ -134,7 +134,7 @@ function buildSkillSpecJson(slug: string, title: string, fpfId: string): string 
     failure_modes: ["UNKNOWN: intent.non_goals", "UNKNOWN: constraints.safety", "UNKNOWN: constraints.privacy", "UNKNOWN: constraints.licensing"],
   };
 
-  return JSON.stringify(spec, null, 2) + "\n";
+  return `${JSON.stringify(spec, null, 2)}\n`;
 }
 
 async function main() {

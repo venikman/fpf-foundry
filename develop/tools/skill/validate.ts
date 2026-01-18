@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { resolve } from "path";
-import { statSync } from "fs";
+import { resolve } from "node:path";
+import { statSync } from "node:fs";
 import { findSkillFiles, loadJsonFile, toRepoRelative } from "./lib/skill-io";
-import { CrossCheckError, SkillDoc, validateSchema, runCrossChecks } from "./lib/skill-validate";
+import { type CrossCheckError, type SkillDoc, validateSchema, runCrossChecks } from "./lib/skill-validate";
 
 const args = process.argv.slice(2);
 if (args.includes("-h") || args.includes("--help")) {
@@ -86,16 +86,16 @@ function collectTargets(argsList: string[], root: string): string[] {
   for (const arg of argsList) {
     if (arg === "--all") continue;
     const fullPath = resolve(root, arg);
-    let stat;
+    let stat: ReturnType<typeof statSync> | undefined;
     try {
       stat = statSync(fullPath);
     } catch {
       console.error(`Path not found: ${arg}`);
       continue;
     }
-    if (stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       results.push(...findSkillFiles(fullPath));
-    } else if (stat.isFile()) {
+    } else if (stat?.isFile()) {
       results.push(fullPath);
     }
   }

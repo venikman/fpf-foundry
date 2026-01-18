@@ -1,4 +1,4 @@
-import { execFileSync } from "child_process";
+import { execFileSync } from "node:child_process";
 
 export const gitMaxBufferBytes = 64 * 1024 * 1024;
 

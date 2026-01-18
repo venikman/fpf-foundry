@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { parseArgs } from "util";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { dirname, join, relative, resolve } from "path";
-import { fileURLToPath } from "url";
+import { parseArgs } from "node:util";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join, relative, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseSemicolonList, resolveNow, sortKeys, stableStringify } from "../../_shared/utils";
 
 type CliOptions = {
@@ -144,11 +144,7 @@ writeFileSync(testPath, renderTestStub(skillId), "utf8");
 
 runOrExit(["bun", "develop/tools/skill/validate.ts", toRepoRelative(specPath, repoRoot)], repoRoot, "SkillSpec validation failed.");
 runOrExit(["bun", "develop/tools/skill/inventory.ts"], repoRoot, "Inventory regeneration failed.");
-runOrExit(
-  ["bun", "develop/tools/skill/index.ts", "--out", "design/skills/SKILL_INDEX.json"],
-  repoRoot,
-  "Skill index regeneration failed.",
-);
+runOrExit(["bun", "develop/tools/skill/index.ts", "--out", "design/skills/SKILL_INDEX.json"], repoRoot, "Skill index regeneration failed.");
 
 logWork({
   repoRoot,
@@ -218,16 +214,7 @@ function parseCliOptions(): CliOptions {
   };
 }
 
-function renderSkillMd(input: {
-  skillId: string;
-  name: string;
-  summary: string;
-  version: string;
-  status: string;
-  family: string;
-  role: string;
-  policies: string[];
-}): string {
+function renderSkillMd(input: { skillId: string; name: string; summary: string; version: string; status: string; family: string; role: string; policies: string[] }): string {
   const lines: string[] = [];
   lines.push("---");
   lines.push(`name: ${input.skillId}`);
@@ -314,7 +301,7 @@ function parseArgs(argv: string[]): CliOptions {
       i += 1;
       continue;
     }
-    fail(\"Unknown argument '\" + arg + \"'.\");
+    fail("Unknown argument '" + arg + "'.");
   }
 
   if (inputPath.trim().length === 0) {
@@ -332,7 +319,7 @@ function loadJson<T>(filePath: string): T {
 function requireArgValue(argv: string[], index: number, name: string): string {
   const value = argv[index + 1];
   if (!value || value.startsWith("-")) {
-    fail(\"Missing value for \" + name + \".\");
+    fail("Missing value for " + name + ".");
   }
   return value;
 }
@@ -370,14 +357,7 @@ test("${skillIdValue} fixtures", () => {
 `;
 }
 
-function logWork(input: {
-  repoRoot: string;
-  roleAssignment: string;
-  workContext: string;
-  action: string;
-  outputs: string[];
-  decisions: string[];
-}): void {
+function logWork(input: { repoRoot: string; roleAssignment: string; workContext: string; action: string; outputs: string[]; decisions: string[] }): void {
   const logScript = join(input.repoRoot, "develop", "skills", "src", "telemetry", "log-work", "index.ts");
   if (!existsSync(logScript)) {
     console.warn("WARN: telemetry/log-work skill not found; skipping audit trace.");
@@ -497,8 +477,8 @@ function printUsage(): void {
   console.log("  --role <role>              RoleAssignment label (default: Toolsmith).");
   console.log("  --status <status>          planned | experimental | stable | deprecated (default: planned).");
   console.log("  --version <semver>         Skill version (default: 0.1.0).");
-  console.log("  --tags \"a; b\"              Semicolon-delimited metadata tags.");
-  console.log("  --policies \"A.15; E.19\"    Semicolon-delimited policy references for SKILL.md.");
+  console.log('  --tags "a; b"              Semicolon-delimited metadata tags.');
+  console.log('  --policies "A.15; E.19"    Semicolon-delimited policy references for SKILL.md.');
   console.log("  --work-context <ctx>       Work logging context (default: Skills).");
-  console.log("  --decisions \"003-...; ...\" Semicolon-delimited related decision ids/paths.");
+  console.log('  --decisions "003-...; ..." Semicolon-delimited related decision ids/paths.');
 }

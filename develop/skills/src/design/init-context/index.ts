@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { parseArgs } from "util";
-import { existsSync, mkdirSync, writeFileSync } from "fs";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
+import { parseArgs } from "node:util";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { parseSemicolonList } from "../../_shared/utils";
 
 const args = Bun.argv.slice(2);
@@ -37,11 +37,7 @@ const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = findRepoRoot(scriptDir);
 const contextRoot = join(repoRoot, "runtime", "contexts", context);
 
-const standardDirs = [
-  join(contextRoot, "design", "names"),
-  join(contextRoot, "planning", "workplans"),
-  join(contextRoot, "telemetry", "work"),
-];
+const standardDirs = [join(contextRoot, "design", "names"), join(contextRoot, "planning", "workplans"), join(contextRoot, "telemetry", "work")];
 
 for (const dir of standardDirs) {
   mkdirSync(dir, { recursive: true });
@@ -82,14 +78,7 @@ ${purpose}
 `;
 }
 
-function logWork(input: {
-  repoRoot: string;
-  context: string;
-  roleAssignment: string;
-  action: string;
-  outputs: string[];
-  relatedDecisions: string[];
-}): void {
+function logWork(input: { repoRoot: string; context: string; roleAssignment: string; action: string; outputs: string[]; relatedDecisions: string[] }): void {
   const logScript = join(input.repoRoot, "develop", "skills", "src", "telemetry", "log-work", "index.ts");
   if (!existsSync(logScript)) {
     console.warn("WARN: telemetry/log-work skill not found; skipping audit trace.");
@@ -156,5 +145,5 @@ function findRepoRoot(startDir: string): string {
 }
 
 function printUsage(): void {
-  console.log("Usage: bun develop/skills/src/design/init-context/index.ts --context <Context> [--description \"...\"] [--role-assignment <Role>] [--decisions \"...\"]");
+  console.log('Usage: bun develop/skills/src/design/init-context/index.ts --context <Context> [--description "..."] [--role-assignment <Role>] [--decisions "..."]');
 }

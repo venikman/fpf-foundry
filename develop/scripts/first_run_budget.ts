@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { spawnSync } from "child_process";
-import { mkdtempSync, rmSync } from "fs";
-import * as os from "os";
-import * as path from "path";
+import { spawnSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 
 type RunResult = {
   ok: boolean;
@@ -71,9 +71,7 @@ try {
   const message = error instanceof Error ? error.message : String(error);
   const isHelp = error instanceof HelpError;
   if (jsonRequested) {
-    const payload = isHelp
-      ? { ok: true, command: "first-run-budget", usage: message }
-      : { ok: false, command: "first-run-budget", error: { message } };
+    const payload = isHelp ? { ok: true, command: "first-run-budget", usage: message } : { ok: false, command: "first-run-budget", error: { message } };
     console.log(JSON.stringify(payload));
   } else if (isHelp) {
     console.log(message);
@@ -165,9 +163,7 @@ function writeConsoleReport(report: BudgetReport): void {
   if (report.failures.length > 0) {
     console.log("Failures:");
     for (const failure of report.failures) {
-      console.log(
-        `- run ${failure.run}: exit=${failure.exitCode ?? "null"}, durationMs=${failure.durationMs}, root=${failure.root}, stderr=${failure.stderr}`,
-      );
+      console.log(`- run ${failure.run}: exit=${failure.exitCode ?? "null"}, durationMs=${failure.durationMs}, root=${failure.root}, stderr=${failure.stderr}`);
     }
   }
 

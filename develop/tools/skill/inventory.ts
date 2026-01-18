@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { existsSync, readFileSync, writeFileSync } from "fs";
-import { dirname, join, resolve } from "path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { findSkillFiles, loadJsonFile, parseYaml, toRepoRelative } from "./lib/skill-io";
 
 type InventoryEntry = {
@@ -70,7 +70,6 @@ function parseArgs(argv: string[], repoRoot: string): Options {
     if (arg === "--out") {
       options.outputPath = resolve(repoRoot, getArgValue(argv, i, "--out"));
       i += 1;
-      continue;
     }
   }
 
@@ -246,9 +245,7 @@ function resolveOutputs(frontmatter: Frontmatter | null, skillData: Record<strin
     }
   }
 
-  const unique = Array.from(
-    new Set(entries.map((entry) => entry.trim()).filter((entry) => entry.length > 0)),
-  ).sort((a, b) => a.localeCompare(b));
+  const unique = Array.from(new Set(entries.map((entry) => entry.trim()).filter((entry) => entry.length > 0))).sort((a, b) => a.localeCompare(b));
   if (unique.length === 0) {
     return "-";
   }

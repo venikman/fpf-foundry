@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { chmodSync, cpSync, existsSync, mkdirSync, rmSync } from "fs";
-import { join } from "path";
+import { chmodSync, cpSync, existsSync, mkdirSync, rmSync } from "node:fs";
+import { join } from "node:path";
 
 const repoRoot = process.cwd();
 const srcRoot = join(repoRoot, "packages", "fpf");

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { writeFileSync } from "fs";
-import { resolve } from "path";
+import { writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { loadJsonFile, sortKeys, stableStringify } from "./lib/skill-io";
 
 const args = process.argv.slice(2);

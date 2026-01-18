@@ -1,5 +1,5 @@
-import { readFileSync, readdirSync } from "fs";
-import { join, relative } from "path";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
 
 type LineInfo = {
   sourceName: string;
@@ -304,7 +304,7 @@ function mergeInlineMapping(lines: LineInfo[], nextIndex: number, indentLevel: n
     throw new Error(`${lineInfo(lines[followingIndex])} inline mapping must expand into an object`);
   }
   for (const [key, entryValue] of Object.entries(value as Record<string, unknown>)) {
-    if (Object.prototype.hasOwnProperty.call(baseObject, key)) {
+    if (Object.hasOwn(baseObject, key)) {
       throw new Error(`${lineInfo(lines[followingIndex])} duplicate key '${key}' in mapping`);
     }
     baseObject[key] = entryValue;
@@ -329,7 +329,7 @@ function parseMapping(lines: LineInfo[], startIndex: number, indentLevel: number
       throw new Error(`${lineInfo(line)} unexpected sequence item in mapping`);
     }
     const { key, value } = splitKeyValue(trimmed, line);
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
+    if (Object.hasOwn(obj, key)) {
       throw new Error(`${lineInfo(line)} duplicate key '${key}' in mapping`);
     }
     if (value.length === 0) {

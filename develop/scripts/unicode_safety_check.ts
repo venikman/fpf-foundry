@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { execFileSync } from "child_process";
-import { readFileSync } from "fs";
+import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { gitMaxBufferBytes, listStagedFiles, listTrackedFiles } from "./lib/git-utils";
 
 const args = process.argv.slice(2);

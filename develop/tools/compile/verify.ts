@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import { existsSync, readFileSync, readdirSync } from "fs";
-import { resolve, basename, extname } from "path";
-import { spawnSync } from "child_process";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { resolve, basename, extname } from "node:path";
+import { spawnSync } from "node:child_process";
 import { sortKeys, stableStringify } from "../skill/lib/skill-io";
 
 const rootDir = process.cwd();
@@ -186,7 +186,6 @@ function parseArgs(argv: string[], repoRoot: string): CliOptions {
     if (arg === "--source") {
       options.sourcePaths.push(resolve(repoRoot, getArgValue(argv, i, "--source")));
       i += 1;
-      continue;
     }
   }
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import { mkdirSync, statSync, writeFileSync } from "fs";
-import { dirname, resolve } from "path";
+import { mkdirSync, statSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
 import { findSkillFiles, loadJsonFile, sortKeys, stableStringify, toRepoRelative } from "./lib/skill-io";
 import { validateSchema } from "./lib/skill-validate";
 
@@ -106,16 +106,16 @@ function collectTargets(argsList: string[], root: string, includeAll: boolean): 
   for (const arg of argsList) {
     if (arg === "--all") continue;
     const fullPath = resolve(root, arg);
-    let stat;
+    let stat: ReturnType<typeof statSync> | undefined;
     try {
       stat = statSync(fullPath);
     } catch {
       console.error(`Path not found: ${arg}`);
       continue;
     }
-    if (stat.isDirectory()) {
+    if (stat?.isDirectory()) {
       results.push(...findSkillFiles(fullPath));
-    } else if (stat.isFile()) {
+    } else if (stat?.isFile()) {
       results.push(fullPath);
     }
   }

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-import * as fs from "fs";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 const repoRoot = process.cwd();
 const inventoryPath = path.join(repoRoot, "design", "skills", "SKILL_INVENTORY.md");

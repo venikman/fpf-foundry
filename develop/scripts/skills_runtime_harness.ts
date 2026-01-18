@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import { spawnSync } from "child_process";
-import { createHash } from "crypto";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 
 type Scenario = {
   name: string;
@@ -117,19 +117,8 @@ function buildScenarios(input: { sandboxRepo: string; fixedNow: string }): Scena
     {
       name: "design-init-context",
       command: "bun",
-      args: [
-        "develop/skills/src/design/init-context/index.ts",
-        "--context",
-        "Harness",
-        "--description",
-        "Harness context for deterministic skill execution tests.",
-      ],
-      expectedPaths: [
-        "runtime/contexts/Harness/README.md",
-        "runtime/contexts/Harness/design/names",
-        "runtime/contexts/Harness/planning/workplans",
-        workFile,
-      ],
+      args: ["develop/skills/src/design/init-context/index.ts", "--context", "Harness", "--description", "Harness context for deterministic skill execution tests."],
+      expectedPaths: ["runtime/contexts/Harness/README.md", "runtime/contexts/Harness/design/names", "runtime/contexts/Harness/planning/workplans", workFile],
       expectedFilesForDigest: ["runtime/contexts/Harness/README.md", workFile],
     },
   ];
@@ -240,12 +229,7 @@ function computeAvailableSkillId(root: string, baseSkillId: string): string {
   }
 }
 
-function runScenarioOnce(input: {
-  sandboxRepo: string;
-  baselineCommit: string;
-  scenario: Scenario;
-  fixedNow: string;
-}): string {
+function runScenarioOnce(input: { sandboxRepo: string; baselineCommit: string; scenario: Scenario; fixedNow: string }): string {
   runOrExit("git", ["reset", "--hard", input.baselineCommit], { cwd: input.sandboxRepo });
   runOrExit("git", ["clean", "-fdx"], { cwd: input.sandboxRepo });
 
@@ -283,17 +267,7 @@ function runScenarioOnce(input: {
   runOrExit("git", ["add", "-A"], { cwd: input.sandboxRepo });
   const diff = runCapture("git", ["diff", "--cached", "--no-color"], { cwd: input.sandboxRepo });
 
-  return [
-    `scenario=${input.scenario.name}`,
-    `fixed_now=${input.fixedNow}`,
-    "",
-    "digests:",
-    ...digests.sort(),
-    "",
-    "git_diff_cached:",
-    diff.trimEnd(),
-    "",
-  ].join("\n");
+  return [`scenario=${input.scenario.name}`, `fixed_now=${input.fixedNow}`, "", "digests:", ...digests.sort(), "", "git_diff_cached:", diff.trimEnd(), ""].join("\n");
 }
 
 function initGitRepo(root: string): void {
@@ -332,11 +306,7 @@ function copyRepo(src: string, dest: string): void {
   });
 }
 
-function runOrExit(
-  command: string,
-  args: string[],
-  options: { cwd: string; env?: NodeJS.ProcessEnv } = { cwd: process.cwd() },
-): void {
+function runOrExit(command: string, args: string[], options: { cwd: string; env?: NodeJS.ProcessEnv } = { cwd: process.cwd() }): void {
   const result = spawnSync(command, args, { cwd: options.cwd, env: options.env, encoding: "utf8" });
   if (result.error) {
     const message = result.error instanceof Error ? result.error.message : String(result.error);

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { spawnSync } from "child_process";
+import { spawnSync } from "node:child_process";
 
 type Step = {
   name: string;

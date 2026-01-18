@@ -29,7 +29,22 @@ const singleLinePattern = /^[^\r\n]*$/;
 const datePattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const dateTimePattern = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
-const rootRequired = ["schema_version", "id", "name", "summary", "conformance", "intent", "inputs", "outputs", "procedure", "constraints", "dependencies", "eval", "version", "metadata"];
+const rootRequired = [
+  "schema_version",
+  "id",
+  "name",
+  "summary",
+  "conformance",
+  "intent",
+  "inputs",
+  "outputs",
+  "procedure",
+  "constraints",
+  "dependencies",
+  "eval",
+  "version",
+  "metadata",
+];
 
 const rootAllowed = [...rootRequired, "failure_modes", "quality", "provenance"];
 
@@ -169,7 +184,9 @@ function validateConformance(value: unknown, path: string, errors: SchemaError[]
 function validateInputs(value: unknown, path: string, errors: SchemaError[]): void {
   const inputs = ensureArray(value, path, errors);
   if (!inputs) return;
-  inputs.forEach((entry, index) => validateInput(entry, `${path}[${index}]`, errors));
+  for (const [index, entry] of inputs.entries()) {
+    validateInput(entry, `${path}[${index}]`, errors);
+  }
 }
 
 function validateInput(value: unknown, path: string, errors: SchemaError[]): void {
@@ -187,7 +204,9 @@ function validateInput(value: unknown, path: string, errors: SchemaError[]): voi
 function validateOutputs(value: unknown, path: string, errors: SchemaError[]): void {
   const outputs = ensureArray(value, path, errors);
   if (!outputs) return;
-  outputs.forEach((entry, index) => validateOutput(entry, `${path}[${index}]`, errors));
+  for (const [index, entry] of outputs.entries()) {
+    validateOutput(entry, `${path}[${index}]`, errors);
+  }
 }
 
 function validateOutput(value: unknown, path: string, errors: SchemaError[]): void {
@@ -204,7 +223,9 @@ function validateOutput(value: unknown, path: string, errors: SchemaError[]): vo
 function validateProcedure(value: unknown, path: string, errors: SchemaError[]): void {
   const procedure = ensureArray(value, path, errors);
   if (!procedure) return;
-  procedure.forEach((entry, index) => validateProcedureStep(entry, `${path}[${index}]`, errors));
+  for (const [index, entry] of procedure.entries()) {
+    validateProcedureStep(entry, `${path}[${index}]`, errors);
+  }
 }
 
 function validateProcedureStep(value: unknown, path: string, errors: SchemaError[]): void {
@@ -244,7 +265,9 @@ function validateEval(value: unknown, path: string, errors: SchemaError[]): void
   validateStringArray(evalBlock.acceptance_criteria, `${path}.acceptance_criteria`, errors);
   const tests = ensureArray(evalBlock.tests, `${path}.tests`, errors);
   if (!tests) return;
-  tests.forEach((entry, index) => validateTest(entry, `${path}.tests[${index}]`, errors));
+  for (const [index, entry] of tests.entries()) {
+    validateTest(entry, `${path}.tests[${index}]`, errors);
+  }
 }
 
 function validateTest(value: unknown, path: string, errors: SchemaError[]): void {
@@ -299,7 +322,9 @@ function validateProvenance(value: unknown, path: string, errors: SchemaError[])
   if (provenance.field_evidence !== undefined) {
     const fieldEvidence = ensureArray(provenance.field_evidence, `${path}.field_evidence`, errors);
     if (!fieldEvidence) return;
-    fieldEvidence.forEach((entry, index) => validateFieldEvidence(entry, `${path}.field_evidence[${index}]`, errors));
+    for (const [index, entry] of fieldEvidence.entries()) {
+      validateFieldEvidence(entry, `${path}.field_evidence[${index}]`, errors);
+    }
   }
 }
 

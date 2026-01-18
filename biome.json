@@ -12,18 +12,7 @@
       "develop/**/*.ts"
     ],
     "rules": {
-      "recommended": false,
-      "style": {
-        "noParameterAssign": "error",
-        "useConst": "error"
-      },
-      "suspicious": {
-        "noAssignInExpressions": "error",
-        "noCatchAssign": "error",
-        "noClassAssign": "error",
-        "noFunctionAssign": "error",
-        "noVar": "error"
-      }
+      "recommended": true
     }
   },
   "assist": {

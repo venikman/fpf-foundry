@@ -1,4 +1,4 @@
-import { spawnSync } from "child_process";
+import { spawnSync } from "node:child_process";
 
 /**
  * Compile mode affecting prompt and output parsing rules.

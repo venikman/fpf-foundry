@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-import { parseArgs } from "util";
-import { existsSync, mkdirSync, readFileSync } from "fs";
-import { dirname, isAbsolute, join, relative, resolve, sep } from "path";
-import { fileURLToPath } from "url";
-import { createHash } from "crypto";
+import { parseArgs } from "node:util";
+import { existsSync, mkdirSync, readFileSync } from "node:fs";
+import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
 import { parseSemicolonList, sortKeys, stableStringify } from "../../_shared/utils";
 
 // A.15.1 U.Work Generator
@@ -31,7 +31,7 @@ const rawMethod = values.method ?? values.spec;
 const rawRoleAssignment = values["role-assignment"] ?? values.role;
 
 if (!rawMethod || !rawRoleAssignment || !values.context || !values.action) {
-  console.error("Usage: log-work --method <id> --role-assignment <assigned> --context <ctx> --action <desc> [--outputs \"a; b\"] [--decisions \"drr; drr\"]");
+  console.error('Usage: log-work --method <id> --role-assignment <assigned> --context <ctx> --action <desc> [--outputs "a; b"] [--decisions "drr; drr"]');
   process.exit(1);
 }
 

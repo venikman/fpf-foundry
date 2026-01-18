@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "fs";
-import { spawnSync } from "child_process";
-import * as os from "os";
-import * as path from "path";
+import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { spawnSync } from "node:child_process";
+import * as os from "node:os";
+import * as path from "node:path";
 
 type Block = {
   file: string;
@@ -42,7 +42,7 @@ try {
 
   if (blocks.length === 0) {
     console.log("No README shell examples found.");
-    return;
+    process.exit(0);
   }
 
   for (const block of blocks) {
@@ -64,14 +64,7 @@ function parseArgs(argv: string[]): Options {
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
     if (arg === "-h" || arg === "--help") {
-      console.log(
-        [
-          "Usage: bun develop/scripts/readme_examples_check.ts [options] [files...]",
-          "",
-          "Options:",
-          "  --keep-sandbox  Keep the temp repo for inspection",
-        ].join("\n"),
-      );
+      console.log(["Usage: bun develop/scripts/readme_examples_check.ts [options] [files...]", "", "Options:", "  --keep-sandbox  Keep the temp repo for inspection"].join("\n"));
       process.exit(0);
     }
     if (arg === "--keep-sandbox") {

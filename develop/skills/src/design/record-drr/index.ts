@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
-import { parseArgs } from "util";
-import { existsSync, mkdirSync, readdirSync } from "fs";
-import { join } from "path";
+import { parseArgs } from "node:util";
+import { existsSync, mkdirSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import { resolveNow } from "../../_shared/utils";
 
 // E.9 Design-Rationale Record (DRR) Generator

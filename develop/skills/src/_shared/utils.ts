@@ -38,4 +38,3 @@ export function sortKeys(value: unknown): unknown {
 export function stableStringify(value: unknown): string {
   return `${JSON.stringify(value, null, 2)}\n`;
 }
-
