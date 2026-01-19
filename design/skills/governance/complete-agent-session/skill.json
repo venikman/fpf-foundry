@@ -1,0 +1,170 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in completion summaries."
+    ],
+    "safety": [
+      "Fail if the session record does not exist.",
+      "Reject context and session_id values containing path separators or dot-segments.",
+      "Do not overwrite a completed session without explicit intent."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "view_file",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Updates the session record with completion status and timestamp.",
+      "Fails if the session record is missing.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "session_record_path": "runtime/contexts/AgentWorkflow/sessions/AW-0001.session.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0001",
+          "status": "needs-review",
+          "summary": "Awaiting human verification."
+        },
+        "name": "basic-complete"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, status).",
+    "Invalid context or session_id value (not a safe path segment).",
+    "Session record missing for the provided session_id.",
+    "Session record already completed.",
+    "Failed to write the updated session record file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "governance/complete-agent-session",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier to complete (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Completion status (success, needs-review, blocked, failed).",
+      "name": "status",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional completion summary.",
+      "name": "summary",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type completing the session.",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Complete an existing agent session record with status and summary.",
+    "non_goals": [
+      "Does not validate Definition of Done requirements.",
+      "Does not create handoff artifacts.",
+      "Does not resolve escalation workflows."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-18",
+    "tags": [
+      "governance"
+    ],
+    "updated": "2026-01-18"
+  },
+  "name": "Complete Agent Session",
+  "outputs": [
+    {
+      "description": "Path to the updated session record markdown file.",
+      "name": "session_record_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id, status) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Load the session record and confirm it has not already been completed.",
+      "step_id": "step-load-record"
+    },
+    {
+      "instruction": "Update the session record with completion status, timestamp, and summary.",
+      "step_id": "step-update-record"
+    },
+    {
+      "instruction": "Write the updated session record back to disk.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the session completion with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Completes an agent session with status and summary.",
+  "version": "0.1.0"
+}

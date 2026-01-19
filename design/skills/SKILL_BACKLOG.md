@@ -47,9 +47,6 @@ Columns
 | `release/ship-sota-pack` | Release | G.10 | - | planned | none | - | Ships a SoTA Pack (Release). |
 | `maintenance/refresh-models` | Maintenance | G.11 | - | planned | none | - | Refreshes stale models based on telemetry. |
 | `telemetry/generate-dhc` | Telemetry | G.12 | - | planned | none | - | Generates a Discipline-Health Dashboard. |
-| `governance/start-agent-session` | Governance | A.15.1 | - | planned | none | SessionRecord | Starts a new agent session with deterministic identifiers. |
-| `governance/handoff-to-agent` | Governance | A.15.1 | - | planned | none | HandoffRecord | Records a handoff to another agent role within a session. |
-| `governance/complete-agent-session` | Governance | A.15.1 | - | planned | none | SessionRecord | Completes an agent session with status and summary. |
 | `workflow/generate-handoff` | Workflow | A.15.1 | - | planned | none | HandoffRecord | Generates a structured handoff artifact from session inputs. |
 | `workflow/parse-handoff` | Workflow | A.15.1 | - | planned | none | - | Parses and validates a handoff artifact into structured data. |
 | `audit/verify-definition-of-done` | Audit | E.19 | audit/verify-definition-of-done | planned | none | DoDReport | Verifies Definition of Done requirements for a session. |

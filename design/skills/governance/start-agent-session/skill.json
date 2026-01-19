@@ -1,0 +1,173 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in session records."
+    ],
+    "safety": [
+      "Do not overwrite an existing session record.",
+      "Reject context and session_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a session record at runtime/contexts/<context>/sessions/<session_id>.session.md.",
+      "Fails when a session record already exists for the same session_id.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "session_record_path": "runtime/contexts/AgentWorkflow/sessions/AW-0001.session.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0001",
+          "title": "Agent workflow bootstrap",
+          "purpose": "Establish a new session baseline."
+        },
+        "name": "basic-start"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, title).",
+    "Invalid context or session_id value (not a safe path segment).",
+    "Session record already exists.",
+    "Failed to write the session record file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "governance/start-agent-session",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Unique session identifier (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Short title for the session.",
+      "name": "title",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional purpose or summary for the session.",
+      "name": "purpose",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional initiator reference (person, team, or system).",
+      "name": "initiated_by",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type (strategist, executor, etc).",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Start a new agent session record under runtime/contexts with deterministic naming.",
+    "non_goals": [
+      "Does not assign roles beyond recording metadata.",
+      "Does not create handoff artifacts.",
+      "Does not enforce Definition of Done checks."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-18",
+    "tags": [
+      "governance"
+    ],
+    "updated": "2026-01-18"
+  },
+  "name": "Start Agent Session",
+  "outputs": [
+    {
+      "description": "Path to the generated session record markdown file.",
+      "name": "session_record_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id, title) and ensure they are safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Create runtime/contexts/<context>/sessions if missing and ensure the session record does not already exist.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the session record content with status=active and started_at timestamp.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the session record to runtime/contexts/<context>/sessions/<session_id>.session.md.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the session start with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Starts a new agent session record with deterministic naming.",
+  "version": "0.1.0"
+}

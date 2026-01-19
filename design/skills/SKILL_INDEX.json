@@ -30,6 +30,27 @@
       "version": "0.1.1"
     },
     {
+      "id": "governance/complete-agent-session",
+      "invocation": "governance/complete-agent-session",
+      "package": "@venikman/fpf-skill-governance-complete-agent-session",
+      "spec_path": "design/skills/governance/complete-agent-session/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "governance/handoff-to-agent",
+      "invocation": "governance/handoff-to-agent",
+      "package": "@venikman/fpf-skill-governance-handoff-to-agent",
+      "spec_path": "design/skills/governance/handoff-to-agent/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "governance/start-agent-session",
+      "invocation": "governance/start-agent-session",
+      "package": "@venikman/fpf-skill-governance-start-agent-session",
+      "spec_path": "design/skills/governance/start-agent-session/skill.json",
+      "version": "0.1.0"
+    },
+    {
       "id": "planning/create-workplan",
       "invocation": "planning/create-workplan",
       "package": "@venikman/fpf-skill-planning-create-workplan",
