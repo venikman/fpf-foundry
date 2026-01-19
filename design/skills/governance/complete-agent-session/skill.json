@@ -23,7 +23,8 @@
   },
   "dependencies": {
     "skills": [
-      "telemetry/log-work@^0.1.1"
+      "telemetry/log-work@^0.1.1",
+      "governance/check-roc-compliance@^0.1.0"
     ],
     "tools": [
       "view_file",
@@ -35,6 +36,7 @@
       "Updates the session record with completion status and timestamp.",
       "Fails if the session record is missing.",
       "When status is success, requires a DoD report with pass status or downgrades to needs-review.",
+      "When a RoC report indicates violations, applies the RoC violation outcome policy.",
       "Logs a U.Work record when telemetry/log-work is available."
     ],
     "tests": [
@@ -58,6 +60,7 @@
     "Session record missing for the provided session_id.",
     "Session record already completed.",
     "DoD report missing or invalid when required.",
+    "RoC report missing or invalid when required.",
     "Failed to write the updated session record file.",
     "Optional telemetry logging failed."
   ],
@@ -84,6 +87,30 @@
     {
       "description": "Optional path to a Definition of Done report (required for success).",
       "name": "dod_report",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional path to a RoC compliance report.",
+      "name": "roc_report",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional path to a RoC policy file (used to generate a compliance report).",
+      "name": "roc_path",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of tools used during the session (for RoC checks).",
+      "name": "used_tools",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of approval keys satisfied (for RoC checks).",
+      "name": "approvals",
       "required": false,
       "type": "string"
     },
@@ -128,6 +155,7 @@
     "goal": "Complete an existing agent session record with status and summary.",
     "non_goals": [
       "Does not perform Definition of Done checks (requires external report).",
+      "Does not define Rule of Constraints policies.",
       "Does not create handoff artifacts.",
       "Does not resolve escalation workflows."
     ]
@@ -174,5 +202,5 @@
   ],
   "schema_version": "0.1.0",
   "summary": "Completes an agent session with status and summary.",
-  "version": "0.1.1"
+  "version": "0.1.2"
 }

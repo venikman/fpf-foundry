@@ -16,11 +16,15 @@ const { values } = parseArgs({
   options: {
     context: { type: "string" },
     "session-id": { type: "string" },
-    "capability-ref": { type: "string" },
-    title: { type: "string" },
-    purpose: { type: "string" },
-    "initiated-by": { type: "string" },
-    "agent-type": { type: "string" },
+    "approval-id": { type: "string" },
+    summary: { type: "string" },
+    details: { type: "string" },
+    "required-for": { type: "string" },
+    "approver-role": { type: "string" },
+    "requested-by": { type: "string" },
+    "due-by": { type: "string" },
+    artifacts: { type: "string" },
+    notes: { type: "string" },
     "agent-model": { type: "string" },
     "role-assignment": { type: "string" },
     decisions: { type: "string" },
@@ -30,17 +34,22 @@ const { values } = parseArgs({
   allowPositionals: true,
 });
 
-if (!values.context || !values["session-id"] || !values.title) {
+if (!values.context || !values["session-id"] || !values["approval-id"] || !values.summary) {
   printUsage();
   process.exit(1);
 }
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
 const sessionId = requireMatch(values["session-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "session-id", "a safe path segment (letters, digits, '_' or '-')");
-const title = requireNonEmpty(values.title, "title");
-const purpose = normalizeOptional(values.purpose) ?? "TBD";
-const initiatedBy = normalizeOptional(values["initiated-by"]);
-const agentType = normalizeOptional(values["agent-type"]);
+const approvalId = requireMatch(values["approval-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "approval-id", "a safe path segment (letters, digits, '_' or '-')");
+const summary = requireNonEmpty(values.summary, "summary");
+const details = normalizeOptional(values.details);
+const requiredFor = parseSemicolonList(values["required-for"]);
+const approverRole = normalizeOptional(values["approver-role"]);
+const requestedBy = normalizeOptional(values["requested-by"]);
+const dueBy = normalizeOptional(values["due-by"]);
+const artifacts = parseSemicolonList(values.artifacts);
+const notes = normalizeOptional(values.notes);
 const agentModel = normalizeOptional(values["agent-model"]);
 const roleAssignment = normalizeOptional(values["role-assignment"]) ?? "Strategist";
 const relatedDecisions = parseSemicolonList(values.decisions);
@@ -50,108 +59,105 @@ const isoTimestamp = timestampStart.toISOString();
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = findRepoRoot(scriptDir);
-const sessionsDir = join(repoRoot, "runtime", "contexts", context, "sessions");
-mkdirSync(sessionsDir, { recursive: true });
 
-const capabilityPath = resolveCapabilityPath(values["capability-ref"], repoRoot, context);
-if (!existsSync(capabilityPath)) {
-  console.error(`Error: Capability declaration not found at ${capabilityPath}`);
-  console.error("Hint: run governance/declare-agent-capability to create one.");
-  process.exit(1);
-}
-const capabilityRef = normalizeArtifactRef(capabilityPath, repoRoot);
+const approvalsDir = join(repoRoot, "runtime", "contexts", context, "approvals");
+mkdirSync(approvalsDir, { recursive: true });
 
-const sessionPath = join(sessionsDir, `${sessionId}.session.md`);
-if (existsSync(sessionPath)) {
-  console.error(`Error: Session record already exists at ${sessionPath}`);
+const approvalPath = join(approvalsDir, `${sessionId}.${approvalId}.approval.md`);
+if (existsSync(approvalPath)) {
+  console.error(`Error: Approval request already exists at ${approvalPath}`);
   process.exit(1);
 }
 
+const normalizedArtifacts = artifacts.map((entry) => normalizeArtifactRef(entry, repoRoot));
 const normalizedDecisions = relatedDecisions.map((entry) => normalizeArtifactRef(entry, repoRoot));
 
-const frontmatter = renderFrontmatter({
-  sessionId,
+const requestContent = renderRequest({
   context,
-  status: "active",
-  startedAt: isoTimestamp,
-  title,
-  purpose,
-  initiatedBy,
-  capabilityRef,
-  agentType,
-  agentModel,
-  relatedDecisions: normalizedDecisions,
+  sessionId,
+  approvalId,
+  summary,
+  details,
+  requiredFor,
+  approverRole,
+  requestedBy,
+  dueBy,
+  requestedAt: isoTimestamp,
+  artifacts: normalizedArtifacts,
+  notes,
 });
 
-const body = `# Agent Session: ${sessionId}
-
-## Title
-${title}
-
-## Purpose
-${purpose}
-
-## Initiated By
-${initiatedBy ?? "(unspecified)"}
-
-## Capability Reference
-${capabilityRef}
-
-## Agent Type
-${agentType ?? "(unspecified)"}
-`;
-
-await Bun.write(sessionPath, `${frontmatter}\n${body}`);
+await Bun.write(approvalPath, requestContent);
 
 logWork({
   repoRoot,
   context,
   roleAssignment,
-  action: `Started agent session '${sessionId}': ${title}`,
-  outputs: [toRepoRelative(sessionPath, repoRoot)],
+  action: `Requested approval '${approvalId}' for session '${sessionId}'.`,
+  outputs: [toRepoRelative(approvalPath, repoRoot)],
   relatedDecisions: normalizedDecisions,
   agentSession: sessionId,
   agentModel,
-  agentType,
+  agentType: undefined,
   timestampStart: values["timestamp-start"],
 });
 
-console.log(`Session started: ${sessionPath}`);
+console.log(`Approval request recorded: ${approvalPath}`);
 
-function renderFrontmatter(input: {
-  sessionId: string;
+function renderRequest(input: {
   context: string;
-  status: string;
-  startedAt: string;
-  title: string;
-  purpose: string;
-  initiatedBy?: string;
-  capabilityRef: string;
-  agentType?: string;
-  agentModel?: string;
-  relatedDecisions: string[];
+  sessionId: string;
+  approvalId: string;
+  summary: string;
+  details?: string;
+  requiredFor: string[];
+  approverRole?: string;
+  requestedBy?: string;
+  dueBy?: string;
+  requestedAt: string;
+  artifacts: string[];
+  notes?: string;
 }): string {
-  const lines = ["---"];
-  lines.push(`type: U.AgentSession`);
-  lines.push(`session_id: ${JSON.stringify(input.sessionId)}`);
-  lines.push(`context: ${JSON.stringify(input.context)}`);
-  lines.push(`status: ${JSON.stringify(input.status)}`);
-  lines.push(`started_at: ${JSON.stringify(input.startedAt)}`);
-  lines.push(`title: ${JSON.stringify(input.title)}`);
-  lines.push(`purpose: ${JSON.stringify(input.purpose)}`);
-  lines.push(`capability_ref: ${JSON.stringify(input.capabilityRef)}`);
-  if (input.initiatedBy) {
-    lines.push(`initiated_by: ${JSON.stringify(input.initiatedBy)}`);
+  const frontmatter = [
+    "---",
+    "type: U.ApprovalRequest",
+    "schema_version: \"0.1.0\"",
+    "version: \"0.1.0\"",
+    `context: ${JSON.stringify(input.context)}`,
+    `session_id: ${JSON.stringify(input.sessionId)}`,
+    `approval_id: ${JSON.stringify(input.approvalId)}`,
+    `status: \"pending\"`,
+    `requested_at: ${JSON.stringify(input.requestedAt)}`,
+  ];
+  if (input.requestedBy) {
+    frontmatter.push(`requested_by: ${JSON.stringify(input.requestedBy)}`);
   }
-  if (input.agentType) {
-    lines.push(`agent_type: ${JSON.stringify(input.agentType)}`);
+  if (input.approverRole) {
+    frontmatter.push(`approver_role: ${JSON.stringify(input.approverRole)}`);
   }
-  if (input.agentModel) {
-    lines.push(`agent_model: ${JSON.stringify(input.agentModel)}`);
+  if (input.dueBy) {
+    frontmatter.push(`due_by: ${JSON.stringify(input.dueBy)}`);
   }
-  lines.push(renderYamlKeyList("related_decisions", input.relatedDecisions));
-  lines.push("---");
-  return lines.join("\n");
+  frontmatter.push(renderYamlKeyList("required_for", input.requiredFor));
+  frontmatter.push(renderYamlKeyList("artifacts", input.artifacts));
+  if (input.notes) {
+    frontmatter.push(`notes: ${JSON.stringify(input.notes)}`);
+  }
+  frontmatter.push("---");
+
+  const lines: string[] = [];
+  lines.push(`# Approval Request: ${input.approvalId}`);
+  lines.push("");
+  lines.push("## Summary");
+  lines.push(input.summary);
+  if (input.details) {
+    lines.push("");
+    lines.push("## Details");
+    lines.push(input.details);
+  }
+  lines.push("");
+
+  return `${frontmatter.join("\n")}\n\n${lines.join("\n")}`;
 }
 
 function renderYamlKeyList(key: string, values: string[]): string {
@@ -183,7 +189,7 @@ function logWork(input: {
     "bun",
     logScript,
     "--method",
-    "governance/start-agent-session",
+    "workflow/request-approval",
     "--role-assignment",
     input.roleAssignment,
     "--context",
@@ -241,26 +247,18 @@ function resolveTimestampStart(value?: string): Date {
   return resolveNow();
 }
 
-function normalizeArtifactRef(value: string, repoRoot: string): string {
+function normalizeArtifactRef(value: string, repoRootDir: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return trimmed;
 
-  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  const rel = relative(repoRoot, absolute);
+  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
+  const rel = relative(repoRootDir, absolute);
   const isOutsideRoot = isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`);
   if (!isOutsideRoot) {
-    return toRepoRelative(absolute, repoRoot);
+    return toRepoRelative(absolute, repoRootDir);
   }
 
   return trimmed;
-}
-
-function resolveCapabilityPath(value: string | undefined, repoRoot: string, contextName: string): string {
-  const trimmed = (value ?? "").trim();
-  if (trimmed.length > 0) {
-    return isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  }
-  return join(repoRoot, "runtime", "contexts", contextName, "capabilities", "default.capability.yaml");
 }
 
 function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
@@ -308,6 +306,6 @@ function findRepoRoot(startDir: string): string {
 
 function printUsage(): void {
   console.log(
-    "Usage: bun develop/skills/src/governance/start-agent-session/index.ts --context <Context> --session-id <Id> --title <Title> [--capability-ref <Path>] [--purpose \"...\"] [--initiated-by \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
+    "Usage: bun develop/skills/src/workflow/request-approval/index.ts --context <Context> --session-id <Id> --approval-id <Id> --summary \"...\" [--details \"...\"] [--required-for \"a; b\"] [--approver-role <Role>] [--requested-by <Label>] [--due-by <Date>] [--artifacts \"a; b\"] [--notes \"...\"] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
   );
 }

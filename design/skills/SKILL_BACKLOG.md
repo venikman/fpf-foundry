@@ -47,10 +47,3 @@ Columns
 | `release/ship-sota-pack` | Release | G.10 | - | planned | none | - | Ships a SoTA Pack (Release). |
 | `maintenance/refresh-models` | Maintenance | G.11 | - | planned | none | - | Refreshes stale models based on telemetry. |
 | `telemetry/generate-dhc` | Telemetry | G.12 | - | planned | none | - | Generates a Discipline-Health Dashboard. |
-| `governance/define-roc` | Governance | E.16 | - | planned | none | RoCSpec | Defines a Rule of Constraints policy bundle for agent autonomy. |
-| `governance/check-roc-compliance` | Governance | E.16 | - | planned | none | RoCReport | Checks session compliance against a Rule of Constraints. |
-| `governance/declare-agent-capability` | Governance | A.2.2 | - | planned | none | CapabilityDeclaration | Declares agent capabilities for session eligibility. |
-| `workflow/escalate-to-human` | Workflow | E.16 | - | planned | none | EscalationRecord | Escalates a session issue to a human reviewer. |
-| `workflow/resolve-escalation` | Workflow | E.16 | - | planned | none | EscalationResolution | Records a resolution for a human escalation. |
-| `workflow/request-approval` | Workflow | E.16 | - | planned | none | ApprovalRequest | Requests approval for constrained actions or scope changes. |
-| `workflow/respond-to-approval` | Workflow | E.16 | - | planned | none | ApprovalResponse | Records approval decisions for session actions. |

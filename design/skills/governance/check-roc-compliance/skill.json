@@ -1,0 +1,174 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in RoC compliance reports."
+    ],
+    "safety": [
+      "Do not overwrite existing RoC compliance reports.",
+      "Reject context and session_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "view_file",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a RoC compliance report under runtime/contexts/<context>/audits/roc/.",
+      "Flags violations when forbidden tools are used or approvals are missing.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "roc_report_path": "runtime/contexts/AgentWorkflow/audits/roc/AW-0005.<timestamp>.roc.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0005",
+          "roc_path": "runtime/contexts/AgentWorkflow/roc/roc-agentworkflow-default.roc.yaml",
+          "used_tools": "rg; bun",
+          "approvals": "schema_changes"
+        },
+        "name": "basic-roc-check"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, roc_path).",
+    "Invalid context or session_id value (not a safe path segment).",
+    "RoC file missing or invalid.",
+    "Failed to write the RoC compliance report.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "governance/check-roc-compliance",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier to check (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Path to the RoC YAML file.",
+      "name": "roc_path",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of used tools.",
+      "name": "used_tools",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of approval keys satisfied.",
+      "name": "approvals",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type performing the RoC check.",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: ProxyAuditor).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Check session activity against a Rule of Constraints policy and record compliance status.",
+    "non_goals": [
+      "Does not enforce actions or approvals.",
+      "Does not resolve escalations."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-19",
+    "tags": [
+      "governance"
+    ],
+    "updated": "2026-01-19"
+  },
+  "name": "Check RoC Compliance",
+  "outputs": [
+    {
+      "description": "Path to the generated RoC compliance report markdown file.",
+      "name": "roc_report_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id, roc_path) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Load the RoC file and parse permissions, approvals, and escalation policy.",
+      "step_id": "step-load-roc"
+    },
+    {
+      "instruction": "Compare used tools and approvals to the RoC requirements and collect violations.",
+      "step_id": "step-check-compliance"
+    },
+    {
+      "instruction": "Write a RoC compliance report with status and violations.",
+      "step_id": "step-write-report"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the compliance check with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Checks session compliance against a Rule of Constraints policy.",
+  "version": "0.1.0"
+}

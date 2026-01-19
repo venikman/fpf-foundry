@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { parseArgs } from "node:util";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseSemicolonList, resolveNow } from "../../_shared/utils";
@@ -16,11 +16,12 @@ const { values } = parseArgs({
   options: {
     context: { type: "string" },
     "session-id": { type: "string" },
-    "capability-ref": { type: "string" },
-    title: { type: "string" },
-    purpose: { type: "string" },
-    "initiated-by": { type: "string" },
-    "agent-type": { type: "string" },
+    reason: { type: "string" },
+    severity: { type: "string" },
+    target: { type: "string" },
+    "requested-by": { type: "string" },
+    artifacts: { type: "string" },
+    notes: { type: "string" },
     "agent-model": { type: "string" },
     "role-assignment": { type: "string" },
     decisions: { type: "string" },
@@ -30,17 +31,19 @@ const { values } = parseArgs({
   allowPositionals: true,
 });
 
-if (!values.context || !values["session-id"] || !values.title) {
+if (!values.context || !values["session-id"] || !values.reason) {
   printUsage();
   process.exit(1);
 }
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
 const sessionId = requireMatch(values["session-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "session-id", "a safe path segment (letters, digits, '_' or '-')");
-const title = requireNonEmpty(values.title, "title");
-const purpose = normalizeOptional(values.purpose) ?? "TBD";
-const initiatedBy = normalizeOptional(values["initiated-by"]);
-const agentType = normalizeOptional(values["agent-type"]);
+const reason = requireNonEmpty(values.reason, "reason");
+const severity = normalizeSeverity(values.severity);
+const target = normalizeOptional(values.target) ?? "human";
+const requestedBy = normalizeOptional(values["requested-by"]);
+const artifacts = parseSemicolonList(values.artifacts);
+const notes = normalizeOptional(values.notes);
 const agentModel = normalizeOptional(values["agent-model"]);
 const roleAssignment = normalizeOptional(values["role-assignment"]) ?? "Strategist";
 const relatedDecisions = parseSemicolonList(values.decisions);
@@ -50,108 +53,98 @@ const isoTimestamp = timestampStart.toISOString();
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = findRepoRoot(scriptDir);
-const sessionsDir = join(repoRoot, "runtime", "contexts", context, "sessions");
-mkdirSync(sessionsDir, { recursive: true });
 
-const capabilityPath = resolveCapabilityPath(values["capability-ref"], repoRoot, context);
-if (!existsSync(capabilityPath)) {
-  console.error(`Error: Capability declaration not found at ${capabilityPath}`);
-  console.error("Hint: run governance/declare-agent-capability to create one.");
-  process.exit(1);
-}
-const capabilityRef = normalizeArtifactRef(capabilityPath, repoRoot);
+const escalationsDir = join(repoRoot, "runtime", "contexts", context, "escalations");
+mkdirSync(escalationsDir, { recursive: true });
 
-const sessionPath = join(sessionsDir, `${sessionId}.session.md`);
-if (existsSync(sessionPath)) {
-  console.error(`Error: Session record already exists at ${sessionPath}`);
+const nextIndex = resolveNextEscalationIndex(escalationsDir, sessionId);
+const escalationId = `${sessionId}.${nextIndex}`;
+const escalationPath = join(escalationsDir, `${escalationId}.escalation.md`);
+if (existsSync(escalationPath)) {
+  console.error(`Error: Escalation record already exists at ${escalationPath}`);
   process.exit(1);
 }
 
+const normalizedArtifacts = artifacts.map((entry) => normalizeArtifactRef(entry, repoRoot));
 const normalizedDecisions = relatedDecisions.map((entry) => normalizeArtifactRef(entry, repoRoot));
 
-const frontmatter = renderFrontmatter({
-  sessionId,
+const reportContent = renderEscalation({
   context,
-  status: "active",
-  startedAt: isoTimestamp,
-  title,
-  purpose,
-  initiatedBy,
-  capabilityRef,
-  agentType,
-  agentModel,
-  relatedDecisions: normalizedDecisions,
+  sessionId,
+  escalationId,
+  reason,
+  severity,
+  target,
+  requestedBy,
+  raisedAt: isoTimestamp,
+  artifacts: normalizedArtifacts,
+  notes,
 });
 
-const body = `# Agent Session: ${sessionId}
-
-## Title
-${title}
-
-## Purpose
-${purpose}
-
-## Initiated By
-${initiatedBy ?? "(unspecified)"}
-
-## Capability Reference
-${capabilityRef}
-
-## Agent Type
-${agentType ?? "(unspecified)"}
-`;
-
-await Bun.write(sessionPath, `${frontmatter}\n${body}`);
+await Bun.write(escalationPath, reportContent);
 
 logWork({
   repoRoot,
   context,
   roleAssignment,
-  action: `Started agent session '${sessionId}': ${title}`,
-  outputs: [toRepoRelative(sessionPath, repoRoot)],
+  action: `Escalated session '${sessionId}' to ${target}.`,
+  outputs: [toRepoRelative(escalationPath, repoRoot)],
   relatedDecisions: normalizedDecisions,
   agentSession: sessionId,
   agentModel,
-  agentType,
+  agentType: undefined,
   timestampStart: values["timestamp-start"],
 });
 
-console.log(`Session started: ${sessionPath}`);
+console.log(`Escalation recorded: ${escalationPath}`);
 
-function renderFrontmatter(input: {
-  sessionId: string;
+function renderEscalation(input: {
   context: string;
-  status: string;
-  startedAt: string;
-  title: string;
-  purpose: string;
-  initiatedBy?: string;
-  capabilityRef: string;
-  agentType?: string;
-  agentModel?: string;
-  relatedDecisions: string[];
+  sessionId: string;
+  escalationId: string;
+  reason: string;
+  severity: string;
+  target: string;
+  requestedBy?: string;
+  raisedAt: string;
+  artifacts: string[];
+  notes?: string;
 }): string {
-  const lines = ["---"];
-  lines.push(`type: U.AgentSession`);
-  lines.push(`session_id: ${JSON.stringify(input.sessionId)}`);
-  lines.push(`context: ${JSON.stringify(input.context)}`);
-  lines.push(`status: ${JSON.stringify(input.status)}`);
-  lines.push(`started_at: ${JSON.stringify(input.startedAt)}`);
-  lines.push(`title: ${JSON.stringify(input.title)}`);
-  lines.push(`purpose: ${JSON.stringify(input.purpose)}`);
-  lines.push(`capability_ref: ${JSON.stringify(input.capabilityRef)}`);
-  if (input.initiatedBy) {
-    lines.push(`initiated_by: ${JSON.stringify(input.initiatedBy)}`);
+  const frontmatter = [
+    "---",
+    "type: U.EscalationRecord",
+    "schema_version: \"0.1.0\"",
+    "version: \"0.1.0\"",
+    `context: ${JSON.stringify(input.context)}`,
+    `session_id: ${JSON.stringify(input.sessionId)}`,
+    `escalation_id: ${JSON.stringify(input.escalationId)}`,
+    `status: \"open\"`,
+    `severity: ${JSON.stringify(input.severity)}`,
+    `target: ${JSON.stringify(input.target)}`,
+    `raised_at: ${JSON.stringify(input.raisedAt)}`,
+  ];
+  if (input.requestedBy) {
+    frontmatter.push(`requested_by: ${JSON.stringify(input.requestedBy)}`);
   }
-  if (input.agentType) {
-    lines.push(`agent_type: ${JSON.stringify(input.agentType)}`);
+  frontmatter.push(renderYamlKeyList("artifacts", input.artifacts));
+  if (input.notes) {
+    frontmatter.push(`notes: ${JSON.stringify(input.notes)}`);
   }
-  if (input.agentModel) {
-    lines.push(`agent_model: ${JSON.stringify(input.agentModel)}`);
+  frontmatter.push("---");
+
+  const lines: string[] = [];
+  lines.push(`# Escalation: ${input.escalationId}`);
+  lines.push("");
+  lines.push("## Reason");
+  lines.push(input.reason);
+  if (input.notes) {
+    lines.push("");
+    lines.push("## Notes");
+    lines.push(input.notes);
   }
-  lines.push(renderYamlKeyList("related_decisions", input.relatedDecisions));
-  lines.push("---");
-  return lines.join("\n");
+  lines.push("");
+
+  return `${frontmatter.join("\n")}\n\n${lines.join("\n")}`;
 }
 
 function renderYamlKeyList(key: string, values: string[]): string {
@@ -159,6 +152,40 @@ function renderYamlKeyList(key: string, values: string[]): string {
     return `${key}: []`;
   }
   return `${key}:\n${values.map((value) => `  - ${JSON.stringify(value)}`).join("\n")}`;
+}
+
+function resolveNextEscalationIndex(dir: string, sessionId: string): number {
+  const pattern = new RegExp(`^${escapeRegExp(sessionId)}\\.(\\d+)\\.escalation\\.md$`);
+  let maxIndex = 0;
+  if (!existsSync(dir)) {
+    return 1;
+  }
+  for (const entry of readdirSync(dir)) {
+    const match = entry.match(pattern);
+    if (!match) continue;
+    const value = Number.parseInt(match[1] ?? "0", 10);
+    if (value > maxIndex) {
+      maxIndex = value;
+    }
+  }
+  return maxIndex + 1;
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function normalizeSeverity(value?: string): string {
+  const trimmed = (value ?? "").trim().toLowerCase();
+  if (trimmed.length === 0) {
+    return "medium";
+  }
+  const allowed = new Set(["low", "medium", "high"]);
+  if (!allowed.has(trimmed)) {
+    console.error(`Invalid severity '${value ?? ""}'. Expected low, medium, or high.`);
+    process.exit(1);
+  }
+  return trimmed;
 }
 
 function logWork(input: {
@@ -183,7 +210,7 @@ function logWork(input: {
     "bun",
     logScript,
     "--method",
-    "governance/start-agent-session",
+    "workflow/escalate-to-human",
     "--role-assignment",
     input.roleAssignment,
     "--context",
@@ -241,26 +268,18 @@ function resolveTimestampStart(value?: string): Date {
   return resolveNow();
 }
 
-function normalizeArtifactRef(value: string, repoRoot: string): string {
+function normalizeArtifactRef(value: string, repoRootDir: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return trimmed;
 
-  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  const rel = relative(repoRoot, absolute);
+  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
+  const rel = relative(repoRootDir, absolute);
   const isOutsideRoot = isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`);
   if (!isOutsideRoot) {
-    return toRepoRelative(absolute, repoRoot);
+    return toRepoRelative(absolute, repoRootDir);
   }
 
   return trimmed;
-}
-
-function resolveCapabilityPath(value: string | undefined, repoRoot: string, contextName: string): string {
-  const trimmed = (value ?? "").trim();
-  if (trimmed.length > 0) {
-    return isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  }
-  return join(repoRoot, "runtime", "contexts", contextName, "capabilities", "default.capability.yaml");
 }
 
 function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
@@ -308,6 +327,6 @@ function findRepoRoot(startDir: string): string {
 
 function printUsage(): void {
   console.log(
-    "Usage: bun develop/skills/src/governance/start-agent-session/index.ts --context <Context> --session-id <Id> --title <Title> [--capability-ref <Path>] [--purpose \"...\"] [--initiated-by \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
+    "Usage: bun develop/skills/src/workflow/escalate-to-human/index.ts --context <Context> --session-id <Id> --reason \"...\" [--severity <low|medium|high>] [--target <Target>] [--requested-by <Label>] [--artifacts \"a; b\"] [--notes \"...\"] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
   );
 }

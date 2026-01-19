@@ -1,0 +1,170 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in approval responses."
+    ],
+    "safety": [
+      "Do not overwrite existing approval response records.",
+      "Reject context and approval_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "view_file",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates an approval response record under runtime/contexts/<context>/approvals/.",
+      "Fails when the referenced approval request is missing.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "approval_response_path": "runtime/contexts/AgentWorkflow/approvals/AW-0007.schema-change.<timestamp>.response.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0007",
+          "approval_id": "schema-change",
+          "decision": "approved",
+          "responded_by": "human"
+        },
+        "name": "basic-approval-response"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, approval_id, decision).",
+    "Invalid context or approval_id value (not a safe path segment).",
+    "Approval request missing for the provided approval_id.",
+    "Failed to write the approval response file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "workflow/respond-to-approval",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier tied to the approval request (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Approval identifier to respond to (safe path segment).",
+      "name": "approval_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Approval decision (approved, denied, needs-review).",
+      "name": "decision",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional responder label (person or role).",
+      "name": "responded_by",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional response notes or conditions.",
+      "name": "notes",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Record a structured approval decision tied to a prior request.",
+    "non_goals": [
+      "Does not alter the original approval request.",
+      "Does not enforce actions beyond recording the response."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-19",
+    "tags": [
+      "workflow"
+    ],
+    "updated": "2026-01-19"
+  },
+  "name": "Respond to Approval",
+  "outputs": [
+    {
+      "description": "Path to the generated approval response markdown file.",
+      "name": "approval_response_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, approval_id, decision) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Locate the referenced approval request and confirm it exists.",
+      "step_id": "step-load-request"
+    },
+    {
+      "instruction": "Write the approval response record with the decision and notes.",
+      "step_id": "step-write-response"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the approval response with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Records a response to an approval request.",
+  "version": "0.1.0"
+}

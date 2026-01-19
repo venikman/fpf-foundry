@@ -1,0 +1,219 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in RoC files."
+    ],
+    "safety": [
+      "Do not overwrite existing RoC files.",
+      "Reject context and roc_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a RoC file under runtime/contexts/<context>/roc/<roc_id>.roc.yaml.",
+      "Fails when the RoC already exists.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "roc_path": "runtime/contexts/AgentWorkflow/roc/roc-agentworkflow-default.roc.yaml"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "roc_id": "roc-agentworkflow-default",
+          "constraints": "No destructive git commands; Tests must pass before success",
+          "allowed_tools": "rg; bun",
+          "forbidden_tools": "git reset --hard",
+          "approvals_required_for": "schema_changes; policy_changes",
+          "approver_role": "strategist",
+          "escalations_trigger_on": "blocked; policy_conflict",
+          "escalation_target": "human",
+          "violation_outcome": "needs-review"
+        },
+        "name": "basic-roc"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, roc_id).",
+    "Invalid context or roc_id value (not a safe path segment).",
+    "No constraints, permissions, approvals, or escalations supplied.",
+    "RoC file already exists.",
+    "Failed to write the RoC file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "governance/define-roc",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "RoC identifier (safe path segment).",
+      "name": "roc_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited constraint statements.",
+      "name": "constraints",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited allowed tool list.",
+      "name": "allowed_tools",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited forbidden tool list.",
+      "name": "forbidden_tools",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited approval requirement keys.",
+      "name": "approvals_required_for",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional approver role for required approvals.",
+      "name": "approver_role",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited escalation trigger list.",
+      "name": "escalations_trigger_on",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional escalation target (default: human).",
+      "name": "escalation_target",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional violation outcome policy (blocked or needs-review).",
+      "name": "violation_outcome",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional evolution policy notes (reserved, not enforced).",
+      "name": "evolution_notes",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type defining the RoC.",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Define a Rule of Constraints policy bundle for a bounded context.",
+    "non_goals": [
+      "Does not enforce compliance.",
+      "Does not manage approvals or escalations directly."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-19",
+    "tags": [
+      "governance"
+    ],
+    "updated": "2026-01-19"
+  },
+  "name": "Define Rule of Constraints",
+  "outputs": [
+    {
+      "description": "Path to the generated RoC YAML file.",
+      "name": "roc_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, roc_id) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Ensure at least one of constraints, permissions, approvals, or escalations is provided.",
+      "step_id": "step-validate-content"
+    },
+    {
+      "instruction": "Create runtime/contexts/<context>/roc if missing and ensure the target file does not already exist.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the RoC YAML with constraint, permission, approval, and escalation sections.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the RoC file to runtime/contexts/<context>/roc/<roc_id>.roc.yaml.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the RoC definition with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Defines a Rule of Constraints policy bundle for agent autonomy.",
+  "version": "0.1.0"
+}

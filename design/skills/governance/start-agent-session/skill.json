@@ -32,6 +32,7 @@
     "acceptance_criteria": [
       "Creates a session record at runtime/contexts/<context>/sessions/<session_id>.session.md.",
       "Fails when a session record already exists for the same session_id.",
+      "Fails when a required capability declaration is missing.",
       "Logs a U.Work record when telemetry/log-work is available."
     ],
     "tests": [
@@ -42,6 +43,7 @@
         "input_fixture": {
           "context": "AgentWorkflow",
           "session_id": "AW-0001",
+          "capability_ref": "runtime/contexts/AgentWorkflow/capabilities/default.capability.yaml",
           "title": "Agent workflow bootstrap",
           "purpose": "Establish a new session baseline."
         },
@@ -53,6 +55,7 @@
     "Missing required inputs (context, session_id, title).",
     "Invalid context or session_id value (not a safe path segment).",
     "Session record already exists.",
+    "Capability declaration missing or invalid.",
     "Failed to write the session record file.",
     "Optional telemetry logging failed."
   ],
@@ -68,6 +71,12 @@
       "description": "Unique session identifier (safe path segment).",
       "name": "session_id",
       "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional path to a capability declaration (defaults to runtime/contexts/<context>/capabilities/default.capability.yaml).",
+      "name": "capability_ref",
+      "required": false,
       "type": "string"
     },
     {
@@ -123,6 +132,7 @@
     "goal": "Start a new agent session record under runtime/contexts with deterministic naming.",
     "non_goals": [
       "Does not assign roles beyond recording metadata.",
+      "Does not create capability declarations.",
       "Does not create handoff artifacts.",
       "Does not enforce Definition of Done checks."
     ]
@@ -135,7 +145,7 @@
     "tags": [
       "governance"
     ],
-    "updated": "2026-01-18"
+    "updated": "2026-01-19"
   },
   "name": "Start Agent Session",
   "outputs": [
@@ -169,5 +179,5 @@
   ],
   "schema_version": "0.1.0",
   "summary": "Starts a new agent session record with deterministic naming.",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

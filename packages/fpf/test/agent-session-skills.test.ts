@@ -40,12 +40,33 @@ test("agent session lifecycle skills create deterministic artifacts", () => {
   rmSync(contextRoot, { recursive: true, force: true });
 
   try {
+    const capabilityResult = runSkill("develop/skills/src/governance/declare-agent-capability/index.ts", [
+      "--context",
+      context,
+      "--capability-id",
+      "default",
+      "--title",
+      "Harness Capability",
+      "--work-scope",
+      "Harness context",
+      "--work-measures",
+      "Baseline checks",
+      "--timestamp-start",
+      "2026-01-01T00:00:00.500Z",
+    ]);
+
+    expect(capabilityResult.exitCode).toBe(0);
+    const capabilityPath = path.join(contextRoot, "capabilities", "default.capability.yaml");
+    expect(existsSync(capabilityPath)).toBe(true);
+
     const startTimestamp = "2026-01-01T00:00:00.000Z";
     const startResult = runSkill("develop/skills/src/governance/start-agent-session/index.ts", [
       "--context",
       context,
       "--session-id",
       sessionId,
+      "--capability-ref",
+      capabilityPath,
       "--title",
       "Harness Session",
       "--purpose",
@@ -74,6 +95,8 @@ test("agent session lifecycle skills create deterministic artifacts", () => {
       context,
       "--session-id",
       sessionId,
+      "--capability-ref",
+      capabilityPath,
       "--title",
       "Duplicate",
       "--timestamp-start",

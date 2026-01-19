@@ -38,6 +38,24 @@ test("DoD verification and completion gating", () => {
   rmSync(contextRoot, { recursive: true, force: true });
 
   try {
+    const capabilityResult = runSkill("develop/skills/src/governance/declare-agent-capability/index.ts", [
+      "--context",
+      context,
+      "--capability-id",
+      "default",
+      "--title",
+      "Audit Capability",
+      "--work-scope",
+      "Harness audit context",
+      "--work-measures",
+      "Baseline checks",
+      "--timestamp-start",
+      "2026-01-02T00:00:00.500Z",
+    ]);
+    expect(capabilityResult.exitCode).toBe(0);
+    const capabilityPath = path.join(contextRoot, "capabilities", "default.capability.yaml");
+    expect(existsSync(capabilityPath)).toBe(true);
+
     const sessionIdPass = "session-pass";
     const startTimestamp = "2026-01-02T00:00:00.000Z";
     const startResult = runSkill("develop/skills/src/governance/start-agent-session/index.ts", [
@@ -45,6 +63,8 @@ test("DoD verification and completion gating", () => {
       context,
       "--session-id",
       sessionIdPass,
+      "--capability-ref",
+      capabilityPath,
       "--title",
       "Audit Gate Session",
       "--timestamp-start",
@@ -102,6 +122,8 @@ test("DoD verification and completion gating", () => {
       context,
       "--session-id",
       sessionIdMissing,
+      "--capability-ref",
+      capabilityPath,
       "--title",
       "Missing DoD Session",
       "--timestamp-start",
@@ -134,6 +156,8 @@ test("DoD verification and completion gating", () => {
       context,
       "--session-id",
       sessionIdFail,
+      "--capability-ref",
+      capabilityPath,
       "--title",
       "Failing DoD Session",
       "--timestamp-start",

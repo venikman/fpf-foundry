@@ -1,0 +1,200 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in approval requests."
+    ],
+    "safety": [
+      "Do not overwrite existing approval request records.",
+      "Reject context and approval_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates an approval request under runtime/contexts/<context>/approvals/.",
+      "Fails when an approval request with the same id already exists.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "approval_request_path": "runtime/contexts/AgentWorkflow/approvals/AW-0007.schema-change.approval.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0007",
+          "approval_id": "schema-change",
+          "summary": "Request approval for schema updates",
+          "requested_by": "strategist",
+          "approver_role": "human"
+        },
+        "name": "basic-approval-request"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, approval_id, summary).",
+    "Invalid context or approval_id value (not a safe path segment).",
+    "Approval request already exists.",
+    "Failed to write the approval request file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "workflow/request-approval",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier requesting approval (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Approval identifier (safe path segment).",
+      "name": "approval_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Short summary of the approval request.",
+      "name": "summary",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional request details or justification.",
+      "name": "details",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of approval requirement keys.",
+      "name": "required_for",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional approver role label.",
+      "name": "approver_role",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional requester label (person or role).",
+      "name": "requested_by",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional due date for the approval request.",
+      "name": "due_by",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related artifact paths.",
+      "name": "artifacts",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional freeform notes.",
+      "name": "notes",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Record a structured approval request for human review.",
+    "non_goals": [
+      "Does not grant approvals.",
+      "Does not resolve escalations."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-19",
+    "tags": [
+      "workflow"
+    ],
+    "updated": "2026-01-19"
+  },
+  "name": "Request Approval",
+  "outputs": [
+    {
+      "description": "Path to the generated approval request markdown file.",
+      "name": "approval_request_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id, approval_id, summary) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Resolve the approval request path and ensure it does not already exist.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Write the approval request record with status pending.",
+      "step_id": "step-write-request"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the approval request with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Requests approval for a constrained action or change.",
+  "version": "0.1.0"
+}

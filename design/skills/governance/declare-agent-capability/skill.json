@@ -1,0 +1,197 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in capability declarations."
+    ],
+    "safety": [
+      "Do not overwrite existing capability declarations.",
+      "Reject context and capability_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a capability declaration at runtime/contexts/<context>/capabilities/<capability_id>.capability.yaml.",
+      "Fails when the declaration already exists.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "capability_declaration_path": "runtime/contexts/AgentWorkflow/capabilities/default.capability.yaml"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "capability_id": "default",
+          "title": "Default agent capability",
+          "work_scope": "AgentWorkflow context",
+          "work_measures": "Standard quality checks"
+        },
+        "name": "basic-capability"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, capability_id, title, work_scope, work_measures).",
+    "Invalid context or capability_id value (not a safe path segment).",
+    "Capability declaration already exists.",
+    "Failed to write the capability declaration file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "governance/declare-agent-capability",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Capability identifier (safe path segment).",
+      "name": "capability_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Short title for the capability.",
+      "name": "title",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Semicolon-delimited work scope entries.",
+      "name": "work_scope",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Semicolon-delimited work measures entries.",
+      "name": "work_measures",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional holder or system identifier for the capability.",
+      "name": "holder",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 validity start timestamp.",
+      "name": "valid_from",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 validity end timestamp.",
+      "name": "valid_until",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional notes for the capability declaration.",
+      "name": "notes",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type declaring the capability.",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Declare a capability statement for an agent or system within a bounded context.",
+    "non_goals": [
+      "Does not assign roles or authorize actions.",
+      "Does not evaluate capability evidence."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-19",
+    "tags": [
+      "governance"
+    ],
+    "updated": "2026-01-19"
+  },
+  "name": "Declare Agent Capability",
+  "outputs": [
+    {
+      "description": "Path to the generated capability declaration file.",
+      "name": "capability_declaration_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, capability_id, title, work_scope, work_measures) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Create runtime/contexts/<context>/capabilities if missing and ensure the target file does not already exist.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the capability declaration YAML with scope and measure lists.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the capability declaration to runtime/contexts/<context>/capabilities/<capability_id>.capability.yaml.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the capability declaration with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Declares an agent capability statement for a bounded context.",
+  "version": "0.1.0"
+}

@@ -21,6 +21,7 @@ Define the explicit constraints, approvals, and escalation rules that govern age
   "version": "0.1.0",
   "context": "AgentWorkflow",
   "roc_id": "roc-agentworkflow-default",
+  "defined_at": "2026-01-18T00:00:00.000Z",
   "constraints": [
     "No destructive git commands",
     "Tests must pass before success"
@@ -37,6 +38,7 @@ Define the explicit constraints, approvals, and escalation rules that govern age
     "trigger_on": ["blocked", "policy_conflict"],
     "target": "human"
   },
+  "violation_outcome": "needs-review",
   "evolution_policy": {
     "status": "reserved",
     "notes": "Reserved for C.18 evolution policy fields; not enforced yet."
@@ -48,6 +50,7 @@ Define the explicit constraints, approvals, and escalation rules that govern age
 - `schema_version`, `type`, `version`, `context`, and `roc_id` are required.
 - `constraints` must be an array of strings.
 - `permissions`, `approvals`, and `escalations` are objects when present.
+- `violation_outcome` must be `blocked` or `needs-review` when provided.
 - `evolution_policy` is reserved for future use and must not drive behavior yet.
 
 ## Example (draft)
@@ -58,6 +61,7 @@ type: U.RuleOfConstraints
 version: "0.1.0"
 context: AgentWorkflow
 roc_id: roc-agentworkflow-default
+defined_at: "2026-01-18T00:00:00.000Z"
 constraints:
   - No destructive git commands.
   - Tests must pass before marking success.
@@ -77,6 +81,7 @@ escalations:
     - blocked
     - policy_conflict
   target: human
+violation_outcome: needs-review
 evolution_policy:
   status: reserved
   notes: Reserved for C.18 evolution policy fields; not enforced yet.

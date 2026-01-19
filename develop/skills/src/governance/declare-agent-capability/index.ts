@@ -15,11 +15,14 @@ const { values } = parseArgs({
   args: Bun.argv,
   options: {
     context: { type: "string" },
-    "session-id": { type: "string" },
-    "capability-ref": { type: "string" },
+    "capability-id": { type: "string" },
     title: { type: "string" },
-    purpose: { type: "string" },
-    "initiated-by": { type: "string" },
+    "work-scope": { type: "string" },
+    "work-measures": { type: "string" },
+    holder: { type: "string" },
+    "valid-from": { type: "string" },
+    "valid-until": { type: "string" },
+    notes: { type: "string" },
     "agent-type": { type: "string" },
     "agent-model": { type: "string" },
     "role-assignment": { type: "string" },
@@ -30,16 +33,31 @@ const { values } = parseArgs({
   allowPositionals: true,
 });
 
-if (!values.context || !values["session-id"] || !values.title) {
+if (!values.context || !values["capability-id"] || !values.title || !values["work-scope"] || !values["work-measures"]) {
   printUsage();
   process.exit(1);
 }
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
-const sessionId = requireMatch(values["session-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "session-id", "a safe path segment (letters, digits, '_' or '-')");
+const capabilityId = requireMatch(values["capability-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "capability-id", "a safe path segment (letters, digits, '_' or '-')");
 const title = requireNonEmpty(values.title, "title");
-const purpose = normalizeOptional(values.purpose) ?? "TBD";
-const initiatedBy = normalizeOptional(values["initiated-by"]);
+const workScope = parseSemicolonList(values["work-scope"]);
+const workMeasures = parseSemicolonList(values["work-measures"]);
+if (workScope.length === 0) {
+  console.error("Missing work-scope entries.");
+  process.exit(1);
+}
+if (workMeasures.length === 0) {
+  console.error("Missing work-measures entries.");
+  process.exit(1);
+}
+
+const holder = normalizeOptional(values.holder);
+const validFrom = normalizeOptional(values["valid-from"]);
+const validUntil = normalizeOptional(values["valid-until"]);
+validateIsoTimestamp(validFrom, "valid-from");
+validateIsoTimestamp(validUntil, "valid-until");
+const notes = normalizeOptional(values.notes);
 const agentType = normalizeOptional(values["agent-type"]);
 const agentModel = normalizeOptional(values["agent-model"]);
 const roleAssignment = normalizeOptional(values["role-assignment"]) ?? "Strategist";
@@ -50,108 +68,94 @@ const isoTimestamp = timestampStart.toISOString();
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = findRepoRoot(scriptDir);
-const sessionsDir = join(repoRoot, "runtime", "contexts", context, "sessions");
-mkdirSync(sessionsDir, { recursive: true });
 
-const capabilityPath = resolveCapabilityPath(values["capability-ref"], repoRoot, context);
-if (!existsSync(capabilityPath)) {
-  console.error(`Error: Capability declaration not found at ${capabilityPath}`);
-  console.error("Hint: run governance/declare-agent-capability to create one.");
-  process.exit(1);
-}
-const capabilityRef = normalizeArtifactRef(capabilityPath, repoRoot);
-
-const sessionPath = join(sessionsDir, `${sessionId}.session.md`);
-if (existsSync(sessionPath)) {
-  console.error(`Error: Session record already exists at ${sessionPath}`);
+const capabilityDir = join(repoRoot, "runtime", "contexts", context, "capabilities");
+mkdirSync(capabilityDir, { recursive: true });
+const capabilityPath = join(capabilityDir, `${capabilityId}.capability.yaml`);
+if (existsSync(capabilityPath)) {
+  console.error(`Error: Capability declaration already exists at ${capabilityPath}`);
   process.exit(1);
 }
 
-const normalizedDecisions = relatedDecisions.map((entry) => normalizeArtifactRef(entry, repoRoot));
-
-const frontmatter = renderFrontmatter({
-  sessionId,
+const yaml = renderCapabilityYaml({
   context,
-  status: "active",
-  startedAt: isoTimestamp,
+  capabilityId,
   title,
-  purpose,
-  initiatedBy,
-  capabilityRef,
+  declaredAt: isoTimestamp,
+  holder,
+  workScope,
+  workMeasures,
+  validFrom,
+  validUntil,
+  notes,
   agentType,
   agentModel,
-  relatedDecisions: normalizedDecisions,
 });
 
-const body = `# Agent Session: ${sessionId}
+await Bun.write(capabilityPath, yaml);
 
-## Title
-${title}
-
-## Purpose
-${purpose}
-
-## Initiated By
-${initiatedBy ?? "(unspecified)"}
-
-## Capability Reference
-${capabilityRef}
-
-## Agent Type
-${agentType ?? "(unspecified)"}
-`;
-
-await Bun.write(sessionPath, `${frontmatter}\n${body}`);
+const normalizedDecisions = relatedDecisions.map((entry) => normalizeArtifactRef(entry, repoRoot));
 
 logWork({
   repoRoot,
   context,
   roleAssignment,
-  action: `Started agent session '${sessionId}': ${title}`,
-  outputs: [toRepoRelative(sessionPath, repoRoot)],
+  action: `Declared capability '${capabilityId}' in ${context}.`,
+  outputs: [toRepoRelative(capabilityPath, repoRoot)],
   relatedDecisions: normalizedDecisions,
-  agentSession: sessionId,
+  agentSession: undefined,
   agentModel,
   agentType,
   timestampStart: values["timestamp-start"],
 });
 
-console.log(`Session started: ${sessionPath}`);
+console.log(`Capability declared: ${capabilityPath}`);
 
-function renderFrontmatter(input: {
-  sessionId: string;
+function renderCapabilityYaml(input: {
   context: string;
-  status: string;
-  startedAt: string;
+  capabilityId: string;
   title: string;
-  purpose: string;
-  initiatedBy?: string;
-  capabilityRef: string;
+  declaredAt: string;
+  holder?: string;
+  workScope: string[];
+  workMeasures: string[];
+  validFrom?: string;
+  validUntil?: string;
+  notes?: string;
   agentType?: string;
   agentModel?: string;
-  relatedDecisions: string[];
 }): string {
-  const lines = ["---"];
-  lines.push(`type: U.AgentSession`);
-  lines.push(`session_id: ${JSON.stringify(input.sessionId)}`);
-  lines.push(`context: ${JSON.stringify(input.context)}`);
-  lines.push(`status: ${JSON.stringify(input.status)}`);
-  lines.push(`started_at: ${JSON.stringify(input.startedAt)}`);
-  lines.push(`title: ${JSON.stringify(input.title)}`);
-  lines.push(`purpose: ${JSON.stringify(input.purpose)}`);
-  lines.push(`capability_ref: ${JSON.stringify(input.capabilityRef)}`);
-  if (input.initiatedBy) {
-    lines.push(`initiated_by: ${JSON.stringify(input.initiatedBy)}`);
+  const lines = [
+    `schema_version: "0.1.0"`,
+    `type: U.CapabilityDeclaration`,
+    `version: "0.1.0"`,
+    `context: ${JSON.stringify(input.context)}`,
+    `capability_id: ${JSON.stringify(input.capabilityId)}`,
+    `title: ${JSON.stringify(input.title)}`,
+    `declared_at: ${JSON.stringify(input.declaredAt)}`,
+  ];
+  if (input.holder) {
+    lines.push(`holder: ${JSON.stringify(input.holder)}`);
   }
   if (input.agentType) {
-    lines.push(`agent_type: ${JSON.stringify(input.agentType)}`);
+    lines.push(`declared_by: ${JSON.stringify(input.agentType)}`);
   }
   if (input.agentModel) {
-    lines.push(`agent_model: ${JSON.stringify(input.agentModel)}`);
+    lines.push(`declared_model: ${JSON.stringify(input.agentModel)}`);
   }
-  lines.push(renderYamlKeyList("related_decisions", input.relatedDecisions));
-  lines.push("---");
-  return lines.join("\n");
+  if (input.validFrom) {
+    lines.push(`valid_from: ${JSON.stringify(input.validFrom)}`);
+  }
+  if (input.validUntil) {
+    lines.push(`valid_until: ${JSON.stringify(input.validUntil)}`);
+  }
+  lines.push(renderYamlKeyList("work_scope", input.workScope));
+  lines.push(renderYamlKeyList("work_measures", input.workMeasures));
+  if (input.notes) {
+    lines.push(`notes: ${JSON.stringify(input.notes)}`);
+  }
+  return `${lines.join("\n")}
+`;
 }
 
 function renderYamlKeyList(key: string, values: string[]): string {
@@ -183,7 +187,7 @@ function logWork(input: {
     "bun",
     logScript,
     "--method",
-    "governance/start-agent-session",
+    "governance/declare-agent-capability",
     "--role-assignment",
     input.roleAssignment,
     "--context",
@@ -241,26 +245,18 @@ function resolveTimestampStart(value?: string): Date {
   return resolveNow();
 }
 
-function normalizeArtifactRef(value: string, repoRoot: string): string {
+function normalizeArtifactRef(value: string, repoRootDir: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return trimmed;
 
-  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  const rel = relative(repoRoot, absolute);
+  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
+  const rel = relative(repoRootDir, absolute);
   const isOutsideRoot = isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`);
   if (!isOutsideRoot) {
-    return toRepoRelative(absolute, repoRoot);
+    return toRepoRelative(absolute, repoRootDir);
   }
 
   return trimmed;
-}
-
-function resolveCapabilityPath(value: string | undefined, repoRoot: string, contextName: string): string {
-  const trimmed = (value ?? "").trim();
-  if (trimmed.length > 0) {
-    return isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  }
-  return join(repoRoot, "runtime", "contexts", contextName, "capabilities", "default.capability.yaml");
 }
 
 function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
@@ -286,6 +282,15 @@ function requireMatch(value: string | undefined, pattern: RegExp, name: string, 
   return trimmed;
 }
 
+function validateIsoTimestamp(value: string | undefined, label: string): void {
+  if (!value) return;
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    console.error(`Invalid ${label} '${value}'. Expected an ISO-8601 date-time.`);
+    process.exit(1);
+  }
+}
+
 function normalizeOptional(value?: string): string | undefined {
   const trimmed = (value ?? "").trim();
   return trimmed.length > 0 ? trimmed : undefined;
@@ -308,6 +313,6 @@ function findRepoRoot(startDir: string): string {
 
 function printUsage(): void {
   console.log(
-    "Usage: bun develop/skills/src/governance/start-agent-session/index.ts --context <Context> --session-id <Id> --title <Title> [--capability-ref <Path>] [--purpose \"...\"] [--initiated-by \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
+    "Usage: bun develop/skills/src/governance/declare-agent-capability/index.ts --context <Context> --capability-id <Id> --title <Title> --work-scope \"a; b\" --work-measures \"a; b\" [--holder \"...\"] [--valid-from <iso>] [--valid-until <iso>] [--notes \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
   );
 }

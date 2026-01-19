@@ -1,7 +1,7 @@
 ---
 name: governance/complete-agent-session
 description: Completes an agent session with status and summary.
-version: 0.1.1
+version: 0.1.2
 status: experimental
 family: governance
 role: Strategist
@@ -26,6 +26,10 @@ This skill updates a session record with completion status and summary, leaving 
 - **session_id** (required): Session identifier (safe path segment).
 - **status** (required): Completion status (`success`, `needs-review`, `blocked`, `failed`).
 - **dod_report** (optional): Path to a DoD report (required to mark `success`).
+- **roc_report** (optional): Path to a RoC compliance report.
+- **roc_path** (optional): Path to a RoC policy file (used to generate a compliance report).
+- **used_tools** (optional): Semicolon-delimited tools used during the session (for RoC checks).
+- **approvals** (optional): Semicolon-delimited approval keys satisfied (for RoC checks).
 - **summary** (optional): Completion summary.
 - **agent_type** (optional): Agent type completing the session.
 - **agent_model** (optional): Agent model identifier.
@@ -41,6 +45,7 @@ This skill updates a session record with completion status and summary, leaving 
 
 1. Validate inputs and confirm the session record exists.
 2. If status is `success`, require a DoD report with pass status or downgrade to `needs-review`.
-3. Update front matter with completion status and timestamp.
-4. Append a completion section with summary.
-5. Emit U.Work via `telemetry/log-work` when available.
+3. Evaluate RoC compliance when provided and apply violation outcomes.
+4. Update front matter with completion status and timestamp.
+5. Append a completion section with summary.
+6. Emit U.Work via `telemetry/log-work` when available.

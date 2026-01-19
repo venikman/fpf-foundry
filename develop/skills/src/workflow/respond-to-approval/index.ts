@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { parseArgs } from "node:util";
-import { existsSync, mkdirSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseSemicolonList, resolveNow } from "../../_shared/utils";
@@ -16,11 +16,10 @@ const { values } = parseArgs({
   options: {
     context: { type: "string" },
     "session-id": { type: "string" },
-    "capability-ref": { type: "string" },
-    title: { type: "string" },
-    purpose: { type: "string" },
-    "initiated-by": { type: "string" },
-    "agent-type": { type: "string" },
+    "approval-id": { type: "string" },
+    decision: { type: "string" },
+    "responded-by": { type: "string" },
+    notes: { type: "string" },
     "agent-model": { type: "string" },
     "role-assignment": { type: "string" },
     decisions: { type: "string" },
@@ -30,135 +29,121 @@ const { values } = parseArgs({
   allowPositionals: true,
 });
 
-if (!values.context || !values["session-id"] || !values.title) {
+if (!values.context || !values["session-id"] || !values["approval-id"] || !values.decision) {
   printUsage();
   process.exit(1);
 }
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
 const sessionId = requireMatch(values["session-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "session-id", "a safe path segment (letters, digits, '_' or '-')");
-const title = requireNonEmpty(values.title, "title");
-const purpose = normalizeOptional(values.purpose) ?? "TBD";
-const initiatedBy = normalizeOptional(values["initiated-by"]);
-const agentType = normalizeOptional(values["agent-type"]);
+const approvalId = requireMatch(values["approval-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "approval-id", "a safe path segment (letters, digits, '_' or '-')");
+const decision = normalizeDecision(values.decision);
+const respondedBy = normalizeOptional(values["responded-by"]);
+const notes = normalizeOptional(values.notes);
 const agentModel = normalizeOptional(values["agent-model"]);
 const roleAssignment = normalizeOptional(values["role-assignment"]) ?? "Strategist";
 const relatedDecisions = parseSemicolonList(values.decisions);
 
 const timestampStart = resolveTimestampStart(values["timestamp-start"]);
 const isoTimestamp = timestampStart.toISOString();
+const timestampSlug = isoTimestamp.replace(/[:.]/g, "-");
 
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = findRepoRoot(scriptDir);
-const sessionsDir = join(repoRoot, "runtime", "contexts", context, "sessions");
-mkdirSync(sessionsDir, { recursive: true });
 
-const capabilityPath = resolveCapabilityPath(values["capability-ref"], repoRoot, context);
-if (!existsSync(capabilityPath)) {
-  console.error(`Error: Capability declaration not found at ${capabilityPath}`);
-  console.error("Hint: run governance/declare-agent-capability to create one.");
-  process.exit(1);
-}
-const capabilityRef = normalizeArtifactRef(capabilityPath, repoRoot);
-
-const sessionPath = join(sessionsDir, `${sessionId}.session.md`);
-if (existsSync(sessionPath)) {
-  console.error(`Error: Session record already exists at ${sessionPath}`);
+const approvalsDir = join(repoRoot, "runtime", "contexts", context, "approvals");
+const requestPath = join(approvalsDir, `${sessionId}.${approvalId}.approval.md`);
+if (!existsSync(requestPath)) {
+  console.error(`Error: Approval request not found at ${requestPath}`);
   process.exit(1);
 }
 
-const normalizedDecisions = relatedDecisions.map((entry) => normalizeArtifactRef(entry, repoRoot));
+const responsePath = join(approvalsDir, `${sessionId}.${approvalId}.${timestampSlug}.response.md`);
+if (existsSync(responsePath)) {
+  console.error(`Error: Approval response already exists at ${responsePath}`);
+  process.exit(1);
+}
 
-const frontmatter = renderFrontmatter({
-  sessionId,
+const responseContent = renderResponse({
   context,
-  status: "active",
-  startedAt: isoTimestamp,
-  title,
-  purpose,
-  initiatedBy,
-  capabilityRef,
-  agentType,
-  agentModel,
-  relatedDecisions: normalizedDecisions,
+  sessionId,
+  approvalId,
+  decision,
+  respondedAt: isoTimestamp,
+  respondedBy,
+  notes,
 });
 
-const body = `# Agent Session: ${sessionId}
+await Bun.write(responsePath, responseContent);
 
-## Title
-${title}
-
-## Purpose
-${purpose}
-
-## Initiated By
-${initiatedBy ?? "(unspecified)"}
-
-## Capability Reference
-${capabilityRef}
-
-## Agent Type
-${agentType ?? "(unspecified)"}
-`;
-
-await Bun.write(sessionPath, `${frontmatter}\n${body}`);
+const normalizedDecisions = relatedDecisions.map((entry) => normalizeArtifactRef(entry, repoRoot));
 
 logWork({
   repoRoot,
   context,
   roleAssignment,
-  action: `Started agent session '${sessionId}': ${title}`,
-  outputs: [toRepoRelative(sessionPath, repoRoot)],
+  action: `Responded to approval '${approvalId}' with '${decision}'.`,
+  outputs: [toRepoRelative(responsePath, repoRoot)],
   relatedDecisions: normalizedDecisions,
   agentSession: sessionId,
   agentModel,
-  agentType,
+  agentType: undefined,
   timestampStart: values["timestamp-start"],
 });
 
-console.log(`Session started: ${sessionPath}`);
+console.log(`Approval response recorded: ${responsePath}`);
 
-function renderFrontmatter(input: {
-  sessionId: string;
+function renderResponse(input: {
   context: string;
-  status: string;
-  startedAt: string;
-  title: string;
-  purpose: string;
-  initiatedBy?: string;
-  capabilityRef: string;
-  agentType?: string;
-  agentModel?: string;
-  relatedDecisions: string[];
+  sessionId: string;
+  approvalId: string;
+  decision: string;
+  respondedAt: string;
+  respondedBy?: string;
+  notes?: string;
 }): string {
-  const lines = ["---"];
-  lines.push(`type: U.AgentSession`);
-  lines.push(`session_id: ${JSON.stringify(input.sessionId)}`);
-  lines.push(`context: ${JSON.stringify(input.context)}`);
-  lines.push(`status: ${JSON.stringify(input.status)}`);
-  lines.push(`started_at: ${JSON.stringify(input.startedAt)}`);
-  lines.push(`title: ${JSON.stringify(input.title)}`);
-  lines.push(`purpose: ${JSON.stringify(input.purpose)}`);
-  lines.push(`capability_ref: ${JSON.stringify(input.capabilityRef)}`);
-  if (input.initiatedBy) {
-    lines.push(`initiated_by: ${JSON.stringify(input.initiatedBy)}`);
+  const frontmatter = [
+    "---",
+    "type: U.ApprovalResponse",
+    "schema_version: \"0.1.0\"",
+    "version: \"0.1.0\"",
+    `context: ${JSON.stringify(input.context)}`,
+    `session_id: ${JSON.stringify(input.sessionId)}`,
+    `approval_id: ${JSON.stringify(input.approvalId)}`,
+    `decision: ${JSON.stringify(input.decision)}`,
+    `responded_at: ${JSON.stringify(input.respondedAt)}`,
+  ];
+  if (input.respondedBy) {
+    frontmatter.push(`responded_by: ${JSON.stringify(input.respondedBy)}`);
   }
-  if (input.agentType) {
-    lines.push(`agent_type: ${JSON.stringify(input.agentType)}`);
+  if (input.notes) {
+    frontmatter.push(`notes: ${JSON.stringify(input.notes)}`);
   }
-  if (input.agentModel) {
-    lines.push(`agent_model: ${JSON.stringify(input.agentModel)}`);
+  frontmatter.push("---");
+
+  const lines: string[] = [];
+  lines.push(`# Approval Response: ${input.approvalId}`);
+  lines.push("");
+  lines.push("## Decision");
+  lines.push(input.decision);
+  if (input.notes) {
+    lines.push("");
+    lines.push("## Notes");
+    lines.push(input.notes);
   }
-  lines.push(renderYamlKeyList("related_decisions", input.relatedDecisions));
-  lines.push("---");
-  return lines.join("\n");
+  lines.push("");
+
+  return `${frontmatter.join("\n")}\n\n${lines.join("\n")}`;
 }
 
-function renderYamlKeyList(key: string, values: string[]): string {
-  if (values.length === 0) {
-    return `${key}: []`;
+function normalizeDecision(value: string | undefined): string {
+  const trimmed = (value ?? "").trim().toLowerCase();
+  const allowed = new Set(["approved", "denied", "needs-review"]);
+  if (!allowed.has(trimmed)) {
+    console.error(`Invalid decision '${value ?? ""}'. Expected approved, denied, or needs-review.`);
+    process.exit(1);
   }
-  return `${key}:\n${values.map((value) => `  - ${JSON.stringify(value)}`).join("\n")}`;
+  return trimmed;
 }
 
 function logWork(input: {
@@ -183,7 +168,7 @@ function logWork(input: {
     "bun",
     logScript,
     "--method",
-    "governance/start-agent-session",
+    "workflow/respond-to-approval",
     "--role-assignment",
     input.roleAssignment,
     "--context",
@@ -241,40 +226,23 @@ function resolveTimestampStart(value?: string): Date {
   return resolveNow();
 }
 
-function normalizeArtifactRef(value: string, repoRoot: string): string {
+function normalizeArtifactRef(value: string, repoRootDir: string): string {
   const trimmed = value.trim();
   if (trimmed.length === 0) return trimmed;
 
-  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  const rel = relative(repoRoot, absolute);
+  const absolute = isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
+  const rel = relative(repoRootDir, absolute);
   const isOutsideRoot = isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`);
   if (!isOutsideRoot) {
-    return toRepoRelative(absolute, repoRoot);
+    return toRepoRelative(absolute, repoRootDir);
   }
 
   return trimmed;
-}
-
-function resolveCapabilityPath(value: string | undefined, repoRoot: string, contextName: string): string {
-  const trimmed = (value ?? "").trim();
-  if (trimmed.length > 0) {
-    return isAbsolute(trimmed) ? trimmed : resolve(repoRoot, trimmed);
-  }
-  return join(repoRoot, "runtime", "contexts", contextName, "capabilities", "default.capability.yaml");
 }
 
 function toRepoRelative(filePath: string, rootDir = process.cwd()): string {
   const rel = relative(rootDir, filePath);
   return rel.length === 0 ? "." : rel.split("\\").join("/");
-}
-
-function requireNonEmpty(value: string | undefined, name: string): string {
-  const trimmed = (value ?? "").trim();
-  if (trimmed.length === 0) {
-    console.error(`Missing ${name}.`);
-    process.exit(1);
-  }
-  return trimmed;
 }
 
 function requireMatch(value: string | undefined, pattern: RegExp, name: string, description: string): string {
@@ -308,6 +276,6 @@ function findRepoRoot(startDir: string): string {
 
 function printUsage(): void {
   console.log(
-    "Usage: bun develop/skills/src/governance/start-agent-session/index.ts --context <Context> --session-id <Id> --title <Title> [--capability-ref <Path>] [--purpose \"...\"] [--initiated-by \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
+    "Usage: bun develop/skills/src/workflow/respond-to-approval/index.ts --context <Context> --session-id <Id> --approval-id <Id> --decision <approved|denied|needs-review> [--responded-by <Label>] [--notes \"...\"] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
   );
 }

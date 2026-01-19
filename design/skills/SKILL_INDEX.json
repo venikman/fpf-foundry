@@ -44,11 +44,32 @@
       "version": "0.1.1"
     },
     {
+      "id": "governance/check-roc-compliance",
+      "invocation": "governance/check-roc-compliance",
+      "package": "@venikman/fpf-skill-governance-check-roc-compliance",
+      "spec_path": "design/skills/governance/check-roc-compliance/skill.json",
+      "version": "0.1.0"
+    },
+    {
       "id": "governance/complete-agent-session",
       "invocation": "governance/complete-agent-session",
       "package": "@venikman/fpf-skill-governance-complete-agent-session",
       "spec_path": "design/skills/governance/complete-agent-session/skill.json",
-      "version": "0.1.1"
+      "version": "0.1.2"
+    },
+    {
+      "id": "governance/declare-agent-capability",
+      "invocation": "governance/declare-agent-capability",
+      "package": "@venikman/fpf-skill-governance-declare-agent-capability",
+      "spec_path": "design/skills/governance/declare-agent-capability/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "governance/define-roc",
+      "invocation": "governance/define-roc",
+      "package": "@venikman/fpf-skill-governance-define-roc",
+      "spec_path": "design/skills/governance/define-roc/skill.json",
+      "version": "0.1.0"
     },
     {
       "id": "governance/handoff-to-agent",
@@ -62,7 +83,7 @@
       "invocation": "governance/start-agent-session",
       "package": "@venikman/fpf-skill-governance-start-agent-session",
       "spec_path": "design/skills/governance/start-agent-session/skill.json",
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "id": "planning/create-workplan",
@@ -79,6 +100,13 @@
       "version": "0.1.1"
     },
     {
+      "id": "workflow/escalate-to-human",
+      "invocation": "workflow/escalate-to-human",
+      "package": "@venikman/fpf-skill-workflow-escalate-to-human",
+      "spec_path": "design/skills/workflow/escalate-to-human/skill.json",
+      "version": "0.1.0"
+    },
+    {
       "id": "workflow/generate-handoff",
       "invocation": "workflow/generate-handoff",
       "package": "@venikman/fpf-skill-workflow-generate-handoff",
@@ -90,6 +118,27 @@
       "invocation": "workflow/parse-handoff",
       "package": "@venikman/fpf-skill-workflow-parse-handoff",
       "spec_path": "design/skills/workflow/parse-handoff/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "workflow/request-approval",
+      "invocation": "workflow/request-approval",
+      "package": "@venikman/fpf-skill-workflow-request-approval",
+      "spec_path": "design/skills/workflow/request-approval/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "workflow/resolve-escalation",
+      "invocation": "workflow/resolve-escalation",
+      "package": "@venikman/fpf-skill-workflow-resolve-escalation",
+      "spec_path": "design/skills/workflow/resolve-escalation/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "workflow/respond-to-approval",
+      "invocation": "workflow/respond-to-approval",
+      "package": "@venikman/fpf-skill-workflow-respond-to-approval",
+      "spec_path": "design/skills/workflow/respond-to-approval/skill.json",
       "version": "0.1.0"
     }
   ]
