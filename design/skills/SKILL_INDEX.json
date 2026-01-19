@@ -55,7 +55,7 @@
       "invocation": "governance/complete-agent-session",
       "package": "@venikman/fpf-skill-governance-complete-agent-session",
       "spec_path": "design/skills/governance/complete-agent-session/skill.json",
-      "version": "0.1.2"
+      "version": "0.1.3"
     },
     {
       "id": "governance/declare-agent-capability",

@@ -5,7 +5,7 @@ version: 0.1.3
 status: experimental
 family: governance
 role: Strategist
-allowed_tools:
+allowed-tools:
   - view_file
   - write_to_file
 policies:

@@ -11,6 +11,7 @@ import { runMintNameAsync } from "./commands/mint-name.ts";
 import { runQuickstartAsync } from "./commands/quickstart.ts";
 import { runRecordDrrAsync } from "./commands/record-drr.ts";
 import { runScaffoldAsync } from "./commands/scaffold.ts";
+import { runSessionAsync } from "./commands/session.ts";
 
 type GlobalOptions = {
   json: boolean;
@@ -80,6 +81,10 @@ export async function runCliAsync(argv: string[]): Promise<number> {
     }
     if (parsed.command === "log-work") {
       const result = await runLogWorkAsync({ rootDir: parsed.rootDir }, parsed.commandArgs);
+      return flushResult(parsed.json, result);
+    }
+    if (parsed.command === "session") {
+      const result = await runSessionAsync({ rootDir: parsed.rootDir }, parsed.commandArgs);
       return flushResult(parsed.json, result);
     }
 
@@ -214,6 +219,7 @@ function writeHelp(json: boolean, command: string | null): number {
     "  mint-name",
     "  record-drr",
     "  log-work",
+    "  session",
     "",
     "Global options:",
     "  --root <dir>   Target root directory (default: cwd)",

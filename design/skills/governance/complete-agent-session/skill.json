@@ -9,7 +9,7 @@
     "safety": [
       "Fail if the session record does not exist.",
       "Reject context and session_id values containing path separators or dot-segments.",
-      "Do not overwrite a completed session without explicit intent."
+      "Do not overwrite a completed session unless allow_recomplete is true."
     ]
   },
   "conformance": {
@@ -35,6 +35,7 @@
     "acceptance_criteria": [
       "Updates the session record with completion status and timestamp.",
       "Fails if the session record is missing.",
+      "Allows re-completion only when allow_recomplete is true and the prior outcome is needs-review.",
       "When status is success, requires a DoD report with pass status or downgrades to needs-review.",
       "When a RoC report indicates violations, applies the RoC violation outcome policy.",
       "Logs a U.Work record when telemetry/log-work is available."
@@ -58,7 +59,7 @@
     "Missing required inputs (context, session_id, status).",
     "Invalid context or session_id value (not a safe path segment).",
     "Session record missing for the provided session_id.",
-    "Session record already completed.",
+    "Session record already completed without allow_recomplete or with non-review outcome.",
     "DoD report missing or invalid when required.",
     "RoC report missing or invalid when required.",
     "Failed to write the updated session record file.",
@@ -82,6 +83,12 @@
       "description": "Completion status (success, needs-review, blocked, failed).",
       "name": "status",
       "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional boolean flag to allow re-completion when the prior outcome is needs-review (true/false).",
+      "name": "allow_recomplete",
+      "required": false,
       "type": "string"
     },
     {
@@ -168,7 +175,7 @@
     "tags": [
       "governance"
     ],
-    "updated": "2026-01-19"
+    "updated": "2026-01-20"
   },
   "name": "Complete Agent Session",
   "outputs": [
@@ -184,7 +191,7 @@
       "step_id": "step-validate-inputs"
     },
     {
-      "instruction": "Load the session record and confirm it has not already been completed.",
+      "instruction": "Load the session record and confirm it is not completed (unless allow_recomplete is true and the outcome is needs-review).",
       "step_id": "step-load-record"
     },
     {
@@ -202,5 +209,5 @@
   ],
   "schema_version": "0.1.0",
   "summary": "Completes an agent session with status and summary.",
-  "version": "0.1.2"
+  "version": "0.1.3"
 }

@@ -5,7 +5,7 @@ version: 0.1.0
 status: experimental
 family: design
 role: Archivist
-allowed_tools:
+allowed-tools:
   - list_dir
   - view_file
   - write_to_file
@@ -62,6 +62,6 @@ Generate a Markdown file (The DRR) following the ADR (Architecture Decision Reco
 
 ### 3.4 Execution Steps
 
-1. **Index**: Find the next sequential number in the `decisions/` directory.
+1. **Index**: Find the next sequential number in the `design/decisions/` directory.
 2. **Draft**: Create the file with the strict headers.
 3. **Commit**: (Implicit) The file is written to disk.

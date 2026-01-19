@@ -1,29 +1,15 @@
 ---
-name: design-mint-name
-description: "FPF Pattern F.18: Local‑First Unification Naming Protocol. Mints F.18 compliant Name Cards."
+name: fpf-local-first-unification-naming-protocol
+description: FPF Pattern F.18: Local‑First Unification Naming Protocol
 license: Apache-2.0
 metadata:
   fpf_id: F.18
   fpf_title: "Local‑First Unification Naming Protocol"
-  family: design
-allowed-tools:
-  - run_command
-  - write_to_file
+allowed-tools: []
 ---
 
 ## F.18 - Local‑First Unification Naming Protocol
-
-### Execution
-
-To mint a new name card that complies with F.18, execute the included script:
-
-```bash
-bun scripts/index.ts --context "<Context>" --id "<kebab-id>" --label "<Title>" --mds "<Definition>"
-```
-
-*Note: This will also trigger A.15.1 Work Logging automatically.*
-
-*Status: normative (Part F, Unification Suite). Audience: engineer‑managers, lead architects, editors of FPF artefacts.*
+*Status: normative (Part F, Unification Suite). Audience: engineer‑managers, lead architects, editors of FPF artefacts.* 
 
 ### F.18:1 - Context
 
@@ -32,7 +18,6 @@ Names must carry enough signal for everyday use, yet never smuggle in Cross‑co
 **Scope.** This protocol applies to naming of **any concepts** authored in Part F (U.Types and **local concepts** alike: kinds, roles, services, methods, works, relations, characteristics, states/statuses, etc.). The **U.Types** norms in this section are a **specialization**, not a restriction of scope.
 
 **Purpose of this pattern.** Provide a **human‑legible, context‑anchored naming protocol** that:
-
 * keeps *local meaning first* and prevents Cross‑context conflation;
 * makes the **kind** of thing explicit (System, Episteme, Role, Service, Method, Work, Decision, Requirement, etc.);
 * integrates smoothly with **Concept-Sets**, **`U.RoleDescription`**, and **Bridges** without requiring any special notation or tooling;
@@ -70,7 +55,7 @@ F.18 defines **eight rules** (R‑rules) and **six practices** (P‑practices). 
 #### F.18:4.1 - The Eight R‑rules (normative)
 
 **R1 — Speak every name *with its Context*.**
-A name is **never** context‑free. When you introduce or use a name, **pair it with the Bounded Context** where it lives (the “Context of meaning”), and with the **edition** of that Context if relevant. In everyday speech: “X, *in* Y.” Cross‑context use requires a Bridge; labels alone do not travel.
+A name is **never** context‑free. When you introduce or use a name, **pair it with the Bounded Context** where it lives (the “Context of meaning”), and with the **edition** of that Context if relevant. In everyday speech: “X, *in* Y.” Cross‑context use requires a Bridge; labels alone do not travel. 
 
 **R2 — State the ontological *Kind* on the Card.**
 Every Name Card **must** state the **Kind** (System, Episteme, Role, Service, Method, Work, Objective, Requirement, Decision, Characteristic, etc.). This prevents category errors and keeps Role–Method–Work alignment clean. *Clarification:* this is a **Card requirement**, not a demand that the label string begin with the Kind.
@@ -83,7 +68,6 @@ A minted name must resolve to a Local-Sense inside its Context (the result of F.
 
 **R5 — Use *Twin Registers* (Unified Tech + Plain).**
 Provide two human‑oriented labels on the Name Card, per **E.10** register discipline:
-
 * a **Unified Tech** label (short, morphology‑stable, neutral in wording);
 * a **Plain** label (reader‑friendly phrasing for managers and subject‑matter experts).
 
@@ -112,7 +96,7 @@ For the purposes of **Diversity_P**, group candidates into **head-term families*
 **Lexical Q‑axes for the NQD‑front**
 When P1 uses **NQD‑CAL (C.18)**, treat the **Quality vector** over candidates as part of the same archive as C.18’s **NQD‑frontier**. Recommended axes (all **ordinal; no arithmetic means**):
 
-* **SemanticFidelity (P — Ontological precision).**
+ * **SemanticFidelity (P — Ontological precision).**
   *Question.* Does the label verify against the **Minimal Definitional Statement (MDS)** and Concept‑Set row without adding or losing core invariants?
   *Scale (ordinal; ↑ better).* `{Misleading, Vague, Precise, Exact}` with `Exact ≻ Precise ≻ Vague ≻ Misleading`.  
   *Link to P2.* When **P2** is run, derive the SemanticFidelity rating from the per‑sense‑seed judgements: candidates with any **core** sense‑seeds classified as `wrong‑prototype` **MUST** be rated **Misleading**; candidates rated **SemanticFidelity ≥ Precise** **SHOULD** have at least a configurable fraction `θ_P` (default `θ_P = 0.7`) of sense‑seeds in `on‑target` and **NONE** in `wrong‑prototype`. Discard candidates that remain **Misleading** after revision.
@@ -166,7 +150,7 @@ To prevent “post-hoc justification” of intuitively chosen labels, every **Na
     – the resulting **NQD-front** of **non-dominated candidates** over ⟨Q-tuple, N, Diversity_P⟩;  
     – a short **selection note** explaining why the chosen Tech/Plain pair was picked from that front
       (e.g., “better CognitiveErgonomics at equal SemanticFidelity”).  
-
+ 
   – A single-element NQD-front is permitted only if the Card records a brief rationale why **no alternative candidate
     survived** the lexical and NQD filters (e.g., legacy constraints, strong AliasRisk on all other options).
 
@@ -185,7 +169,7 @@ A **Name Card** is the authoritative, human‑readable record of a name inside i
 1. **Row ID** — the stable, opaque **UTS row identifier** (the identity anchor).
 2. **Twin labels** — **Unified Tech** and **Plain** (per E.10).
 3. **Context of meaning** — the Bounded Context and, if relevant, its edition.
-4. **Kind** — what sort of thing this is (System, Episteme, Role, Service, Method, Work, Objective, Requirement, Decision, Characteristic, etc.). This is an **ontological category**, not a surface‑string prefix.
+4. **Kind** — what sort of thing this is (System, Episteme, Role, Service, Method, Work, Objective, Requirement, Decision, Characteristic, etc.). This is an **ontological category**, not a surface‑string prefix. 
 5. **Purpose / use‑domain** — the intended area(s) of use (which families of contexts are expected to use it).
 6. **Minimal Definitional Statement (MDS)** — one‑paragraph intended sense in the home context (no tool/process slang).
 7. **Didactic subtitle** — ≤ 12 words that signal pragmatic use.
@@ -198,7 +182,7 @@ A **Name Card** is the authoritative, human‑readable record of a name inside i
 14. **NQD‑front seeds** — brief rationale for discarded candidates (**include mismatch patterns from P2 and any lexical Q‑scores used in P1**).
 15. **SemanticFidelity/CognitiveErgonomics/OperationalAffordance/AliasRisk** scores for the NQD-front labels.
 16. **Version**  — current status and history of editions.
-17. **Card notes** — optional free text with comments about the name (e.g., recommended translations, etymology, pronunciation).
+17. **Card notes** — optional free text with comments about the name (e.g., recommended translations, etymology, pronunciation). 
 
 **Manager’s reading habit.** When two names collide in a meeting, ask for their **Context**, **Kind**, **Purpose/use‑domain**, and **Sense anchor**. If any of those differ, you are comparing different things; switch to **Bridge** talk, not label talk.
 
@@ -257,7 +241,7 @@ A **Name Card** is the authoritative, human‑readable record of a name inside i
 | Operating Surgeon | Precise | Natural | Role‑hinting | Context‑dependent | Reads well, but “operating” competes with “operating theatre/room”; kept as Plain label only. |
 | Primary Surgeon | Vague | Natural | Role‑hinting | Context‑dependent | “Primary” ambiguous (training vs shift); rejected for governance vocabulary. |
 | Operating Physician | Vague | Jargon | Role‑hinting | High‑Risk | Collides with non‑surgical physician roles; rejected despite familiarity in some hospitals. |
-
+ 
 **Why it’s good.** No fatigue thresholds or readiness states in the name; those live in the Role’s state graph and checklists.
 
 #### F.18:7.3 - Public service Context: “Civic Services - 2026”
@@ -273,6 +257,7 @@ A **Name Card** is the authoritative, human‑readable record of a name inside i
 * **NQD‑front (seed candidates):** *Passport Lead‑Time*, *Issuance Time*, *Service Turnaround*, *Time to Issue Passport*. **Chosen:** *Passport Lead‑Time* (neutral; Plain remains didactic).
 
 **Why it’s good.** Target values (e.g., ≤ 20 days) are not in the label; they live in acceptance clauses.
+
 
 ### F.18:8 - Conformance Checklist (editor aid) — *Part I: naming & cards* (**non‑normative**)
 
@@ -327,7 +312,6 @@ A published name MUST ship with a human‑readable **Minimal Definitional Statem
 
 **9.3 Row ID + label surfaces.**
 For each adopted name, the home supplies:
-
 * a **Row ID** (the opaque UTS identifier — the **identity anchor**), and
 * two **label surfaces**: a **Unified Tech** label (for Core prose) and a **Plain** label (for teaching).
   Both labels refer to the same underlying sense; **Plain** may simplify terms, not premises.
@@ -377,10 +361,11 @@ Engineers need **precise** wording; managers and stakeholders need **approachabl
 Acyclic dependencies cut off circular definitions and policy deadlocks. The ladder provides a simple mental model: *build on what is already firm*.
 
 **10.5 Relation-kind discipline prevents category errors.**
-Part-whole claims **(structural)** must rest on **Constructive** grounds (`tv:groundedBy → Γₘ.sum|set|slice`, `validationMode=axiomatic`). Experience-based or evaluative relations **(epistemic)** follow assurance rules (**Logical/Mapping**, and **Empirical Validation** when *postulate*), with an explicit `validationMode ∈ {inferential, postulate}`. Mixing relation kinds inside a single name confuses review and invites hidden assumptions.
+Part-whole claims **(structural)** must rest on **Constructive** grounds (`tv:groundedBy → Γₘ.sum|set|slice`, `validationMode=axiomatic`). Experience-based or evaluative relations **(epistemic)** follow assurance rules (**Logical/Mapping**, and **Empirical Validation** when *postulate*), with an explicit `validationMode ∈ {inferential, postulate}`. Mixing relation kinds inside a single name confuses review and invites hidden assumptions. 
 
 **10.6 Sense over string reduces false conflicts.**
 Disputes often orbit the string (“we hate that word”). By separating **sense** (what we mean) from **string** (how we say it), the protocol enables peaceful coexistence: keep the **Row ID** constant; use one **Plain** label and, where helpful, a budgeted **alias** per register.
+
 
 ### F.18:11 - Application Guidance (how to apply, step by step)
 
@@ -475,7 +460,7 @@ Letting a Plain label or alias accumulate extra meanings absent in the underlyin
 
 ### F.18:14 - Assurance & Conformance (human‑only checks)
 
-#### F.18:14.1 - Author checklist (before requesting review)
+#### F.18:14.1 - Author checklist (before requesting review).
 
 * [ ] I identified the **home Bounded Context** and audience.
 * [ ] I wrote a clear **MDS** (≤ 1 paragraph) and a **Didactic Subtitle** (≤ 12 words).
@@ -560,6 +545,8 @@ Every Name Card **SHALL** declare its `CardMode ∈ {MintNew, DocumentLegacy}`. 
 | A6 | “We’ll fix synonyms later.”                             | Synonym sprawl grows costs.                                     | “Apply **E.10** rules now: one Tech, one Plain; retire extras via **F.13**.”                                        |
 | A7 | “One mega‑row for everything service‑like.”             | Bundles distinct concepts; harms teachability.                  | “One **Concept‑Set per idea**; group with a **Block Plan** for pedagogy.” (F.17 §7)                                 |
 
+
+
 #### F.18:16.1 - Canonical semantic unpacking for “contract” language (normative; used across FPF)
 
 In FPF, everyday “contract” talk is treated as shorthand for a bundle of distinct roles. When precision matters (architecture, audit, compliance), authors **SHALL** avoid mapping “contract” to a single concept and instead disambiguate at least:
@@ -590,6 +577,7 @@ Example 2 (§F.18:18.2) shows one naming instantiation of this unpacking.
 
 **M5 — Upgrade rationale quality with worked examples.** Every rename or split should be accompanied by a **one‑page example** that shows the new row in action across at least **two Contexts**. (F.16; “tell‑show‑show”.)
 
+
 ### F.18:18 - Worked examples (compact)
 
 > Each example shows **how the Protocol steers naming** so engineers and managers can communicate without hidden Cross‑context leaks.  
@@ -612,12 +600,10 @@ Example 2 (§F.18:18.2) shows one naming instantiation of this unpacking.
   *run-time heads:* {Run, Execution, Enactment, ActivityInstance, Job, Episode}
 * **Chosen from frontier (Unified Tech / Plain):**  
   `U.MethodDescription` / “recipe”; `U.Work` / “run”.  
-  *Discarded highlights:* **Procedure** (collides with governance “procedure/policy”); **Execution** (overloaded in CS/security);
+  *Discarded highlights:* **Procedure** (collides with governance “procedure/policy”); **Execution** (overloaded in CS/security); 
 * **Anti-pattern (for illustration only, non-conformant).**  
-
  > *Bad CandidateSet (lexically narrow):* {“Reference plane”, “Plane of reference”, “Planar reference”, “Ref. plane v2”}.  
  > All four are one **head-term family** (*plane*). Even if Diversity_P over raw strings looks high (four labels), **head-term diversity is 1**, so this set **fails** the F.18 diversity intent. A conformant Card would either: (a) add labels with other heads (e.g., *Layer*, *Track*, *Band*), or (b) explicitly record why other heads are rejected (AliasRisk, domain idiom) and accept low lexical Diversity_P with a rationale.
-
 * **Enactment** (speech‑act nuance).
 * **Bridges:** recipe↔run **related**, not identical; loss note “control‑flow vs. execution.”
 * **Why it matters:** Managers can schedule **Work** while authors improve the **MethodDescription**—no category errors. The NQD‑front preserves tradition‑diverse, lexically stable options until a reasoned choice is made. (F.11/F.16; F.17 rows.)
@@ -675,6 +661,7 @@ Example 2 (§F.18:18.2) shows one naming instantiation of this unpacking.
 **Q5. What if two teams insist on different Tech labels for the same concept?**
 **A.** Publish **one** Tech label; treat the other as a **deprecated alias** (Annex). Bridge their local senses on the row. (F.13; Part H.)
 
+
 ### F.18:20 - 90‑second teaching script (for engineer‑managers)
 
 > “**Local‑first** means we start in **context of meaning**—we harvest terms **inside** each Context and only then unify. A unified name is a **teachable promise**: one **Tech** label for precision, one **Plain** label for outreach. Its **row** in the **UTS** shows where the idea lives in real disciplines (the **SenseCells**) and how those Contexts connect (explicit **Bridges** with a brief loss note). We never equate terms by spelling; we argue sameness with a **bridge**. We also never bake stages or actors into names—those belong to **dynamics** and **roles**, not labels. When the story changes, we evolve names with **lexical continuity** rather than re‑inventing words. The result is a vocabulary managers and engineers can **hold on one page** and use the same way across projects.”
@@ -711,19 +698,19 @@ Example 2 (§F.18:18.2) shows one naming instantiation of this unpacking.
 
 ### F.18:21 - Migration & Deprecation Notes (informative, naming‑specific)
 
-1. **Start from rows, not strings.** When consolidating legacy labels, **build or revisit the Concept‑Set row** first; only then pick the **Unified Tech/Plain** names. This keeps **meaning** primary. **(F.7, F.17)**
+1. **Start from rows, not strings.** When consolidating legacy labels, **build or revisit the Concept‑Set row** first; only then pick the **Unified Tech/Plain** names. This keeps **meaning** primary. **(F.7, F.17)** 
 2. **Prefer alias over merge.** If the *sense* is stable but the label misleads, **rename and retain one alias**; if the sense changed, **mint a new row** (no retrofits). **(F.13)**
-3. **Resist modifier types.** New adjectives (e.g., *Peak*, *Remote*, *Night*) usually belong to **windows** or **examples**, not to the unified name. **(F.10/F.12/F.14)**
-4. **Keep neutrality visible.** If stakeholders push a brand‑coloured label, document why the chosen **Unified Tech** is **neutral** and include the brand as an **alias** in Glossary/Annex. **(F.5, F.17)**
-5. **Don’t globalise a Context.** Never move a Context label into the unified name as if it were universal. Use **Bridges** to relate Contexts, with an explicit **loss note**. **(F.0.1, F.9)**
+3. **Resist modifier types.** New adjectives (e.g., *Peak*, *Remote*, *Night*) usually belong to **windows** or **examples**, not to the unified name. **(F.10/F.12/F.14)** 
+4. **Keep neutrality visible.** If stakeholders push a brand‑coloured label, document why the chosen **Unified Tech** is **neutral** and include the brand as an **alias** in Glossary/Annex. **(F.5, F.17)** 
+5. **Don’t globalise a Context.** Never move a Context label into the unified name as if it were universal. Use **Bridges** to relate Contexts, with an explicit **loss note**. **(F.0.1, F.9)** 
 
 ### F.18:22 - FAQ (authoring hygiene for engineer‑managers)
 
 **Q1. Can we reuse a dominant industry term as the Unified Tech name?**
-**A.** Only if the row’s Concept‑Set shows **exact identity** across Contexts; otherwise pick a **neutral** Unified Tech and list the industry label as an **alias** in the Glossary. **(F.5, F.17)**
+**A.** Only if the row’s Concept‑Set shows **exact identity** across Contexts; otherwise pick a **neutral** Unified Tech and list the industry label as an **alias** in the Glossary. **(F.5, F.17)** 
 
 **Q2. Two terms look identical across Contexts—may we skip Bridges?**
-**A.** No. **Sameness is argued, not spelled.** Publish a **Bridge** with relation kind and **CL** plus a short **loss/fit** note. **(F.9, F.0.1)**
+**A.** No. **Sameness is argued, not spelled.** Publish a **Bridge** with relation kind and **CL** plus a short **loss/fit** note. **(F.9, F.0.1)** 
 
 **Q3. When do we mint a new U.Type vs. add a new row vs. add an alias?**
 **A.** Use **F.8 Mint‑or‑Reuse**: if the *intension* changes, **new U.Type**; if the *same thing* spans new Context, **new row**; if only the label misleads, **alias/rename**.
@@ -732,7 +719,7 @@ Example 2 (§F.18:18.2) shows one naming instantiation of this unpacking.
 **A.** Keep the **Role** unified and express qualifiers as **windows** on **Statuses** or as **example context**. This follows **F.14** and **F.12**.
 
 **Q5. Can we compress two near‑equivalent rows into one to “simplify the sheet”?**
-**A.** Only if the **one‑breath rationale** remains true after review and the Bridges support equivalence with the same or stronger CL; otherwise keep **two rows** with explicit differences. **(F.17, F.9)**
+**A.** Only if the **one‑breath rationale** remains true after review and the Bridges support equivalence with the same or stronger CL; otherwise keep **two rows** with explicit differences. **(F.17, F.9)** 
 
 ### F.18:23 - Didactic distillation (90‑second script)
 
@@ -750,7 +737,7 @@ Example 2 (§F.18:18.2) shows one naming instantiation of this unpacking.
 **Builds on:**
 **F.0.1** Contextual Lexicon Principles (local meaning; bridge‑only Cross‑context claims). **F.1–F.3** Contexts → term harvesting → local sense clustering. **F.5** Naming discipline. **F.7** Concept‑Set construction. **F.8** Mint‑or‑Reuse decision lattice. **F.13** Lexical continuity (renames/aliases/splits/merges). **F.14** Anti‑explosion controls (bundles, SoD, windows). **F.15** SCR/RSCR harness. **F.17** UTS as the publication surface.  
 
-**Constrains:**
+**Constrains:** 
 All patterns that propose or consume unified names and rows in Part F; any Part A/C pattern that cites U.Types on UTS rows inherits these naming duties (through the UTS linkage), while keeping **structural/epistemic/temporal** aspects distinct per Part E authoring rules.
 
 **Coordinates with.**

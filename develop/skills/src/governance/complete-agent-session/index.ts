@@ -17,6 +17,7 @@ const { values } = parseArgs({
     context: { type: "string" },
     "session-id": { type: "string" },
     status: { type: "string" },
+    "allow-recomplete": { type: "string" },
     "dod-report": { type: "string" },
     "roc-report": { type: "string" },
     "roc-path": { type: "string" },
@@ -42,6 +43,7 @@ const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "con
 const sessionId = requireMatch(values["session-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "session-id", "a safe path segment (letters, digits, '_' or '-')");
 const requestedOutcome = normalizeStatus(values.status);
 let outcome = requestedOutcome;
+const allowRecomplete = parseBoolean(values["allow-recomplete"], "allow-recomplete");
 const summary = normalizeOptional(values.summary) ?? "(no summary provided)";
 const agentType = normalizeOptional(values["agent-type"]);
 const agentModel = normalizeOptional(values["agent-model"]);
@@ -72,10 +74,19 @@ if (!parsed) {
   process.exit(1);
 }
 
-const statusLine = parsed.frontmatter.find((line) => line.startsWith("status:"));
-if (statusLine && statusLine.includes("completed")) {
-  console.error("Error: Session record already completed.");
-  process.exit(1);
+const sessionData = parseFrontmatterMap(parsed.frontmatter);
+const currentStatus = sessionData.status ?? "";
+const currentOutcome = sessionData.outcome ?? "";
+const alreadyCompleted = currentStatus === "completed";
+if (alreadyCompleted) {
+  if (!allowRecomplete) {
+    console.error("Error: Session record already completed.");
+    process.exit(1);
+  }
+  if (currentOutcome !== "needs-review") {
+    console.error("Error: Only sessions with outcome needs-review can be re-completed.");
+    process.exit(1);
+  }
 }
 
 let dodStatus: string | undefined;
@@ -151,7 +162,8 @@ if (resolvedRocReport) {
   }
 }
 
-const summaryText = appendSummary(summary, [dodGateNote, rocGateNote]);
+const recompleteNote = alreadyCompleted ? "Recompletion: prior outcome needs-review." : undefined;
+const summaryText = appendSummary(summary, [dodGateNote, rocGateNote, recompleteNote]);
 
 const updatedFrontmatter = [...parsed.frontmatter];
 upsertFrontmatterValue(updatedFrontmatter, "status", "completed");
@@ -339,6 +351,22 @@ function normalizeRocOutcome(value: string): string {
     process.exit(1);
   }
   return trimmed;
+}
+
+function parseBoolean(value: string | undefined, label: string): boolean {
+  const trimmed = (value ?? "").trim();
+  if (trimmed.length === 0) {
+    return false;
+  }
+  const normalized = trimmed.toLowerCase();
+  if (["true", "1", "yes", "y"].includes(normalized)) {
+    return true;
+  }
+  if (["false", "0", "no", "n"].includes(normalized)) {
+    return false;
+  }
+  console.error(`Invalid ${label} '${value ?? ""}'. Expected true or false.`);
+  process.exit(1);
 }
 
 function applyOutcomePolicy(current: string, enforced: string): string {
@@ -561,6 +589,6 @@ function findRepoRoot(startDir: string): string {
 
 function printUsage(): void {
   console.log(
-    "Usage: bun develop/skills/src/governance/complete-agent-session/index.ts --context <Context> --session-id <Id> --status <success|needs-review|blocked|failed> [--dod-report <Path>] [--roc-report <Path>] [--roc-path <Path>] [--used-tools \"a; b\"] [--approvals \"a; b\"] [--summary \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
+    "Usage: bun develop/skills/src/governance/complete-agent-session/index.ts --context <Context> --session-id <Id> --status <success|needs-review|blocked|failed> [--allow-recomplete <true|false>] [--dod-report <Path>] [--roc-report <Path>] [--roc-path <Path>] [--used-tools \"a; b\"] [--approvals \"a; b\"] [--summary \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
   );
 }

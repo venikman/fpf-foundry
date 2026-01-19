@@ -38,6 +38,11 @@
   - Reports environment + root status; optional `--check` embeds `fpf check` output under `check`.
 - `fpf mint-name ...`, `fpf record-drr ...`, `fpf log-work ...`
   - Domain commands; all accept `--root` and support `--json`.
+- `fpf session start|handoff|complete|audit`
+  - Session records: `runtime/contexts/<context>/sessions/<session_id>.session.md`
+  - Handoff records: `runtime/contexts/<context>/handoffs/<session_id>.<to_agent_type>.<n>.handoff.yaml`
+  - Audit reports: `runtime/contexts/<context>/audits/dod/<session_id>.<timestamp>.dod.md` and `runtime/contexts/<context>/audits/proxy/<session_id>.<timestamp>.proxy-audit.md`
+  - Requires skill implementations under `develop/skills/src` in the target root.
 
 ## Repo Dev Commands
 
@@ -45,4 +50,3 @@
 - Repo checks: `bun run check`
 - Run tests: `bun test`
 - Run local CLI: `bun packages/fpf/bin/fpf --help`
-

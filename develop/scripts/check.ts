@@ -14,6 +14,8 @@ const steps: Step[] = [
   { name: "inventory-diff", command: "git", args: ["diff", "--exit-code", "--", "design/skills/SKILL_INVENTORY.md"] },
   { name: "skill-index-generate", command: "bun", args: ["develop/tools/skill/index.ts", "--out", "design/skills/SKILL_INDEX.json"] },
   { name: "skill-index-diff", command: "git", args: ["diff", "--exit-code", "--", "design/skills/SKILL_INDEX.json"] },
+  { name: "codex-skills-sync", command: "bun", args: ["develop/tools/codex/sync-skills.ts"] },
+  { name: "codex-skills-diff", command: "git", args: ["diff", "--exit-code", "--", ".codex/skills"] },
   { name: "inventory-checks", command: "bun", args: ["develop/scripts/skill_inventory_checks.ts"] },
   { name: "skills-runtime-harness", command: "bun", args: ["develop/scripts/skills_runtime_harness.ts"] },
   { name: "compile-verify", command: "bun", args: ["develop/tools/compile/verify.ts", "--model-cmd", "bun develop/tools/compile/mock-model.ts"] },
