@@ -179,8 +179,8 @@ These skills are file-output based, so AI agents work well here: ask them to run
 Repo-local (recommended for shared projects):
 
 ```sh
-# Codex reads .codex/skills/<skill-id-with-dashes>/SKILL.md ("/" -> "-")
-# Claude Code reads .claude/skills/<skill-id-with-dashes>/SKILL.md ("/" -> "-")
+# Codex reads .codex/skills/<skill>/SKILL.md
+# Claude Code reads .claude/skills/<skill>/SKILL.md
 mkdir -p .claude/skills
 cp -R .codex/skills/* .claude/skills/
 ```
@@ -191,8 +191,8 @@ User-level (personal install):
 # Codex: $CODEX_HOME/skills (default ~/.codex/skills)
 CODEX_SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
 mkdir -p "$CODEX_SKILLS_DIR" ~/.claude/skills
-cp -R .codex/skills/* "$CODEX_SKILLS_DIR/"
-cp -R .codex/skills/* ~/.claude/skills/
+cp -R .codex/skills/mint-name "$CODEX_SKILLS_DIR/"
+cp -R .codex/skills/mint-name ~/.claude/skills/
 ```
 
 Restart Codex after copying (Claude reloads on save). If needed, enable skills in Codex with `codex --enable skills`. Avoid symlinking `.codex/skills/<skill>`; Codex ignores symlinked skill directories.
@@ -222,7 +222,7 @@ Then show me the created file path(s) and `git diff`.
 Mint a Name Card via Codex skill (`.codex/skills`):
 
 ```text
-Use $design/mint-name to mint a Name Card:
+Use $design-mint-name to mint a Name Card:
 - context: Tooling
 - id: demo-name
 - label: "Demo Name"
