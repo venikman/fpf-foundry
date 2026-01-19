@@ -1,4 +1,5 @@
 # FPF Foundry
+![unnamed (6)](https://github.com/user-attachments/assets/d335e4e8-e814-42c4-b771-942fa4e5850d)
 
 FPF Foundry is a Bun + TypeScript workspace for turning "how we think and work" into concrete, auditable artifacts: names, decisions, and work logs. It's opinionated on purpose: small tools ("skills") generate files in predictable places, with safety and consistency checks baked in.
 
