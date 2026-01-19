@@ -17,6 +17,7 @@ const { values } = parseArgs({
     context: { type: "string" },
     "session-id": { type: "string" },
     status: { type: "string" },
+    "dod-report": { type: "string" },
     summary: { type: "string" },
     "agent-type": { type: "string" },
     "agent-model": { type: "string" },
@@ -35,12 +36,14 @@ if (!values.context || !values["session-id"] || !values.status) {
 
 const context = requireMatch(values.context, /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "context", "a safe path segment (letters, digits, '_' or '-')");
 const sessionId = requireMatch(values["session-id"], /^[A-Za-z0-9][A-Za-z0-9_-]*$/, "session-id", "a safe path segment (letters, digits, '_' or '-')");
-const outcome = normalizeStatus(values.status);
+const requestedOutcome = normalizeStatus(values.status);
+let outcome = requestedOutcome;
 const summary = normalizeOptional(values.summary) ?? "(no summary provided)";
 const agentType = normalizeOptional(values["agent-type"]);
 const agentModel = normalizeOptional(values["agent-model"]);
 const roleAssignment = normalizeOptional(values["role-assignment"]) ?? "Strategist";
 const relatedDecisions = parseSemicolonList(values.decisions);
+const dodReportInput = normalizeOptional(values["dod-report"]);
 
 const timestampStart = resolveTimestampStart(values["timestamp-start"]);
 const isoTimestamp = timestampStart.toISOString();
@@ -67,10 +70,45 @@ if (statusLine && statusLine.includes("completed")) {
   process.exit(1);
 }
 
+let dodStatus: string | undefined;
+let dodReportRef: string | undefined;
+let dodGateNote: string | undefined;
+
+if (dodReportInput) {
+  const dodReportPath = resolvePath(dodReportInput, repoRoot);
+  if (!existsSync(dodReportPath)) {
+    console.error(`Error: DoD report not found at ${dodReportPath}`);
+    process.exit(1);
+  }
+  const dodInfo = loadDodReport(dodReportPath);
+  if (dodInfo.context !== context || dodInfo.sessionId !== sessionId) {
+    console.error(`Error: DoD report does not match session ${sessionId} in ${context}.`);
+    process.exit(1);
+  }
+  dodStatus = normalizeDodStatus(dodInfo.status);
+  dodReportRef = normalizeArtifactRef(dodReportPath, repoRoot);
+} else if (requestedOutcome === "success") {
+  dodStatus = "missing";
+}
+
+if (requestedOutcome === "success" && dodStatus !== "pass") {
+  outcome = "needs-review";
+  const reason = dodStatus ? `DoD status ${dodStatus}` : "missing DoD report";
+  dodGateNote = `DoD gate: ${reason}; forcing needs-review.`;
+}
+
+const summaryText = appendSummary(summary, dodGateNote);
+
 const updatedFrontmatter = [...parsed.frontmatter];
 upsertFrontmatterValue(updatedFrontmatter, "status", "completed");
 upsertFrontmatterValue(updatedFrontmatter, "completed_at", isoTimestamp);
 upsertFrontmatterValue(updatedFrontmatter, "outcome", outcome);
+if (dodReportRef) {
+  upsertFrontmatterValue(updatedFrontmatter, "dod_report", dodReportRef);
+}
+if (dodStatus) {
+  upsertFrontmatterValue(updatedFrontmatter, "dod_status", dodStatus);
+}
 if (agentType) {
   upsertFrontmatterValue(updatedFrontmatter, "completed_by", agentType);
 }
@@ -78,7 +116,15 @@ if (agentModel) {
   upsertFrontmatterValue(updatedFrontmatter, "completed_model", agentModel);
 }
 
-const completionSection = `## Completion\nStatus: ${outcome}\nCompleted at: ${isoTimestamp}\n\n${summary}\n`;
+const completionLines = ["## Completion", `Status: ${outcome}`, `Completed at: ${isoTimestamp}`];
+if (dodStatus) {
+  completionLines.push(`DoD status: ${dodStatus}`);
+}
+if (dodReportRef) {
+  completionLines.push(`DoD report: ${dodReportRef}`);
+}
+completionLines.push("", summaryText);
+const completionSection = `${completionLines.join("\n")}\n`;
 const updatedBody = `${parsed.body.trimEnd()}\n\n${completionSection}`;
 const updatedContent = [`---`, ...updatedFrontmatter, `---`, "", updatedBody].join("\n");
 
@@ -113,6 +159,82 @@ function splitFrontmatter(text: string): { frontmatter: string[]; body: string }
   const body = text.slice(endIndex + 5);
   const lines = frontmatterBlock.split(/\r?\n/).filter((line) => line.trim().length > 0);
   return { frontmatter: lines, body };
+}
+
+function resolvePath(value: string, repoRootDir: string): string {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    console.error("Missing dod-report.");
+    process.exit(1);
+  }
+  return isAbsolute(trimmed) ? trimmed : resolve(repoRootDir, trimmed);
+}
+
+function loadDodReport(filePath: string): { context: string; sessionId: string; status: string } {
+  const content = readFileSync(filePath, "utf8");
+  const parsed = splitFrontmatter(content);
+  if (!parsed) {
+    console.error(`Error: DoD report missing front matter at ${filePath}`);
+    process.exit(1);
+  }
+  const data = parseFrontmatterMap(parsed.frontmatter);
+  const context = data.context ?? "";
+  const sessionId = data.session_id ?? "";
+  const status = data.status ?? "";
+  if (!context || !sessionId || !status) {
+    console.error(`Error: DoD report missing context, session_id, or status at ${filePath}`);
+    process.exit(1);
+  }
+  return { context, sessionId, status };
+}
+
+function parseFrontmatterMap(lines: string[]): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const line of lines) {
+    const match = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
+    if (!match) {
+      continue;
+    }
+    const key = match[1] ?? "";
+    const rawValue = (match[2] ?? "").trim();
+    if (!key || rawValue.length === 0) {
+      continue;
+    }
+    result[key] = parseScalar(rawValue);
+  }
+  return result;
+}
+
+function parseScalar(value: string): string {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+    try {
+      return JSON.parse(trimmed);
+    } catch {
+      return trimmed.slice(1, -1);
+    }
+  }
+  if (trimmed.startsWith("'") && trimmed.endsWith("'")) {
+    return trimmed.slice(1, -1).replace(/''/g, "'");
+  }
+  return trimmed;
+}
+
+function normalizeDodStatus(value: string): string {
+  const trimmed = value.trim().toLowerCase();
+  const allowed = new Set(["pass", "fail"]);
+  if (!allowed.has(trimmed)) {
+    console.error(`Invalid DoD status '${value}'. Expected pass or fail.`);
+    process.exit(1);
+  }
+  return trimmed;
+}
+
+function appendSummary(summary: string, note?: string): string {
+  if (!note) {
+    return summary;
+  }
+  return `${summary}\n\n${note}`;
 }
 
 function upsertFrontmatterValue(lines: string[], key: string, value: string): void {
@@ -265,6 +387,6 @@ function findRepoRoot(startDir: string): string {
 
 function printUsage(): void {
   console.log(
-    "Usage: bun develop/skills/src/governance/complete-agent-session/index.ts --context <Context> --session-id <Id> --status <success|needs-review|blocked|failed> [--summary \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
+    "Usage: bun develop/skills/src/governance/complete-agent-session/index.ts --context <Context> --session-id <Id> --status <success|needs-review|blocked|failed> [--dod-report <Path>] [--summary \"...\"] [--agent-type <Type>] [--agent-model <Model>] [--role-assignment <Role>] [--decisions \"...\"] [--timestamp-start <iso>]",
   );
 }

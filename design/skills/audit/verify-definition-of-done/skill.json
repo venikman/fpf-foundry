@@ -1,0 +1,190 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in DoD reports."
+    ],
+    "safety": [
+      "Do not overwrite existing DoD reports.",
+      "Reject context and session_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "run_command",
+      "view_file",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a DoD report under runtime/contexts/<context>/audits/dod/.",
+      "Fails when required artifacts are missing.",
+      "Checks git working tree changes unless allow_empty_diff is set.",
+      "Runs bun test and fpf check by default.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "dod_report_path": "runtime/contexts/AgentWorkflow/audits/dod/AW-0003.<timestamp>.dod.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0003",
+          "required_artifacts": "runtime/contexts/AgentWorkflow/sessions/AW-0003.session.md",
+          "allow_empty_diff": "true",
+          "test_command": "bun --version",
+          "check_command": "bun --version"
+        },
+        "name": "basic-dod"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id).",
+    "Invalid context or session_id value (not a safe path segment).",
+    "Missing required artifacts.",
+    "Failed checks (git diff/test/fpf check).",
+    "Failed to write the DoD report.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "audit/verify-definition-of-done",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier to verify (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of required artifact paths.",
+      "name": "required_artifacts",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional flag to allow empty git diff (true/false).",
+      "name": "allow_empty_diff",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional command line for running tests (default: bun test).",
+      "name": "test_command",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional command line for running fpf check (default: bun packages/fpf/bin/fpf check).",
+      "name": "check_command",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type performing the DoD check.",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: ProxyAuditor).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Verify Definition of Done checks and generate a report for a session.",
+    "non_goals": [
+      "Does not complete the session.",
+      "Does not modify code or artifacts beyond the report.",
+      "Does not execute proxy audit verdicts."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-18",
+    "tags": [
+      "audit"
+    ],
+    "updated": "2026-01-18"
+  },
+  "name": "Verify Definition of Done",
+  "outputs": [
+    {
+      "description": "Path to the generated DoD report markdown file.",
+      "name": "dod_report_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Run git diff checks unless allow_empty_diff is set.",
+      "step_id": "step-check-diff"
+    },
+    {
+      "instruction": "Run test and fpf check commands (defaults if not overridden).",
+      "step_id": "step-run-checks"
+    },
+    {
+      "instruction": "Verify required artifacts exist (including the session record).",
+      "step_id": "step-check-artifacts"
+    },
+    {
+      "instruction": "Write a DoD report with pass/fail status and check summaries.",
+      "step_id": "step-write-report"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the DoD verification with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Verifies Definition of Done checks and generates a DoD report.",
+  "version": "0.1.0"
+}

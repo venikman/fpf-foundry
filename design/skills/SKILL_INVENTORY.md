@@ -16,6 +16,8 @@ Columns
 
 | Skill ID | Family | PatternRefs | PolicyRealization | Status | Impl | Outputs | Description |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| `audit/proxy-audit-session` | Audit | A.15.1; E.13 | - | experimental | code | ProxyAuditReport | Issues a proxy audit verdict for a session. |
+| `audit/verify-definition-of-done` | Audit | A.15.1; E.19 | - | experimental | code | DoDReport | Verifies Definition of Done checks and generates a DoD report. |
 | `design/init-context` | Design | A.15 | - | experimental | code | context_root; readme_path | Initializes a bounded context skeleton under runtime/contexts to prevent directory drift. |
 | `design/mint-name` | Design | E.5.1; F.18 | - | experimental | code | name_card_path | Mints a new F.18 Name Card with strict Twin-Label and Sense-Seed validation. |
 | `design/record-drr` | Design | A.10; E.9 | - | experimental | code | drr_path | Records a formal Design-Rationale Record (DRR) for architectural decisions. |

@@ -1,0 +1,187 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in proxy audit reports."
+    ],
+    "safety": [
+      "Do not overwrite existing proxy audit reports.",
+      "Reject context and session_id values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a proxy audit report under runtime/contexts/<context>/audits/proxy/.",
+      "Rejects invalid verdict values.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "proxy_audit_report_path": "runtime/contexts/AgentWorkflow/audits/proxy/AW-0004.<timestamp>.proxy-audit.md"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0004",
+          "verdict": "needs-review",
+          "findings": "Missing DoD evidence; Incomplete artifacts",
+          "recommendations": "Run DoD verification; Capture missing artifacts"
+        },
+        "name": "basic-proxy-audit"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, verdict).",
+    "Invalid context or session_id value (not a safe path segment).",
+    "Invalid verdict value.",
+    "Failed to write the proxy audit report.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "audit/proxy-audit-session",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier to audit (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Proxy audit verdict (pass, needs-review, fail).",
+      "name": "verdict",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of findings.",
+      "name": "findings",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of recommendations.",
+      "name": "recommendations",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related artifact paths.",
+      "name": "artifacts",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional path to a Definition of Done report.",
+      "name": "dod_report",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional freeform notes.",
+      "name": "notes",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type performing the audit.",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: ProxyAuditor).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Record a proxy audit verdict for a session with supporting notes and evidence links.",
+    "non_goals": [
+      "Does not validate Definition of Done requirements.",
+      "Does not complete or modify the session record."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-18",
+    "tags": [
+      "audit"
+    ],
+    "updated": "2026-01-18"
+  },
+  "name": "Proxy Audit Session",
+  "outputs": [
+    {
+      "description": "Path to the generated proxy audit report markdown file.",
+      "name": "proxy_audit_report_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id, verdict) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Resolve the proxy audit report path and ensure it does not already exist.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Write the proxy audit report with verdict, findings, and optional references.",
+      "step_id": "step-write-report"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the proxy audit with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Issues a proxy audit verdict for a session.",
+  "version": "0.1.0"
+}

@@ -2,6 +2,20 @@
   "schema_version": "1.0.0",
   "skills": [
     {
+      "id": "audit/proxy-audit-session",
+      "invocation": "audit/proxy-audit-session",
+      "package": "@venikman/fpf-skill-audit-proxy-audit-session",
+      "spec_path": "design/skills/audit/proxy-audit-session/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "audit/verify-definition-of-done",
+      "invocation": "audit/verify-definition-of-done",
+      "package": "@venikman/fpf-skill-audit-verify-definition-of-done",
+      "spec_path": "design/skills/audit/verify-definition-of-done/skill.json",
+      "version": "0.1.0"
+    },
+    {
       "id": "design/init-context",
       "invocation": "design/init-context",
       "package": "@venikman/fpf-skill-design-init-context",
@@ -34,7 +48,7 @@
       "invocation": "governance/complete-agent-session",
       "package": "@venikman/fpf-skill-governance-complete-agent-session",
       "spec_path": "design/skills/governance/complete-agent-session/skill.json",
-      "version": "0.1.0"
+      "version": "0.1.1"
     },
     {
       "id": "governance/handoff-to-agent",

@@ -34,6 +34,7 @@
     "acceptance_criteria": [
       "Updates the session record with completion status and timestamp.",
       "Fails if the session record is missing.",
+      "When status is success, requires a DoD report with pass status or downgrades to needs-review.",
       "Logs a U.Work record when telemetry/log-work is available."
     ],
     "tests": [
@@ -56,6 +57,7 @@
     "Invalid context or session_id value (not a safe path segment).",
     "Session record missing for the provided session_id.",
     "Session record already completed.",
+    "DoD report missing or invalid when required.",
     "Failed to write the updated session record file.",
     "Optional telemetry logging failed."
   ],
@@ -77,6 +79,12 @@
       "description": "Completion status (success, needs-review, blocked, failed).",
       "name": "status",
       "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional path to a Definition of Done report (required for success).",
+      "name": "dod_report",
+      "required": false,
       "type": "string"
     },
     {
@@ -119,7 +127,7 @@
   "intent": {
     "goal": "Complete an existing agent session record with status and summary.",
     "non_goals": [
-      "Does not validate Definition of Done requirements.",
+      "Does not perform Definition of Done checks (requires external report).",
       "Does not create handoff artifacts.",
       "Does not resolve escalation workflows."
     ]
@@ -132,7 +140,7 @@
     "tags": [
       "governance"
     ],
-    "updated": "2026-01-18"
+    "updated": "2026-01-19"
   },
   "name": "Complete Agent Session",
   "outputs": [
@@ -166,5 +174,5 @@
   ],
   "schema_version": "0.1.0",
   "summary": "Completes an agent session with status and summary.",
-  "version": "0.1.0"
+  "version": "0.1.1"
 }

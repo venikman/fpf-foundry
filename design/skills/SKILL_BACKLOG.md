@@ -47,8 +47,6 @@ Columns
 | `release/ship-sota-pack` | Release | G.10 | - | planned | none | - | Ships a SoTA Pack (Release). |
 | `maintenance/refresh-models` | Maintenance | G.11 | - | planned | none | - | Refreshes stale models based on telemetry. |
 | `telemetry/generate-dhc` | Telemetry | G.12 | - | planned | none | - | Generates a Discipline-Health Dashboard. |
-| `audit/verify-definition-of-done` | Audit | E.19 | audit/verify-definition-of-done | planned | none | DoDReport | Verifies Definition of Done requirements for a session. |
-| `audit/proxy-audit-session` | Audit | E.13 | audit/proxy-audit-session | planned | none | ProxyAuditReport | Issues a proxy audit verdict for a session. |
 | `governance/define-roc` | Governance | E.16 | - | planned | none | RoCSpec | Defines a Rule of Constraints policy bundle for agent autonomy. |
 | `governance/check-roc-compliance` | Governance | E.16 | - | planned | none | RoCReport | Checks session compliance against a Rule of Constraints. |
 | `governance/declare-agent-capability` | Governance | A.2.2 | - | planned | none | CapabilityDeclaration | Declares agent capabilities for session eligibility. |
