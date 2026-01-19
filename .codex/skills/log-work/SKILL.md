@@ -12,6 +12,7 @@ allowed-tools:
 ---
 
 ## A.15.1 - U.Work
+> Implementation note (local tooling): When `agent_session`, `agent_model`, or `agent_type` inputs are provided, the reference implementation adds an `agent_metadata` block to the U.Work record.
 
 ### A.15.1:1 - Problem Frame
 

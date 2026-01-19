@@ -19,6 +19,9 @@ type LogWorkInput = {
   outputs: string[];
   decisions: string[];
   timestampStart?: string;
+  agentSession?: string;
+  agentModel?: string;
+  agentType?: string;
 };
 
 type LogWorkResult = {
@@ -64,6 +67,7 @@ export async function logWorkAsync(input: {
 
   const outputs = input.input.outputs.map((entry) => normalizeArtifactRef(entry, rootDir));
   const relatedDecisions = input.input.decisions.map((entry) => normalizeArtifactRef(entry, rootDir));
+  const agentMetadata = resolveAgentMetadata(input.input.agentSession, input.input.agentModel, input.input.agentType);
 
   const timestampStart = resolveTimestampStart(input.input.timestampStart);
   const isoTimestamp = timestampStart.toISOString();
@@ -87,6 +91,7 @@ export async function logWorkAsync(input: {
     action: input.input.action,
     outputs,
     relatedDecisions,
+    ...(agentMetadata ? { agentMetadata } : {}),
   });
 
   const content = `---
@@ -99,7 +104,7 @@ role_assignment_ref: ${JSON.stringify(input.input.roleAssignment)}
 inputs_digest: ${JSON.stringify(inputsDigest)}
 outputs: ${renderYamlStringList(outputs)}
 related_decisions: ${renderYamlStringList(relatedDecisions)}
----
+${renderAgentMetadataYaml(agentMetadata)}---
 
 # U.Work: Execution of ${input.input.method}
 
@@ -148,6 +153,9 @@ type LogWorkArgs = {
   outputs: string[];
   decisions: string[];
   timestampStart?: string;
+  agentSession?: string;
+  agentModel?: string;
+  agentType?: string;
 };
 
 function parseArgs(argv: string[]): LogWorkArgs {
@@ -159,6 +167,9 @@ function parseArgs(argv: string[]): LogWorkArgs {
   let outputs: string[] = [];
   let decisions: string[] = [];
   let timestampStart: string | undefined;
+  let agentSession: string | undefined;
+  let agentModel: string | undefined;
+  let agentType: string | undefined;
 
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i];
@@ -178,6 +189,9 @@ function parseArgs(argv: string[]): LogWorkArgs {
           "  --outputs \"a; b\"         Semicolon-delimited output paths",
           "  --decisions \"x; y\"       Semicolon-delimited DRR ids/paths",
           "  --timestamp-start <iso>  ISO-8601 timestamp override (for deterministic runs)",
+          "  --agent-session <id>     Optional agent session identifier",
+          "  --agent-model <name>     Optional agent model identifier",
+          "  --agent-type <type>      Optional agent type (strategist, executor, etc)",
         ].join("\n"),
         0,
       );
@@ -223,6 +237,21 @@ function parseArgs(argv: string[]): LogWorkArgs {
       i += 1;
       continue;
     }
+    if (arg === "--agent-session") {
+      agentSession = requireArgValue(argv, i, arg);
+      i += 1;
+      continue;
+    }
+    if (arg === "--agent-model") {
+      agentModel = requireArgValue(argv, i, arg);
+      i += 1;
+      continue;
+    }
+    if (arg === "--agent-type") {
+      agentType = requireArgValue(argv, i, arg);
+      i += 1;
+      continue;
+    }
 
     throw new CliError("UNKNOWN_ARG", `Unknown argument '${arg}'.`, 1);
   }
@@ -241,6 +270,9 @@ function parseArgs(argv: string[]): LogWorkArgs {
     outputs,
     decisions,
     timestampStart: timestampStart?.trim().length ? timestampStart.trim() : undefined,
+    agentSession: normalizeOptional(agentSession),
+    agentModel: normalizeOptional(agentModel),
+    agentType: normalizeOptional(agentType),
   };
 }
 
@@ -283,6 +315,12 @@ type MethodDescriptionRef = {
   id: string;
   path?: string;
   version?: string;
+};
+
+type AgentMetadata = {
+  agent_session?: string;
+  agent_model?: string;
+  agent_type?: string;
 };
 
 function resolveMethodDescriptionRef(methodId: string, explicitPath: string | undefined, rootDir: string): MethodDescriptionRef {
@@ -343,6 +381,7 @@ type InputsDigestPayload = {
   action: string;
   outputs: string[];
   relatedDecisions: string[];
+  agentMetadata?: AgentMetadata;
 };
 
 function computeInputsDigest(payload: InputsDigestPayload): string {
@@ -364,6 +403,23 @@ function renderMarkdownList(values: string[]): string {
   return values.map((value) => `- \`${value}\``).join("\n");
 }
 
+function renderAgentMetadataYaml(value?: AgentMetadata): string {
+  if (!value) {
+    return "";
+  }
+  const lines = ["agent_metadata:"];
+  if (value.agent_session) {
+    lines.push(`  agent_session: ${JSON.stringify(value.agent_session)}`);
+  }
+  if (value.agent_model) {
+    lines.push(`  agent_model: ${JSON.stringify(value.agent_model)}`);
+  }
+  if (value.agent_type) {
+    lines.push(`  agent_type: ${JSON.stringify(value.agent_type)}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 function renderMethodDescriptionRefYaml(value: MethodDescriptionRef): string {
   const lines = [`  id: ${JSON.stringify(value.id)}`];
   if (value.path && value.path.trim().length > 0) {
@@ -381,6 +437,28 @@ function resolveTimestampStart(explicitValue?: string): Date {
     return parseIsoTimestampOrThrow(explicit, `timestamp-start '${explicitValue}'`);
   }
   return resolveNow();
+}
+
+function resolveAgentMetadata(session?: string, model?: string, type?: string): AgentMetadata | undefined {
+  const agentMetadata: AgentMetadata = {};
+  const agentSession = normalizeOptional(session);
+  const agentModel = normalizeOptional(model);
+  const agentType = normalizeOptional(type);
+  if (agentSession) {
+    agentMetadata.agent_session = agentSession;
+  }
+  if (agentModel) {
+    agentMetadata.agent_model = agentModel;
+  }
+  if (agentType) {
+    agentMetadata.agent_type = agentType;
+  }
+  return Object.keys(agentMetadata).length > 0 ? agentMetadata : undefined;
+}
+
+function normalizeOptional(value?: string): string | undefined {
+  const trimmed = (value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 type PosthogEvent = {

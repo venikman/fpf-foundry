@@ -5,5 +5,7 @@ dist/
 coverage/
 .bun/
 runtime/out/
-runtime/contexts/
+runtime/contexts/*
+!runtime/contexts/AgentWorkflow/
+!runtime/contexts/AgentWorkflow/**
 runtime/skills/index.json

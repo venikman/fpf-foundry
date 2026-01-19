@@ -41,7 +41,7 @@
       "invocation": "telemetry/log-work",
       "package": "@venikman/fpf-skill-telemetry-log-work",
       "spec_path": "design/skills/telemetry/log-work/skill.json",
-      "version": "0.1.0"
+      "version": "0.1.1"
     }
   ]
 }

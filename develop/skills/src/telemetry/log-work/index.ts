@@ -7,7 +7,7 @@ import { createHash } from "node:crypto";
 import { parseSemicolonList, sortKeys, stableStringify } from "../../_shared/utils";
 
 // A.15.1 U.Work Generator
-// Usage: bun log-work.ts --method <MethodId> --role-assignment <RoleAssignment> --context <Ctx> --action <Description> [--outputs "..."] [--decisions "..."]
+// Usage: bun log-work.ts --method <MethodId> --role-assignment <RoleAssignment> --context <Ctx> --action <Description> [--outputs "..."] [--decisions "..."] [--agent-session "..."] [--agent-model "..."] [--agent-type "..."]
 
 const { values } = parseArgs({
   args: Bun.argv,
@@ -22,6 +22,9 @@ const { values } = parseArgs({
     outputs: { type: "string" },
     decisions: { type: "string" },
     "timestamp-start": { type: "string" },
+    "agent-session": { type: "string" },
+    "agent-model": { type: "string" },
+    "agent-type": { type: "string" },
   },
   strict: true,
   allowPositionals: true,
@@ -31,7 +34,9 @@ const rawMethod = values.method ?? values.spec;
 const rawRoleAssignment = values["role-assignment"] ?? values.role;
 
 if (!rawMethod || !rawRoleAssignment || !values.context || !values.action) {
-  console.error('Usage: log-work --method <id> --role-assignment <assigned> --context <ctx> --action <desc> [--outputs "a; b"] [--decisions "drr; drr"]');
+  console.error(
+    'Usage: log-work --method <id> --role-assignment <assigned> --context <ctx> --action <desc> [--outputs "a; b"] [--decisions "drr; drr"] [--agent-session "..."] [--agent-model "..."] [--agent-type "..."]',
+  );
   process.exit(1);
 }
 
@@ -157,6 +162,7 @@ if (existsSync(filePath)) {
 const methodRef = resolveMethodDescriptionRef(method, values["method-path"], repoRoot);
 const outputs = parseSemicolonList(values.outputs).map((entry) => normalizeArtifactRef(entry, repoRoot));
 const relatedDecisions = parseSemicolonList(values.decisions).map((entry) => normalizeArtifactRef(entry, repoRoot));
+const agentMetadata = resolveAgentMetadata(values["agent-session"], values["agent-model"], values["agent-type"]);
 const inputsDigest = computeInputsDigest({
   methodDescriptionRef: methodRef,
   roleAssignmentRef: roleAssignment,
@@ -164,6 +170,7 @@ const inputsDigest = computeInputsDigest({
   action,
   outputs,
   relatedDecisions,
+  ...(agentMetadata ? { agentMetadata } : {}),
 });
 
 // 3. Content: A.15.1 U.Work Record
@@ -177,7 +184,7 @@ role_assignment_ref: ${JSON.stringify(roleAssignment)}
 inputs_digest: ${JSON.stringify(inputsDigest)}
 outputs: ${renderYamlStringList(outputs)}
 related_decisions: ${renderYamlStringList(relatedDecisions)}
----
+${renderAgentMetadataYaml(agentMetadata)}---
 
 # U.Work: Execution of ${method}
 
@@ -217,6 +224,12 @@ type MethodDescriptionRef = {
   version?: string;
 };
 
+type AgentMetadata = {
+  agent_session?: string;
+  agent_model?: string;
+  agent_type?: string;
+};
+
 function renderMethodDescriptionRefYaml(value: MethodDescriptionRef): string {
   const lines = [`  id: ${JSON.stringify(value.id)}`];
   if (value.path && value.path.trim().length > 0) {
@@ -235,6 +248,7 @@ type InputsDigestPayload = {
   action: string;
   outputs: string[];
   relatedDecisions: string[];
+  agentMetadata?: AgentMetadata;
 };
 
 function resolveTimestampStart(value?: string): Date {
@@ -324,11 +338,50 @@ function renderYamlStringList(values: string[]): string {
   return `\n${values.map((value) => `  - ${JSON.stringify(value)}`).join("\n")}`;
 }
 
+function renderAgentMetadataYaml(value?: AgentMetadata): string {
+  if (!value) {
+    return "";
+  }
+  const lines = ["agent_metadata:"];
+  if (value.agent_session) {
+    lines.push(`  agent_session: ${JSON.stringify(value.agent_session)}`);
+  }
+  if (value.agent_model) {
+    lines.push(`  agent_model: ${JSON.stringify(value.agent_model)}`);
+  }
+  if (value.agent_type) {
+    lines.push(`  agent_type: ${JSON.stringify(value.agent_type)}`);
+  }
+  return `${lines.join("\n")}\n`;
+}
+
 function renderMarkdownList(values: string[]): string {
   if (values.length === 0) {
     return "- (none)";
   }
   return values.map((value) => `- \`${value}\``).join("\n");
+}
+
+function resolveAgentMetadata(session?: string, model?: string, type?: string): AgentMetadata | undefined {
+  const agentMetadata: AgentMetadata = {};
+  const agentSession = normalizeOptional(session);
+  const agentModel = normalizeOptional(model);
+  const agentType = normalizeOptional(type);
+  if (agentSession) {
+    agentMetadata.agent_session = agentSession;
+  }
+  if (agentModel) {
+    agentMetadata.agent_model = agentModel;
+  }
+  if (agentType) {
+    agentMetadata.agent_type = agentType;
+  }
+  return Object.keys(agentMetadata).length > 0 ? agentMetadata : undefined;
+}
+
+function normalizeOptional(value?: string): string | undefined {
+  const trimmed = (value ?? "").trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function toRepoRelative(filePath: string, rootDir = process.cwd()): string {

@@ -14,6 +14,7 @@ allowed-tools:
 ## A.15.1 - U.Work
 
 > Implementation note (local tooling): When `POSTHOG_API_KEY` and `POSTHOG_DISTINCT_ID` are set, the reference implementation emits a PostHog event named `u_work_logged` with spec/context metadata. Set `POSTHOG_INCLUDE_ACTION=1` to include the action text and role.
+> Implementation note (local tooling): When `agent_session`, `agent_model`, or `agent_type` inputs are provided, the reference implementation adds an `agent_metadata` block to the U.Work record.
 
 ### A.15.1:1 - Problem Frame
 
