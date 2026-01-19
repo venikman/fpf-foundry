@@ -63,6 +63,20 @@
       "package": "@venikman/fpf-skill-telemetry-log-work",
       "spec_path": "design/skills/telemetry/log-work/skill.json",
       "version": "0.1.1"
+    },
+    {
+      "id": "workflow/generate-handoff",
+      "invocation": "workflow/generate-handoff",
+      "package": "@venikman/fpf-skill-workflow-generate-handoff",
+      "spec_path": "design/skills/workflow/generate-handoff/skill.json",
+      "version": "0.1.0"
+    },
+    {
+      "id": "workflow/parse-handoff",
+      "invocation": "workflow/parse-handoff",
+      "package": "@venikman/fpf-skill-workflow-parse-handoff",
+      "spec_path": "design/skills/workflow/parse-handoff/skill.json",
+      "version": "0.1.0"
     }
   ]
 }

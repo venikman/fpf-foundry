@@ -25,3 +25,5 @@ Columns
 | `governance/start-agent-session` | Governance | A.15.1 | - | experimental | code | SessionRecord | Starts a new agent session record with deterministic naming. |
 | `planning/create-workplan` | Planning | A.15.1; A.15.2 | - | experimental | code | WorkPlan | Creates a WorkPlan (Schedule of Intent) and stores it under runtime/contexts. |
 | `telemetry/log-work` | Telemetry | A.15.1 | - | experimental | code | work_record_path | Generates a U.Work record for an action (Pattern A.15.1). |
+| `workflow/generate-handoff` | Workflow | A.15.1 | - | experimental | code | HandoffRecord | Generates a structured handoff artifact with guard rails. |
+| `workflow/parse-handoff` | Workflow | A.15.1 | - | experimental | code | ParsedHandoff | Parses and validates a handoff artifact into canonical JSON. |

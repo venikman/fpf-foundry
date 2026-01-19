@@ -1,0 +1,153 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in parsed outputs."
+    ],
+    "safety": [
+      "Reject unknown keys unless they use the x-* extension prefix.",
+      "Reject invalid agent_type values.",
+      "Do not overwrite existing parsed output without explicit intent."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "view_file",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Parses a handoff YAML file into a canonical JSON representation.",
+      "Rejects unknown keys unless they use the x-* extension prefix.",
+      "Rejects invalid agent_type values and malformed list fields.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "parsed_handoff_path": "runtime/contexts/AgentWorkflow/handoffs/AW-0002.executor.1.parsed.json"
+        },
+        "input_fixture": {
+          "handoff_path": "runtime/contexts/AgentWorkflow/handoffs/AW-0002.executor.1.handoff.yaml"
+        },
+        "name": "basic-parse"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required input (handoff_path).",
+    "Invalid or unreadable handoff file.",
+    "Unknown keys without x-* prefix.",
+    "Invalid agent_type values.",
+    "Malformed list fields (must be arrays of strings).",
+    "Failed to write parsed handoff output.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "workflow/parse-handoff",
+  "inputs": [
+    {
+      "description": "Path to the handoff YAML file to parse.",
+      "name": "handoff_path",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional output path for the parsed JSON file.",
+      "name": "output_path",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent type performing the parse (strategist, executor, proxy-auditor, human).",
+      "name": "agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: ProxyAuditor).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Parse and validate a handoff artifact into a canonical JSON representation.",
+    "non_goals": [
+      "Does not modify the original handoff file.",
+      "Does not execute the handoff.",
+      "Does not enforce Definition of Done requirements."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-18",
+    "tags": [
+      "workflow"
+    ],
+    "updated": "2026-01-18"
+  },
+  "name": "Parse Handoff",
+  "outputs": [
+    {
+      "description": "Path to the parsed JSON file.",
+      "name": "parsed_handoff_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate input handoff_path and load the YAML content.",
+      "step_id": "step-load-file"
+    },
+    {
+      "instruction": "Parse the YAML into a strict object and validate against the U.AgentHandoff schema.",
+      "step_id": "step-validate"
+    },
+    {
+      "instruction": "Write a canonical JSON representation of the handoff to output_path (or default location).",
+      "step_id": "step-write-output"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the parse operation with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Parses and validates a handoff artifact into canonical JSON.",
+  "version": "0.1.0"
+}

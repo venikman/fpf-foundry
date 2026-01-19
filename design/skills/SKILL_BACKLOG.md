@@ -47,8 +47,6 @@ Columns
 | `release/ship-sota-pack` | Release | G.10 | - | planned | none | - | Ships a SoTA Pack (Release). |
 | `maintenance/refresh-models` | Maintenance | G.11 | - | planned | none | - | Refreshes stale models based on telemetry. |
 | `telemetry/generate-dhc` | Telemetry | G.12 | - | planned | none | - | Generates a Discipline-Health Dashboard. |
-| `workflow/generate-handoff` | Workflow | A.15.1 | - | planned | none | HandoffRecord | Generates a structured handoff artifact from session inputs. |
-| `workflow/parse-handoff` | Workflow | A.15.1 | - | planned | none | - | Parses and validates a handoff artifact into structured data. |
 | `audit/verify-definition-of-done` | Audit | E.19 | audit/verify-definition-of-done | planned | none | DoDReport | Verifies Definition of Done requirements for a session. |
 | `audit/proxy-audit-session` | Audit | E.13 | audit/proxy-audit-session | planned | none | ProxyAuditReport | Issues a proxy audit verdict for a session. |
 | `governance/define-roc` | Governance | E.16 | - | planned | none | RoCSpec | Defines a Rule of Constraints policy bundle for agent autonomy. |

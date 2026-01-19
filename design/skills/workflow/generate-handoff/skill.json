@@ -1,0 +1,206 @@
+{
+  "constraints": {
+    "licensing": [
+      "Do not copy proprietary text; author original summaries."
+    ],
+    "privacy": [
+      "Do not include secrets or personal data in handoff records."
+    ],
+    "safety": [
+      "Do not overwrite existing handoff files.",
+      "Reject context, session_id, and agent type values containing path separators or dot-segments."
+    ]
+  },
+  "conformance": {
+    "checklist": [
+      "inputs_validated",
+      "outputs_listed",
+      "u_work_emitted",
+      "deterministic_naming",
+      "inventory_updated"
+    ]
+  },
+  "dependencies": {
+    "skills": [
+      "telemetry/log-work@^0.1.1"
+    ],
+    "tools": [
+      "list_dir",
+      "write_to_file"
+    ]
+  },
+  "eval": {
+    "acceptance_criteria": [
+      "Creates a handoff record at runtime/contexts/<context>/handoffs/<session_id>.<to_agent_type>.<n>.handoff.yaml.",
+      "Validates instructions and guard rails before writing.",
+      "Increments the handoff counter deterministically per session and target agent type.",
+      "Logs a U.Work record when telemetry/log-work is available."
+    ],
+    "tests": [
+      {
+        "expected": {
+          "handoff_record_path": "runtime/contexts/AgentWorkflow/handoffs/AW-0002.executor.1.handoff.yaml"
+        },
+        "input_fixture": {
+          "context": "AgentWorkflow",
+          "session_id": "AW-0002",
+          "from_agent_type": "strategist",
+          "to_agent_type": "executor",
+          "instructions": "Implement changes; run checks",
+          "constraints": "No schema changes",
+          "prohibited_actions": "Do not run destructive commands"
+        },
+        "name": "basic-generate"
+      }
+    ]
+  },
+  "failure_modes": [
+    "Missing required inputs (context, session_id, to_agent_type, instructions).",
+    "Guard rails are missing (constraints or prohibited_actions required).",
+    "Invalid context/session_id/agent_type value (not a safe path segment).",
+    "Failed to write the handoff record file.",
+    "Optional telemetry logging failed."
+  ],
+  "id": "workflow/generate-handoff",
+  "inputs": [
+    {
+      "description": "Bounded context name used to locate runtime/contexts/<context> (must be a safe path segment).",
+      "name": "context",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Session identifier that the handoff belongs to (safe path segment).",
+      "name": "session_id",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Agent type issuing the handoff (default: strategist).",
+      "name": "from_agent_type",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Agent type receiving the handoff (safe path segment).",
+      "name": "to_agent_type",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Semicolon-delimited instructions for the recipient.",
+      "name": "instructions",
+      "required": true,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited acceptance criteria for the handoff.",
+      "name": "acceptance_criteria",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited constraints or guardrails.",
+      "name": "constraints",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited prohibited actions (guard rails).",
+      "name": "prohibited_actions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited artifact paths to include in the handoff.",
+      "name": "artifacts",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional notes for the handoff recipient.",
+      "name": "notes",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional agent model identifier.",
+      "name": "agent_model",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional RoleAssignment label used when logging U.Work (default: Strategist).",
+      "name": "role_assignment",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional semicolon-delimited list of related DRR ids or paths.",
+      "name": "decisions",
+      "required": false,
+      "type": "string"
+    },
+    {
+      "description": "Optional ISO-8601 timestamp_start override (used for deterministic testing).",
+      "name": "timestamp_start",
+      "required": false,
+      "type": "string"
+    }
+  ],
+  "intent": {
+    "goal": "Generate a structured handoff artifact with validated instructions and guard rails.",
+    "non_goals": [
+      "Does not execute the handoff.",
+      "Does not validate Definition of Done requirements.",
+      "Does not enforce session completion policies."
+    ]
+  },
+  "metadata": {
+    "authors": [
+      "FPF Foundry"
+    ],
+    "created": "2026-01-18",
+    "tags": [
+      "workflow"
+    ],
+    "updated": "2026-01-18"
+  },
+  "name": "Generate Handoff",
+  "outputs": [
+    {
+      "description": "Path to the generated handoff YAML file.",
+      "name": "handoff_record_path",
+      "type": "string"
+    }
+  ],
+  "procedure": [
+    {
+      "instruction": "Validate required inputs (context, session_id, to_agent_type, instructions) and ensure safe path segments.",
+      "step_id": "step-validate-inputs"
+    },
+    {
+      "instruction": "Ensure guard rails are present (constraints or prohibited_actions).",
+      "step_id": "step-validate-guardrails"
+    },
+    {
+      "instruction": "Compute the next handoff counter for the target agent type.",
+      "step_id": "step-resolve-target"
+    },
+    {
+      "instruction": "Construct the handoff YAML content with deterministic identifiers and timestamps.",
+      "step_id": "step-build-content"
+    },
+    {
+      "instruction": "Write the handoff file to runtime/contexts/<context>/handoffs/<session_id>.<to_agent_type>.<n>.handoff.yaml.",
+      "step_id": "step-write-file"
+    },
+    {
+      "instruction": "If telemetry/log-work is available, log the handoff with agent metadata when provided.",
+      "step_id": "step-log-work"
+    }
+  ],
+  "schema_version": "0.1.0",
+  "summary": "Generates a structured handoff artifact with guard rails.",
+  "version": "0.1.0"
+}
